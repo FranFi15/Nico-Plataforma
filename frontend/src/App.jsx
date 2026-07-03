@@ -19,6 +19,8 @@ import MiPerfil from './pages/MiPerfil';
 import Home from './pages/Home';
 import EntrenamientoADistancia from './pages/EntrenamientoADistancia';
 import Evaluaciones from './pages/Evaluaciones';
+import EvaluacionesIndividual from './pages/EvaluacionesIndividual';
+import EvaluacionesColectivo from './pages/EvaluacionesColectivo';
 import AdminTraining from './pages/AdminTraining';
 import MisAlumnos from './pages/MisAlumnos';
 
@@ -35,6 +37,8 @@ function App() {
           <Route path="capacitaciones" element={<CapacitacionesHub />} />
           <Route path="entrenamiento-a-distancia" element={<EntrenamientoADistancia />} />
           <Route path="evaluaciones" element={<Evaluaciones />} />
+          <Route path="evaluaciones/individual" element={<EvaluacionesIndividual />} />
+          <Route path="evaluaciones/colectivo" element={<EvaluacionesColectivo />} />
           <Route path="nico-sesma-dashboard-privado" element={<AdminTraining />} />
           <Route path="nico-sesma-alumnos" element={<MisAlumnos />} />
           <Route path="cursos" element={<Cursos />} />

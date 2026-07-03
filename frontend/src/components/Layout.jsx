@@ -96,14 +96,14 @@ const Layout = () => {
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginRight: '4px' }}>
               sponsored by
             </span>
-            <a href="https://www.instagram.com/omi_arg/" target="_blank" rel="noreferrer" className="sponsor-link">
-              <img src={omiLogo} alt="Omi" style={{ height: '54px', objectFit: 'contain' }} />
-            </a>
             <a href="https://kinvent.com/" target="_blank" rel="noreferrer" className="sponsor-link">
               <img src={kiventLogo} alt="Kivent" style={{ height: '46px', objectFit: 'contain' }} />
             </a>
             <a href="https://gruporoan.com.ar/" target="_blank" rel="noreferrer" className="sponsor-link">
               <img src={grbLogo} alt="GRB" style={{ height: '52px', objectFit: 'contain' }} />
+            </a>
+            <a href="https://www.instagram.com/omi_arg/" target="_blank" rel="noreferrer" className="sponsor-link">
+              <img src={omiLogo} alt="Omi" style={{ height: '54px', objectFit: 'contain' }} />
             </a>
           </div>
         </div>
@@ -380,14 +380,14 @@ const Layout = () => {
             sponsored by
           </span>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <a href="https://www.instagram.com/omi_arg/" target="_blank" rel="noreferrer" className="sponsor-link">
-              <img src={omiLogo} alt="Omi" style={{ height: '48px', objectFit: 'contain' }} />
-            </a>
             <a href="https://kinvent.com/" target="_blank" rel="noreferrer" className="sponsor-link">
               <img src={kiventLogo} alt="Kivent" style={{ height: '40px', objectFit: 'contain' }} />
             </a>
             <a href="https://gruporoan.com.ar/" target="_blank" rel="noreferrer" className="sponsor-link">
               <img src={grbLogo} alt="GRB" style={{ height: '44px', objectFit: 'contain' }} />
+            </a>
+            <a href="https://www.instagram.com/omi_arg/" target="_blank" rel="noreferrer" className="sponsor-link">
+              <img src={omiLogo} alt="Omi" style={{ height: '48px', objectFit: 'contain' }} />
             </a>
           </div>
         </div>
