@@ -138,11 +138,82 @@ const AdminTraining = () => {
     }
   };
 
+  // Evaluations Config State & Handlers
+  const [evalConfig, setEvalConfig] = useState({
+    colectivoPdfUrl: '/Evaluaciones_Kinvent.pdf',
+    colectivoFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform',
+    individualPdfUrl: '/Evaluaciones_Kinvent.pdf',
+    individualFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform'
+  });
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalUploading, setEvalUploading] = useState({ colectivo: false, individual: false });
+  const [evalMessage, setEvalMessage] = useState('');
+
+  const fetchEvalConfig = async () => {
+    try {
+      const response = await api.get('/evaluations');
+      if (response.data && response.data.success && response.data.data) {
+        setEvalConfig(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching eval config:', err);
+    }
+  };
+
+  const handleUploadEvalPdf = async (type, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = async () => {
+      const base64String = reader.result;
+      setEvalUploading(prev => ({ ...prev, [type]: true }));
+      try {
+        const res = await api.post('/evaluations/upload-pdf', { file: base64String });
+        if (res.data && res.data.url) {
+          if (type === 'colectivo') {
+            setEvalConfig(prev => ({ ...prev, colectivoPdfUrl: res.data.url }));
+          } else {
+            setEvalConfig(prev => ({ ...prev, individualPdfUrl: res.data.url }));
+          }
+          setEvalMessage(`PDF subido correctamente para ${type === 'colectivo' ? 'Colectivo' : 'Individual'}. Haz clic en Guardar Cambios para aplicar.`);
+        }
+      } catch (err) {
+        console.error('Error uploading PDF:', err);
+        alert('Error al subir el archivo PDF.');
+      } finally {
+        setEvalUploading(prev => ({ ...prev, [type]: false }));
+        e.target.value = '';
+      }
+    };
+  };
+
+  const handleSaveEvalConfig = async (e) => {
+    e.preventDefault();
+    setEvalLoading(true);
+    setEvalMessage('');
+    try {
+      const res = await api.put('/evaluations', evalConfig);
+      if (res.data && res.data.success) {
+        setEvalMessage('¡Configuración de Evaluaciones guardada con éxito!');
+        if (res.data.data) {
+          setEvalConfig(res.data.data);
+        }
+      }
+    } catch (err) {
+      console.error('Error saving eval config:', err);
+      setEvalMessage('Error al guardar la configuración de Evaluaciones.');
+    } finally {
+      setEvalLoading(false);
+    }
+  };
+
   // Initial load
   const loadData = async () => {
     setLoading(true);
     setError('');
-    await Promise.all([fetchTrainings(), fetchContents(), fetchCategories(), fetchVideoFolders()]);
+    await Promise.all([fetchTrainings(), fetchContents(), fetchCategories(), fetchVideoFolders(), fetchEvalConfig()]);
     setLoading(false);
   };
 
@@ -539,6 +610,28 @@ const AdminTraining = () => {
 
     setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
+  };
+
+  // Move Training Order (Up/Down)
+  const moveTrainingOrder = async (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= trainings.length) return;
+
+    const newTrainings = [...trainings];
+    const temp = newTrainings[index];
+    newTrainings[index] = newTrainings[newIndex];
+    newTrainings[newIndex] = temp;
+
+    setTrainings(newTrainings);
+
+    const orderedIds = newTrainings.map((t) => t._id);
+    try {
+      await api.put('/trainings/reorder', { orderedIds });
+    } catch (err) {
+      console.error('Error saving order:', err);
+      alert('No se pudo guardar el nuevo orden.');
+      fetchTrainings();
+    }
   };
 
   // Delete Training Program
@@ -948,7 +1041,8 @@ const AdminTraining = () => {
           { id: 'trainings', label: 'Entrenamiento a Distancia' },
           { id: 'blogs', label: 'Blogs & Artículos' },
           { id: 'workshops', label: 'Workshops & Capacitaciones' },
-          { id: 'videoteca', label: 'Videoteca' }
+          { id: 'videoteca', label: 'Videoteca' },
+          { id: 'evaluations', label: 'Evaluaciones' }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1151,7 +1245,7 @@ const AdminTraining = () => {
       {/* ========================================================
           FORM SECTION: GENERIC CONTENT (BLOGS, WORKSHOPS, VIDEOTECA)
           ======================================================== */}
-      {activeTab !== 'trainings' && (
+      {(activeTab !== 'trainings' && activeTab !== 'evaluations') && (
         <div className="admin-panel-card">
           <div
             style={{
@@ -1942,8 +2036,159 @@ const AdminTraining = () => {
       )}
 
       {/* ========================================================
+          FORM SECTION: EVALUATIONS CONFIG
+          ======================================================== */}
+      {activeTab === 'evaluations' && (
+        <div className="admin-panel-card" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '900',
+            color: '#2B2D2F',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            marginBottom: '10px'
+          }}>
+            Configuración de Evaluaciones
+          </h2>
+          <p style={{ color: 'var(--gray-500)', fontSize: '15px', marginBottom: '30px', lineHeight: '1.5' }}>
+            Aquí puedes administrar los archivos PDF descargables y los enlaces a formularios o turnos que aparecen en las secciones pública e individual de Evaluaciones.
+          </p>
+
+          {evalMessage && (
+            <div style={{
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              backgroundColor: evalMessage.includes('Error') ? 'rgba(239, 68, 68, 0.08)' : 'rgba(113, 223, 190, 0.15)',
+              border: `1px solid ${evalMessage.includes('Error') ? '#ef4444' : '#71DFBE'}`,
+              color: evalMessage.includes('Error') ? '#dc2626' : '#047857',
+              fontWeight: '600'
+            }}>
+              {evalMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveEvalConfig} style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+            
+            {/* 1. Evaluaciones para Deportes de Equipo (Colectivo) */}
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--dark)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                1. Evaluaciones para Deportes de Equipo (Colectivo)
+              </h3>
+              
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '700', color: '#334155' }}>Archivo PDF de Descarga</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    className="premium-input"
+                    style={{ flex: '1', minWidth: '280px' }}
+                    placeholder="/Evaluaciones_Kinvent.pdf o URL"
+                    value={evalConfig.colectivoPdfUrl || ''}
+                    onChange={(e) => setEvalConfig({ ...evalConfig, colectivoPdfUrl: e.target.value })}
+                  />
+                  <label className="btn-translucent" style={{ cursor: evalUploading.colectivo ? 'wait' : 'pointer', margin: 0, padding: '12px 20px', whiteSpace: 'nowrap' }}>
+                    {evalUploading.colectivo ? 'Subiendo PDF...' : 'Subir PDF'}
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      style={{ display: 'none' }}
+                      disabled={evalUploading.colectivo}
+                      onChange={(e) => handleUploadEvalPdf('colectivo', e)}
+                    />
+                  </label>
+                </div>
+                <small style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
+                  Puedes pegar una URL existente o usar el botón para subir un nuevo PDF al servidor.
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '700', color: '#334155' }}>Link del Formulario (o Google Form)</label>
+                <input
+                  type="url"
+                  className="premium-input"
+                  placeholder="https://docs.google.com/forms/..."
+                  value={evalConfig.colectivoFormLink || ''}
+                  onChange={(e) => setEvalConfig({ ...evalConfig, colectivoFormLink: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* 2. Evaluación Biomecánica Individual */}
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--dark)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                2. Evaluación Biomecánica Individual (1 a 1)
+              </h3>
+              
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '700', color: '#334155' }}>Archivo PDF de Descarga</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    className="premium-input"
+                    style={{ flex: '1', minWidth: '280px' }}
+                    placeholder="/Evaluaciones_Kinvent.pdf o URL"
+                    value={evalConfig.individualPdfUrl || ''}
+                    onChange={(e) => setEvalConfig({ ...evalConfig, individualPdfUrl: e.target.value })}
+                  />
+                  <label className="btn-translucent" style={{ cursor: evalUploading.individual ? 'wait' : 'pointer', margin: 0, padding: '12px 20px', whiteSpace: 'nowrap' }}>
+                    {evalUploading.individual ? 'Subiendo PDF...' : 'Subir PDF'}
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      style={{ display: 'none' }}
+                      disabled={evalUploading.individual}
+                      onChange={(e) => handleUploadEvalPdf('individual', e)}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '700', color: '#334155' }}>Link del Formulario de Turnos</label>
+                <input
+                  type="url"
+                  className="premium-input"
+                  placeholder="https://docs.google.com/forms/..."
+                  value={evalConfig.individualFormLink || ''}
+                  onChange={(e) => setEvalConfig({ ...evalConfig, individualFormLink: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={evalLoading || evalUploading.colectivo || evalUploading.individual}
+              style={{ padding: '16px', fontSize: '16px', fontWeight: '800' }}
+            >
+              {evalLoading ? 'Guardando Configuración...' : 'Guardar Configuración de Evaluaciones'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ========================================================
           LIST SECTION
           ======================================================== */}
+      {activeTab !== 'evaluations' && (
       <div>
         <h2 style={{
           fontSize: '24px',
@@ -2089,7 +2334,7 @@ const AdminTraining = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {activeTab === 'trainings'
-              ? trainings.map((t) => (
+              ? trainings.map((t, index) => (
                 <div
                   key={t._id}
                   className="premium-card"
@@ -2109,7 +2354,43 @@ const AdminTraining = () => {
                       {t.athletePhotos.length} Fotos subidas • Link de Formulario: <a href={t.googleFormLink} target="_blank" rel="noreferrer" style={{ color: '#2B2D2F', fontWeight: 'bold' }}>Ver enlace</a>
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginRight: '8px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                      <button
+                        onClick={() => moveTrainingOrder(index, -1)}
+                        disabled={index === 0}
+                        title="Mover hacia arriba"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: index === 0 ? 'not-allowed' : 'pointer',
+                          opacity: index === 0 ? 0.3 : 1,
+                          padding: '4px 8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: '#0f172a'
+                        }}
+                      >
+                        <IoChevronUp size={18} />
+                      </button>
+                      <button
+                        onClick={() => moveTrainingOrder(index, 1)}
+                        disabled={index === trainings.length - 1}
+                        title="Mover hacia abajo"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: index === trainings.length - 1 ? 'not-allowed' : 'pointer',
+                          opacity: index === trainings.length - 1 ? 0.3 : 1,
+                          padding: '4px 8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: '#0f172a'
+                        }}
+                      >
+                        <IoChevronDown size={18} />
+                      </button>
+                    </div>
                     <button
                       onClick={() => startEditTraining(t)}
                       className="btn-primary"
@@ -2174,6 +2455,7 @@ const AdminTraining = () => {
           </div>
         )}
       </div>
+      )}
 
     </div>
   );

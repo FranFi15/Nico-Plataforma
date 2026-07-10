@@ -6,7 +6,7 @@ import axios from 'axios';
 // @access  Public
 export const getTrainings = async (req, res, next) => {
   try {
-    const trainings = await Training.find().sort({ createdAt: -1 });
+    const trainings = await Training.find().sort({ order: 1, createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -166,6 +166,31 @@ export const uploadPhoto = async (req, res, next) => {
       message: error.response?.data?.error?.message || error.message,
       details: errDetails
     });
+  }
+};
+
+// @desc    Reorder training programs
+// @route   PUT /api/trainings/reorder
+// @access  Private/Admin
+export const reorderTrainings = async (req, res, next) => {
+  try {
+    const { orderedIds } = req.body;
+
+    if (!orderedIds || !Array.isArray(orderedIds)) {
+      res.status(400);
+      throw new Error('Debe proporcionar un arreglo de IDs ordenados');
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await Training.findByIdAndUpdate(orderedIds[i], { order: i });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Orden actualizado con éxito',
+    });
+  } catch (error) {
+    next(error);
   }
 };
 

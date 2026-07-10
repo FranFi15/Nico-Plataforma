@@ -38,7 +38,7 @@ const Layout = () => {
     navigate('/login');
   };
 
-  const isHome = location.pathname === '/';
+  const isHome = location.pathname === '/' || location.pathname === '/evaluaciones';
 
   const dropdownItemStyle = {
     padding: '12px 16px',
