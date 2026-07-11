@@ -68,11 +68,23 @@ const MisAlumnos = () => {
     student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleRoleChange = async (studentId, newRole) => {
+    try {
+      const response = await api.put(`/users/${studentId}/role`, { role: newRole });
+      if (response.data?.success) {
+        setStudents(students.map(s => s._id === studentId ? { ...s, role: newRole } : s));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al actualizar el rol de usuario');
+    }
+  };
+
   const toggleExpand = (id) => {
     setExpandedStudentId(expandedStudentId === id ? null : id);
   };
 
   const getStudentAccessDetails = (student) => {
+    const isPrivileged = student && ['admin', 'professor', 'profe', 'instructor'].includes(student.role);
     const isPremium = student.membership === 'premium' || student.isSubscribed === true;
     const ownedIds = student.purchasedItems ? student.purchasedItems.map(item => (item._id || item).toString()) : [];
 
@@ -83,7 +95,10 @@ const MisAlumnos = () => {
       let hasAccess = false;
       let accessReason = '';
 
-      if (content.accessType === 'free') {
+      if (isPrivileged) {
+        hasAccess = true;
+        accessReason = student.role === 'admin' ? 'Acceso Total (Admin)' : 'Acceso Total (Docente)';
+      } else if (content.accessType === 'free') {
         hasAccess = true;
         accessReason = 'Gratuito';
       } else if (content.accessType === 'subscription' && isPremium) {
@@ -237,7 +252,31 @@ const MisAlumnos = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                    {/* Role selector dropdown */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={student.role || 'student'}
+                        onChange={(e) => handleRoleChange(student._id, e.target.value)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '16px',
+                          border: student.role === 'admin' || student.role === 'professor' ? '1px solid #1f75f5ff' : '1px solid var(--border)',
+                          backgroundColor: student.role === 'admin' ? '#051020' : student.role === 'professor' || student.role === 'profe' ? '#eff6ff' : '#ffffff',
+                          color: student.role === 'admin' ? '#ffffff' : student.role === 'professor' || student.role === 'profe' ? '#1d4ed8' : '#334155',
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+                        }}
+                      >
+                        <option value="student">Alumno / Estudiante</option>
+                        <option value="professor">Profesor / Docente (Acceso Total)</option>
+                        <option value="admin">Administrador (Acceso Total)</option>
+                      </select>
+                    </div>
+
                     {/* Subscription status badge */}
                     <div style={{
                       display: 'inline-flex',

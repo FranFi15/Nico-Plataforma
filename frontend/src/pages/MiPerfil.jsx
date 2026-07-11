@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const MiPerfil = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, updateProfile } = useAuth();
+  const [isEditingProf, setIsEditingProf] = useState(false);
+  const [profValue, setProfValue] = useState('');
+  const [savingProf, setSavingProf] = useState(false);
+
+  useEffect(() => {
+    if (user && user.profession !== undefined) {
+      setProfValue(user.profession);
+    }
+  }, [user]);
+
+  const handleSaveProfession = async () => {
+    setSavingProf(true);
+    await updateProfile({ profession: profValue });
+    setSavingProf(false);
+    setIsEditingProf(false);
+  };
 
   if (loading) {
     return (
@@ -114,6 +130,83 @@ const MiPerfil = () => {
             <span style={{ fontSize: '15px', color: 'var(--dark)', fontWeight: '600' }}>
               {user.email}
             </span>
+          </div>
+
+          {/* Profession Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Profesión / Cargo:
+            </span>
+            <div>
+              {isEditingProf ? (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={profValue}
+                    onChange={(e) => setProfValue(e.target.value)}
+                    placeholder="Ej. Preparador Físico, Kinesiólogo..."
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '14px',
+                      flex: 1
+                    }}
+                  />
+                  <button
+                    onClick={handleSaveProfession}
+                    disabled={savingProf}
+                    style={{
+                      padding: '8px 14px',
+                      backgroundColor: '#1f75f5ff',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: '800',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {savingProf ? '...' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={() => { setIsEditingProf(false); setProfValue(user.profession || ''); }}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#f1f5f9',
+                      color: '#475569',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontWeight: '800',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '15px', color: user.profession ? 'var(--dark)' : '#94a3b8', fontWeight: user.profession ? '700' : '400', fontStyle: user.profession ? 'normal' : 'italic' }}>
+                    {user.profession || 'No especificada'}
+                  </span>
+                  <button
+                    onClick={() => setIsEditingProf(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#1f75f5ff',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {user.profession ? 'Editar' : '+ Agregar profesión'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Membership Row */}

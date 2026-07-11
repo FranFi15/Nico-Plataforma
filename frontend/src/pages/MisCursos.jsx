@@ -26,10 +26,12 @@ const MisCursos = () => {
         ];
 
         // Filter contents to only those the user has access to
-        const isPremium = user.membership === 'premium' || user.isSubscribed === true;
-        const ownedIds = user.purchasedItems ? user.purchasedItems.map(item => item._id || item) : [];
+        const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
+        const isPremium = user && (user.membership === 'premium' || user.isSubscribed === true);
+        const ownedIds = user && user.purchasedItems ? user.purchasedItems.map(item => item._id || item) : [];
 
         const filtered = allContent.filter(item => {
+          if (isPrivileged) return true;
           if (item.accessType === 'free') return true;
           if (item.accessType === 'subscription' && isPremium) return true;
           if (item.accessType === 'one-time-purchase' && ownedIds.includes(item._id)) return true;

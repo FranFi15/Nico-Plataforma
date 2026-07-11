@@ -57,8 +57,8 @@ export const checkAccess = async (req, res, next) => {
       return next(new Error('Contenido no encontrado'));
     }
 
-    // Admins bypass all access rules
-    if (req.user && req.user.role === 'admin') {
+    // Admins and Professors bypass all access rules
+    if (req.user && ['admin', 'professor', 'profe', 'instructor'].includes(req.user.role)) {
       return next();
     }
 

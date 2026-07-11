@@ -64,12 +64,13 @@ const VideotecaDetail = () => {
   }
 
   // Access check logic
+  const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
   const isFree = content.accessType === 'free';
   const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
   const isOwned = user && user.purchasedItems && user.purchasedItems.some(
     (item) => (item._id || item) === content._id
   );
-  const hasAccess = isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && isOwned);
+  const hasAccess = isPrivileged || isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && isOwned);
 
   const handleAction = () => {
     if (!user) {

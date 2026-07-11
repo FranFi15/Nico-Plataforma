@@ -579,7 +579,27 @@ body::before {
   }
 }
 
-/* ===== Responsive Navbar burger menu ===== */
+/* ===== Responsive Navbar & Notebook 16:10 / Widescreen Adjustments ===== */
+.navbar-main {
+  padding: 0px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navbar-logo-img {
+  height: 100px;
+  object-fit: cover;
+  display: block;
+  transition: height 0.3s ease;
+}
+
 .nav-menu-desktop {
   display: flex;
   gap: 28px;
@@ -593,6 +613,7 @@ body::before {
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   padding-left: 20px;
   height: 40px;
+  transition: all 0.3s ease;
 }
 
 .burger-btn {
@@ -635,7 +656,48 @@ body::before {
   display: flex;
 }
 
-@media (max-width: 960px) {
+/* Notebooks Grandes / Pantallas Medianas (1400px - 1650px) */
+@media (max-width: 1650px) {
+  .navbar-main {
+    padding: 0px 3% !important;
+  }
+  .navbar-left {
+    gap: 16px;
+  }
+  .navbar-logo-img {
+    height: 85px;
+  }
+  .nav-menu-desktop {
+    gap: 20px !important;
+  }
+  .nav-sponsors-desktop {
+    gap: 8px !important;
+    padding-left: 14px !important;
+  }
+  .nav-sponsors-desktop img {
+    max-height: 38px !important;
+  }
+}
+
+/* Notebooks Aspecto 16:10 y Pantallas Medianas de Notebook standard (1150px - 1400px) */
+@media (max-width: 1400px) {
+  .navbar-main {
+    padding: 0px 2.5% !important;
+  }
+  .navbar-logo-img {
+    height: 76px;
+  }
+  .nav-menu-desktop {
+    gap: 14px !important;
+  }
+  /* En notebooks aspect 16:10 o resoluciones medianas (hasta 1400px de ancho), ocultamos los sponsors del navbar para dar todo el espacio horizontal al menú y que no se vea todo junto ni amontonado */
+  .nav-sponsors-desktop {
+    display: none !important;
+  }
+}
+
+/* Tablets, Pantallas Pequeñas y Mobiles (Hasta 1150px) */
+@media (max-width: 1150px) {
   .nav-menu-desktop {
     display: none !important;
   }
@@ -644,5 +706,33 @@ body::before {
   }
   .burger-btn {
     display: flex !important;
+  }
+}
+
+/* Skool Classroom Responsive Layout */
+.skool-classroom-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .skool-classroom-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  /* On mobile, put main player first and accordion below, or keep accordion collapsible */
+  .skool-classroom-layout > div:nth-child(2) {
+    order: -1;
+  }
+}
+
+/* Course Preview Modal Responsive Grid */
+@media (max-width: 900px) {
+  .preview-modal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
   }
 }

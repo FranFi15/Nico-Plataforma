@@ -34,6 +34,7 @@ export const registerUser = async (req, res, next) => {
       email,
       password,
       role: role || 'student',
+      profession: req.body.profession || '',
       membership: membership || 'free',
     });
 
@@ -45,6 +46,7 @@ export const registerUser = async (req, res, next) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profession: user.profession || '',
           membership: user.membership,
           token: generateToken(user._id),
         },
@@ -81,6 +83,7 @@ export const loginUser = async (req, res, next) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profession: user.profession || '',
           membership: user.membership,
           token: generateToken(user._id),
         },
@@ -107,6 +110,41 @@ export const getMe = async (req, res, next) => {
       res.status(200).json({
         success: true,
         data: user,
+      });
+    } else {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user profile (profession, name)
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      if (req.body.profession !== undefined) {
+        user.profession = req.body.profession;
+      }
+      const updatedUser = await user.save();
+
+      res.status(200).json({
+        success: true,
+        data: {
+          _id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          profession: updatedUser.profession || '',
+          membership: updatedUser.membership,
+          token: generateToken(updatedUser._id),
+        },
       });
     } else {
       res.status(404);

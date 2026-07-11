@@ -94,8 +94,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update User profile (profession, name)
+  const updateProfile = async (data) => {
+    try {
+      const response = await api.put('/auth/profile', data);
+      if (response.data && response.data.success) {
+        setUser(response.data.data);
+        if (response.data.data.token) {
+          localStorage.setItem('token', response.data.data.token);
+        }
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      const errMsg = error.response?.data?.message || 'Error al actualizar perfil';
+      return { success: false, error: errMsg };
+    }
+    return { success: false, error: 'Error desconocido al actualizar' };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, register, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

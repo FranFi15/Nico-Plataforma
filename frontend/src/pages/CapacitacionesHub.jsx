@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import img1c from '../assets/1c.webp';
-import img2c from '../assets/2c.webp';
+import img2c from '../assets/1.webp';
 import img3c from '../assets/3c.webp';
 
 const categories = [

@@ -19,7 +19,7 @@ const Blogs = () => {
       try {
         const [blogsRes, catsRes] = await Promise.all([
           api.get('/content?type=blog'),
-          api.get('/categories')
+          api.get('/categories?type=blog')
         ]);
 
         if (blogsRes.data && blogsRes.data.success) {
@@ -38,6 +38,10 @@ const Blogs = () => {
   }, []);
 
   const filteredContents = contents.filter(c => {
+    // 0. Published check (exclude drafts)
+    if (c.isPublished === false || c.status === 'draft') {
+      return false;
+    }
     // 1. Category check
     if (activeCategory !== 'all') {
       const catId = c.category?._id || c.category;
@@ -55,6 +59,10 @@ const Blogs = () => {
       return false;
     }
     return true;
+  }).sort((a, b) => {
+    const dateA = new Date(a.publishDate || a.createdAt || 0);
+    const dateB = new Date(b.publishDate || b.createdAt || 0);
+    return dateB - dateA; // del más nuevo al más viejo
   });
 
   return (

@@ -5,7 +5,16 @@ import Category from '../models/categoryModel.js';
 // @access  Public
 export const getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
+    const { type } = req.query;
+    const filter = {};
+    if (type && type !== 'all') {
+      if (type === 'course') {
+        filter.$or = [{ type: 'course' }, { type: 'general' }, { type: { $exists: false } }, { type: null }];
+      } else {
+        filter.type = type;
+      }
+    }
+    const categories = await Category.find(filter).sort({ name: 1 });
     res.status(200).json({
       success: true,
       count: categories.length,
@@ -21,21 +30,26 @@ export const getCategories = async (req, res, next) => {
 // @access  Private/Admin
 export const createCategory = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, type = 'course' } = req.body;
 
     if (!name) {
       res.status(400);
       throw new Error('Por favor, proporcione un nombre para la categoría');
     }
 
-    // Check if category name already exists
-    const categoryExists = await Category.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    const targetType = type || 'course';
+
+    // Check if category name already exists in this type
+    const categoryExists = await Category.findOne({
+      name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+      type: targetType
+    });
     if (categoryExists) {
       res.status(400);
-      throw new Error('Esta categoría ya existe');
+      throw new Error('Esta categoría ya existe para este tipo');
     }
 
-    const category = await Category.create({ name: name.trim() });
+    const category = await Category.create({ name: name.trim(), type: targetType });
 
     res.status(201).json({
       success: true,
@@ -52,7 +66,7 @@ export const createCategory = async (req, res, next) => {
 // @access  Private/Admin
 export const updateCategory = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, type } = req.body;
 
     if (!name) {
       res.status(400);
@@ -66,17 +80,21 @@ export const updateCategory = async (req, res, next) => {
       throw new Error('Categoría no encontrada');
     }
 
-    // Check if other category has the same name
+    const targetType = type || category.type || 'course';
+
+    // Check if other category in this type has the same name
     const categoryExists = await Category.findOne({
       _id: { $ne: req.params.id },
       name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+      type: targetType,
     });
     if (categoryExists) {
       res.status(400);
-      throw new Error('Ya existe otra categoría con este nombre');
+      throw new Error('Ya existe otra categoría con este nombre en este tipo');
     }
 
     category.name = name.trim();
+    if (type) category.type = type;
     const updatedCategory = await category.save();
 
     res.status(200).json({

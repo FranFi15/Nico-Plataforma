@@ -13,39 +13,67 @@ import bg4 from '../assets/4.webp';
 import kiventLogo from '../assets/kinvent.png';
 
 const HomeAthleteCarousel = ({ photos }) => {
+  const containerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
   if (!photos || photos.length === 0) return null;
 
-  // Repeat items to form a seamless infinite loop track
-  const repeatCount = photos.length < 4 ? 4 : 2;
+  // Repeat items to form a rich scrollable track
+  const repeatCount = photos.length < 6 ? 6 : 3;
   const marqueeList = [];
   for (let i = 0; i < repeatCount; i++) {
     marqueeList.push(...photos);
   }
 
-  const cardWidth = 190;
-  const gap = 24;
-  const itemWidth = cardWidth + gap; // 214px
-  const totalItems = marqueeList.length;
-  const pixelsPerSecond = 35; // Constant speed
-  const duration = (totalItems * itemWidth / 2) / pixelsPerSecond;
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - containerRef.current.offsetLeft);
+    setScrollLeft(containerRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.8; // Speed multiplier for dragging
+    containerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  useEffect(() => {
+    let animationFrameId;
+    const scroll = () => {
+      if (containerRef.current && !isDragging) {
+        containerRef.current.scrollLeft += 0.8;
+        // Seamless loop reset when reaching near the end
+        if (containerRef.current.scrollLeft >= (containerRef.current.scrollWidth - containerRef.current.clientWidth) - 10) {
+          containerRef.current.scrollLeft = 0;
+        }
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+    animationFrameId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isDragging]);
 
   return (
     <div className="home-carousel-container" style={{ overflow: 'hidden', width: '100%', padding: '20px 0', position: 'relative' }}>
       <style>{`
-        @keyframes homeMarquee {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
         .home-carousel-container::before {
           content: '';
           position: absolute;
           top: 0;
           left: 0;
-          width: 150px;
+          width: 120px;
           height: 100%;
           background: linear-gradient(to right, #f3f4f6 15%, rgba(255, 255, 255, 0) 100%);
           z-index: 3;
@@ -56,7 +84,7 @@ const HomeAthleteCarousel = ({ photos }) => {
           position: absolute;
           top: 0;
           right: 0;
-          width: 150px;
+          width: 120px;
           height: 100%;
           background: linear-gradient(to left, #f3f4f6 15%, rgba(255, 255, 255, 0) 100%);
           z-index: 3;
@@ -64,35 +92,39 @@ const HomeAthleteCarousel = ({ photos }) => {
         }
         .home-marquee-track {
           display: flex;
-          width: max-content;
           gap: 24px;
-          animation: homeMarquee linear infinite;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 10px 0;
+          user-select: none;
         }
-        .home-marquee-track:hover {
-          animation-play-state: paused;
+        .home-marquee-track::-webkit-scrollbar {
+          display: none;
         }
         .home-athlete-card {
-          width: 190px;
-          height: 250px;
+          width: 200px;
+          height: 260px;
           background: #f3f4f6;
           border: 1px solid var(--border);
-          border-radius: 16px;
+          border-radius: 18px;
           overflow: hidden;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
           position: relative;
-          transition: all 0.3s ease;
+          transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
           flex-shrink: 0;
         }
         .home-athlete-card:hover {
           transform: translateY(-6px);
           border-color: var(--primary);
-          box-shadow: 0 16px 35px rgba(31, 117, 245, 0.15);
+          box-shadow: 0 16px 35px rgba(31, 117, 245, 0.18);
         }
         .home-athlete-card-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           transition: transform 0.5s ease;
+          pointer-events: none;
         }
         .home-athlete-card:hover .home-athlete-card-img {
           transform: scale(1.06);
@@ -107,10 +139,19 @@ const HomeAthleteCarousel = ({ photos }) => {
           color: #ffffff;
           text-align: center;
           z-index: 2;
+          pointer-events: none;
         }
       `}</style>
 
-      <div className="home-marquee-track" style={{ animationDuration: `${duration}s` }}>
+      <div
+        ref={containerRef}
+        className="home-marquee-track"
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
         {marqueeList.map((photo, idx) => {
           const url = typeof photo === 'string' ? photo : (photo.url || '');
           const fullname = typeof photo === 'string' ? '' : (photo.fullname || '');
@@ -123,7 +164,7 @@ const HomeAthleteCarousel = ({ photos }) => {
               />
               {fullname && (
                 <div className="home-athlete-card-overlay">
-                  <h5 style={{ margin: 0, fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <h5 style={{ margin: 0, fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {fullname}
                   </h5>
                 </div>
@@ -280,21 +321,32 @@ const Home = () => {
           zIndex: 2,
           color: '#ffffff',
           textAlign: 'left',
-          maxWidth: '850px',
+          maxWidth: '700px',
           padding: '0 20px',
-          marginLeft: '10%',
+          marginLeft: '7%',
         }}>
           <h1 style={{
-            fontSize: '32px',
-            lineHeight: '1.5',
+            fontSize: '38px',
+            lineHeight: '1.25',
             fontWeight: '900',
-            marginBottom: '36px',
+            marginBottom: '20px',
             fontFamily: 'var(--font-sans)',
             textTransform: 'uppercase',
-            letterSpacing: '1px'
+            letterSpacing: '0.5px'
           }}>
-            Entrenamiento inteligente para atletas y preparadores físicos que quieren ir más lejos. Porque detrás de cada resultado hay un sistema, un equipo y un compromiso genuino con tu proceso, sin importar dónde estés.
+            Detrás de cada resultado hay un sistema, un equipo y un compromiso genuino con tu proceso, sin importar dónde estés.
           </h1>
+
+          <p style={{
+            fontSize: '19px',
+            lineHeight: '1.6',
+            fontWeight: '600',
+            color: '#e2e8f0',
+            marginBottom: '36px',
+            fontFamily: 'var(--font-sans)'
+          }}>
+            Un entrenamiento inteligente para atletas y preparadores físicos que quieren ir más lejos.
+          </p>
 
           <button
             onClick={scrollToServices}
@@ -453,19 +505,20 @@ const Home = () => {
                         style={{
                           flex: '1 1 500px',
                           opacity: isHovered ? 1 : 0,
-                          maxHeight: isHovered ? '250px' : '0px',
+                          maxHeight: isHovered ? '450px' : '0px',
                           overflow: 'hidden',
                           transition: 'opacity 0.4s ease 0.1s, maxHeight 0.4s ease',
                           pointerEvents: isHovered ? 'auto' : 'none',
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '12px'
+                          gap: '16px'
                         }}
                       >
                         <p style={{
-                          fontSize: '14px',
-                          lineHeight: '2.5',
-                          color: 'rgba(255,255,255,0.9)',
+                          fontSize: '17px',
+                          lineHeight: '1.65',
+                          fontWeight: '600',
+                          color: '#ffffff',
                           margin: 0
                         }}>
                           {service.desc}

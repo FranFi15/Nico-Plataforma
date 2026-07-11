@@ -1,6 +1,14 @@
 import Content from '../models/contentModel.js';
 import User from '../models/userModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+import axios from 'axios';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // @desc    Get all content
 // @route   GET /api/content
@@ -38,7 +46,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, videoFolder, videoLink } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -60,8 +68,14 @@ export const createContent = async (req, res, next) => {
       publishDate: publishDate || undefined,
       category: category || undefined,
       body: body || '',
+      isPublished: isPublished !== undefined ? isPublished : (status !== 'draft'),
+      status: status || (isPublished === false ? 'draft' : 'published'),
       videoFolder: videoFolder || undefined,
       videoLink: videoLink || '',
+      attachments: attachments || [],
+      modules: modules || [],
+      certificate: certificate !== undefined ? certificate : true,
+      duration: duration || '',
     });
 
     res.status(201).json({
@@ -164,7 +178,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, videoFolder, videoLink } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -185,8 +199,22 @@ export const updateContent = async (req, res, next) => {
     content.publishDate = publishDate !== undefined ? publishDate : content.publishDate;
     content.category = category !== undefined ? (category === '' ? undefined : category) : content.category;
     content.body = body !== undefined ? body : content.body;
+    content.isPublished = isPublished !== undefined ? isPublished : (status !== undefined ? status !== 'draft' : content.isPublished);
+    content.status = status !== undefined ? status : (isPublished !== undefined ? (isPublished ? 'published' : 'draft') : content.status);
     content.videoFolder = videoFolder !== undefined ? (videoFolder === '' ? undefined : videoFolder) : content.videoFolder;
     content.videoLink = videoLink !== undefined ? videoLink : content.videoLink;
+    if (attachments !== undefined) {
+      content.attachments = attachments;
+    }
+    if (modules !== undefined) {
+      content.modules = modules;
+    }
+    if (certificate !== undefined) {
+      content.certificate = certificate;
+    }
+    if (duration !== undefined) {
+      content.duration = duration;
+    }
 
     const updatedContent = await content.save();
 
@@ -217,6 +245,135 @@ export const deleteContent = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Contenido eliminado con éxito',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create new review
+// @route   POST /api/content/:id/reviews
+// @access  Private
+export const createContentReview = async (req, res, next) => {
+  try {
+    const { rating, comment, profession } = req.body;
+
+    const content = await Content.findById(req.params.id);
+
+    if (!content) {
+      res.status(404);
+      throw new Error('Contenido no encontrado');
+    }
+
+    // Update user profession if provided
+    let userProfession = profession || req.user.profession || '';
+    if (profession !== undefined && profession !== req.user.profession) {
+      await User.findByIdAndUpdate(req.user._id, { profession });
+    }
+
+    const review = {
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+      profession: userProfession,
+      user: req.user._id,
+    };
+
+    content.reviews.push(review);
+    content.numReviews = content.reviews.length;
+    content.rating =
+      content.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      content.reviews.length;
+
+    await content.save();
+    res.status(201).json({ success: true, message: 'Reseña agregada con éxito', data: content });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Upload file/video/PDF for content (blogs/courses)
+// @route   POST /api/content/upload-file
+// @access  Private/Admin
+export const uploadContentFile = async (req, res, next) => {
+  try {
+    const { file, filename, fileType } = req.body;
+
+    if (!file) {
+      res.status(400);
+      throw new Error('Por favor, proporcione el archivo en formato base64');
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    const ext = filename ? (filename.split('.').pop() || 'file').toLowerCase().replace(/[^a-z0-9]/g, '') : 'file';
+    const cleanName = filename ? filename.replace(/[^a-zA-Z0-9.\-_]/g, '_') : `archivo_${Date.now()}.${ext}`;
+    const uniqueFilename = `blog_${Date.now()}_${cleanName}`;
+
+    // 1. Try Cloudinary if Production SDK is configured
+    if (cloudName && apiKey && apiSecret) {
+      cloudinary.config({
+        cloud_name: cloudName,
+        api_key: apiKey,
+        api_secret: apiSecret,
+      });
+
+      try {
+        const resourceType = ext === 'mp4' || ext === 'webm' || ext === 'mov' || ext === 'avi' ? 'video' : 'raw';
+        const uploadRes = await cloudinary.uploader.upload(file, {
+          resource_type: resourceType,
+          type: 'upload',
+          access_mode: 'public',
+          chunk_size: 6000000,
+          folder: 'blog_attachments',
+          filename_override: uniqueFilename,
+          use_filename: true,
+          unique_filename: true,
+        });
+
+        if (uploadRes && uploadRes.secure_url) {
+          return res.status(200).json({
+            success: true,
+            url: uploadRes.secure_url,
+            filename: cleanName,
+            fileType: ext,
+          });
+        }
+      } catch (cloudErr) {
+        console.warn('Cloudinary upload falló, guardando en servidor local:', cloudErr.message);
+      }
+    }
+
+    // 2. Local Disk Storage (Always works as robust fallback or local dev)
+    const base64Data = file.replace(/^data:.*?;base64,/, '');
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+
+    const backendUploadsDir = path.join(__dirname, '../public/uploads');
+    if (!fs.existsSync(backendUploadsDir)) {
+      fs.mkdirSync(backendUploadsDir, { recursive: true });
+    }
+    const backendFilePath = path.join(backendUploadsDir, uniqueFilename);
+    await fs.promises.writeFile(backendFilePath, fileBuffer);
+
+    try {
+      const frontendUploadsDir = path.join(__dirname, '../../frontend/public/uploads');
+      if (!fs.existsSync(frontendUploadsDir)) {
+        fs.mkdirSync(frontendUploadsDir, { recursive: true });
+      }
+      await fs.promises.writeFile(path.join(frontendUploadsDir, uniqueFilename), fileBuffer);
+    } catch (feErr) {
+      // Ignore if frontend directory not reachable in production
+    }
+
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${uniqueFilename}`;
+
+    res.status(200).json({
+      success: true,
+      url: fileUrl,
+      filename: cleanName,
+      fileType: ext,
     });
   } catch (error) {
     next(error);

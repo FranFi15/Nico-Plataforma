@@ -5,14 +5,20 @@ const categorySchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Por favor, añade un nombre de categoría'],
-      unique: true,
       trim: true,
+    },
+    type: {
+      type: String,
+      enum: ['blog', 'course', 'general'],
+      default: 'general',
     },
   },
   {
     timestamps: true,
   }
 );
+
+categorySchema.index({ name: 1, type: 1 }, { unique: true });
 
 const Category = mongoose.model('Category', categorySchema);
 

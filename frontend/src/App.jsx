@@ -8,6 +8,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import CapacitacionesHub from './pages/CapacitacionesHub';
 import Cursos from './pages/Cursos';
 import Workshops from './pages/Workshops';
+import CursoDetail from './pages/CursoDetail';
 import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import Videoteca from './pages/Videoteca';
@@ -42,7 +43,9 @@ function App() {
           <Route path="nico-sesma-dashboard-privado" element={<AdminTraining />} />
           <Route path="nico-sesma-alumnos" element={<MisAlumnos />} />
           <Route path="cursos" element={<Cursos />} />
+          <Route path="cursos/:id" element={<CursoDetail />} />
           <Route path="workshops" element={<Workshops />} />
+          <Route path="workshops/:id" element={<CursoDetail />} />
           <Route path="blogs" element={<Blogs />} />
           <Route path="blogs/:id" element={<BlogDetail />} />
           <Route path="videoteca" element={<Videoteca />} />

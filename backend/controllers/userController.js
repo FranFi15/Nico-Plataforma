@@ -1,17 +1,18 @@
 import User from '../models/userModel.js';
 
-// @desc    Get all students
+// @desc    Get all users (students, professors, admins)
 // @route   GET /api/users
 // @access  Private/Admin
 export const getUsers = async (req, res, next) => {
   try {
-    const students = await User.find({ role: 'student' })
+    const students = await User.find()
       .select('-password')
-      .populate('purchasedItems');
+      .populate('purchasedItems')
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      message: 'Alumnos recuperados con éxito',
+      message: 'Usuarios recuperados con éxito',
       data: students
     });
   } catch (error) {
@@ -35,6 +36,32 @@ export const createUser = async (req, res, next) => {
       success: true,
       message: 'Usuario creado con éxito',
       data: { name, email }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user role
+// @route   PUT /api/users/:id/role
+// @access  Private/Admin
+export const updateUserRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+
+    if (role) user.role = role;
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Rol de usuario actualizado con éxito',
+      data: updatedUser
     });
   } catch (error) {
     next(error);

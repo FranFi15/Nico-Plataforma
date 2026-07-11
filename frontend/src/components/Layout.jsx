@@ -79,17 +79,13 @@ const Layout = () => {
         }
       `}</style>
       {/* Navbar */}
-      <nav className="glass-nav" style={{ padding: '0px 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <nav className="glass-nav navbar-main">
+        <div className="navbar-left">
           <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src={logoImg}
               alt="Nico Sesma Logo"
-              style={{
-                height: '100px',
-                objectFit: 'cover',
-                display: 'block'
-              }}
+              className="navbar-logo-img"
             />
           </Link>
           <div className="nav-sponsors-desktop">

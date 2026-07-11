@@ -4,17 +4,38 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import Youtube from '@tiptap/extension-youtube';
+import Link from '@tiptap/extension-link';
 import api from '../services/api';
+import {
+  IoArrowUndoOutline,
+  IoArrowRedoOutline,
+  IoListOutline,
+  IoCodeSlashOutline,
+  IoLinkOutline,
+  IoUnlinkOutline,
+  IoLogoYoutube,
+  IoImageOutline,
+  IoChatboxEllipsesOutline,
+  IoDocumentAttachOutline
+} from 'react-icons/io5';
 
 const TiptapEditor = ({ content, onChange }) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // StarterKit includes blockquote, bulletList, orderedList, bold, italic, strike, heading etc.
+        // StarterKit includes blockquote, bulletList, orderedList, bold, italic, strike, heading, codeBlock etc.
       }),
       Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'tiptap-link',
+          style: 'color: #1f75f5ff; text-decoration: underline; font-weight: 600;'
+        }
+      }),
       Image.configure({
         HTMLAttributes: {
           class: 'tiptap-image',
@@ -75,6 +96,63 @@ const TiptapEditor = ({ content, onChange }) => {
     }
   };
 
+  // Handle local PDF / Video / File upload and insert into Tiptap editor
+  const handleLocalFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const base64String = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+      const res = await api.post('/content/upload-file', {
+        file: base64String,
+        filename: file.name,
+        fileType: file.type
+      });
+
+      if (res.data && res.data.url) {
+        const fileUrl = res.data.url;
+        const ext = (file.name.split('.').pop() || 'file').toLowerCase();
+        const isVideo = file.type.startsWith('video/') || ['mp4', 'webm', 'mov', 'avi'].includes(ext);
+
+        if (isVideo) {
+          editor.chain().focus().insertContent(`
+            <div style="margin: 24px 0;">
+              <video controls src="${fileUrl}" style="width: 100%; max-height: 520px; border-radius: 16px; background: #000; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.15);"></video>
+            </div>
+            <p></p>
+          `).run();
+        } else {
+          const fileIcon = ext === 'pdf' ? '📄' : (['zip', 'rar'].includes(ext) ? '📦' : '📎');
+          editor.chain().focus().insertContent(`
+            <div style="margin: 24px 0;">
+              <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="blog-file-download-card" style="display: flex; align-items: center; gap: 16px; padding: 18px 24px; background-color: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; text-decoration: none; color: #0f172a; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <span style="font-size: 32px; flex-shrink: 0;">${fileIcon}</span>
+                <div style="flex: 1; text-align: left;">
+                  <strong style="display: block; font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">Descargar Archivo Adjunto: ${file.name}</strong>
+                  <span style="font-size: 13px; color: #64748b; font-weight: 600;">Haz clic aquí para ver o descargar (${ext.toUpperCase()})</span>
+                </div>
+              </a>
+            </div>
+            <p></p>
+          `).run();
+        }
+      }
+    } catch (err) {
+      console.error('Error uploading file in Tiptap:', err);
+      alert('Error al subir el archivo/PDF/video.');
+    } finally {
+      setUploadingFile(false);
+      e.target.value = '';
+    }
+  };
+
   const handleInsertYoutube = () => {
     const url = window.prompt('Introduce el enlace del video de YouTube (o Short):');
     if (!url) return;
@@ -84,6 +162,19 @@ const TiptapEditor = ({ content, onChange }) => {
       width: 640,
       height: 360,
     });
+  };
+
+  const handleSetLink = () => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('Introduce la URL del enlace:', previousUrl || 'https://');
+    if (url === null) {
+      return; // Cancelled
+    }
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
   // Menu Button helper
@@ -133,28 +224,32 @@ const TiptapEditor = ({ content, onChange }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      {/* Editor Toolbar */}
+      {/* Editor Toolbar (Sticky so it follows you when scrolling down) */}
       <div style={{
+        position: 'sticky',
+        top: '16px',
+        zIndex: 100,
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
         padding: '12px 16px',
         border: '1px solid #cbd5e1',
-        borderBottom: 'none',
+        borderBottom: '2px solid #94a3b8',
         borderTopLeftRadius: '12px',
         borderTopRightRadius: '12px',
         backgroundColor: '#f8fafc',
+        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
         flexWrap: 'wrap'
       }}>
         {/* Undo / Redo */}
         <ToolbarButton
-          label="↶"
+          label={<IoArrowUndoOutline size={16} />}
           title="Deshacer (Ctrl+Z)"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
         />
         <ToolbarButton
-          label="↷"
+          label={<IoArrowRedoOutline size={16} />}
           title="Rehacer (Ctrl+Y)"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
@@ -218,34 +313,57 @@ const TiptapEditor = ({ content, onChange }) => {
 
         {/* Lists & Blocks */}
         <ToolbarButton
-          label="• Lista"
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoListOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Viñetas</span></div>}
           title="Lista con Viñetas"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
         />
         <ToolbarButton
-          label="1. Lista"
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ fontWeight: '900', fontSize: '12px' }}>1.</span><span style={{ fontSize: '11px', fontWeight: '700' }}>Numerada</span></div>}
           title="Lista Numerada"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
         />
         <ToolbarButton
-          label="“ Cita"
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoChatboxEllipsesOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Cita</span></div>}
           title="Bloque de Cita"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
         />
+        <ToolbarButton
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoCodeSlashOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Código</span></div>}
+          title="Bloque de Código (Codeblock)"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          active={editor.isActive('codeBlock')}
+        />
+
+        <div style={{ width: '1px', height: '20px', backgroundColor: '#d1d5db', margin: '0 4px' }} />
+
+        {/* Links */}
+        <ToolbarButton
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoLinkOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Enlace</span></div>}
+          title="Añadir Enlace"
+          onClick={handleSetLink}
+          active={editor.isActive('link')}
+        />
+        {editor.isActive('link') && (
+          <ToolbarButton
+            label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoUnlinkOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Quitar</span></div>}
+            title="Eliminar Enlace"
+            onClick={() => editor.chain().focus().unsetLink().run()}
+          />
+        )}
 
         <div style={{ width: '1px', height: '20px', backgroundColor: '#d1d5db', margin: '0 4px' }} />
 
         {/* Media Inserts */}
         <ToolbarButton
-          label="📺 Video"
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoLogoYoutube size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>Video</span></div>}
           title="Insertar Video de YouTube"
           onClick={handleInsertYoutube}
         />
         <ToolbarButton
-          label={uploading ? 'Subiendo...' : '📷 Imagen'}
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoImageOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>{uploading ? 'Subiendo...' : 'Imagen'}</span></div>}
           title="Subir e Insertar Imagen"
           onClick={() => document.getElementById('tiptap-image-upload').click()}
           disabled={uploading}
@@ -255,6 +373,20 @@ const TiptapEditor = ({ content, onChange }) => {
           type="file"
           accept="image/png, image/jpeg, image/jpg, image/webp"
           onChange={handleLocalImageUpload}
+          style={{ display: 'none' }}
+        />
+
+        <ToolbarButton
+          label={<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><IoDocumentAttachOutline size={16} /><span style={{ fontSize: '11px', fontWeight: '700' }}>{uploadingFile ? 'Subiendo...' : 'Archivo / Video'}</span></div>}
+          title="Subir e Insertar Archivo PDF, Video o Documento"
+          onClick={() => document.getElementById('tiptap-file-upload').click()}
+          disabled={uploadingFile}
+        />
+        <input
+          id="tiptap-file-upload"
+          type="file"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.mp4,.webm,.mov,.avi"
+          onChange={handleLocalFileUpload}
           style={{ display: 'none' }}
         />
       </div>
@@ -356,6 +488,41 @@ const TiptapEditor = ({ content, onChange }) => {
           border: 1px solid #cbd5e1;
           margin: 24px 0;
           display: block;
+        }
+
+        .tiptap-editor-container .ProseMirror pre {
+          background: #0f172a;
+          color: #f8fafc;
+          font-family: 'Courier New', Courier, monospace;
+          padding: 16px 20px;
+          border-radius: 12px;
+          overflow-x: auto;
+          margin: 16px 0;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        .tiptap-editor-container .ProseMirror pre code {
+          color: inherit;
+          padding: 0;
+          background: none;
+          font-size: inherit;
+        }
+
+        .tiptap-editor-container .ProseMirror code {
+          background: #e2e8f0;
+          color: #be185d;
+          padding: 3px 6px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: 'Courier New', Courier, monospace;
+        }
+
+        .tiptap-editor-container .ProseMirror a {
+          color: #1f75f5ff;
+          text-decoration: underline;
+          font-weight: 600;
+          cursor: pointer;
         }
       `}</style>
     </div>
