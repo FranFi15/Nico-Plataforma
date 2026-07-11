@@ -289,6 +289,7 @@ const BlogDetail = () => {
             </button>
           </div>
         </div>
+      ) : (
         <>
           <article
             className="article-body"
