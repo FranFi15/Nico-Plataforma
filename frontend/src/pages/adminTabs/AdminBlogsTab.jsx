@@ -19,6 +19,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
   const [cAccessType, setCAccessType] = useState('free');
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
+  const [cMemberDiscountPercentage, setCMemberDiscountPercentage] = useState(0);
   const [cCardImage, setCCardImage] = useState('');
   const [cCardImagePosition, setCCardImagePosition] = useState('50%');
   const [cPublishDate, setCPublishDate] = useState(new Date().toISOString().split('T')[0]);
@@ -78,6 +79,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType('free');
     setCPriceUsd(0);
     setCPriceArs(0);
+    setCMemberDiscountPercentage(0);
     setCCardImage('');
     setCCardImagePosition('50%');
     setCPublishDate(new Date().toISOString().split('T')[0]);
@@ -98,6 +100,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType(item.accessType || 'free');
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
+    setCMemberDiscountPercentage(item.memberDiscountPercentage || 0);
     setCCardImage(item.cardImage || '');
     setCCardImagePosition(item.cardImagePosition || '50%');
     setCBody(item.body || '');
@@ -310,6 +313,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
         priceUsd: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
         priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
         price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
+        memberDiscountPercentage: cAccessType === 'one-time-purchase' ? Number(cMemberDiscountPercentage) : 0,
         cardImage: cCardImage,
         cardImagePosition: cCardImagePosition,
         body: cBody,
@@ -501,16 +505,16 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                     value={cAccessType}
                     onChange={(e) => setCAccessType(e.target.value)}
                   >
-                    <option value="free">Acceso Gratuito (Público)</option>
+                    <option value="free">Acceso Libre (Público)</option>
                     <option value="subscription">Membresía Premium (Suscritos)</option>
                     <option value="one-time-purchase">Pago Único (Compra Directa)</option>
                   </select>
                 </div>
 
                 {cAccessType === 'one-time-purchase' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="form-group">
-                      <label className="form-label">Precio en Dólares (USD) *</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe', marginBottom: '16px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Precio (USD) *</label>
                       <input
                         type="number"
                         className="premium-input"
@@ -522,8 +526,8 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                         required
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Precio en Pesos (ARS) *</label>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Precio (ARS) *</label>
                       <input
                         type="number"
                         className="premium-input"
@@ -532,6 +536,20 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                         value={cPriceArs}
                         onChange={(e) => setCPriceArs(e.target.value)}
                         required
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        className="premium-input"
+                        value={cMemberDiscountPercentage}
+                        onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                        placeholder="Ej. 20 (20% OFF)"
+                        style={{ border: '1.5px solid #3b82f6' }}
                       />
                     </div>
                   </div>
@@ -905,7 +923,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
               style={{ height: '40px', fontSize: '13px', backgroundColor: '#ffffff', cursor: 'pointer', padding: '8px 12px' }}
             >
               <option value="all">Todos los accesos</option>
-              <option value="free">Acceso Gratuito</option>
+              <option value="free">Acceso Libre</option>
               <option value="subscription">Membresía Premium</option>
               <option value="one-time-purchase">Pago Único</option>
             </select>
@@ -955,7 +973,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                     )}
                   </h4>
                   <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Gratuito' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
+                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Acceso Libre' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
                     {c.category && ` • Categoría: ${typeof c.category === 'object' ? c.category.name : categories.find(cat => cat._id === c.category)?.name || 'General'}`}
                     {c.publishDate && ` • Publicado: ${new Date(c.publishDate).toLocaleDateString('es-ES')}`}
                   </p>

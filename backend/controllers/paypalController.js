@@ -2,6 +2,7 @@ import axios from 'axios';
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
+import Coupon from '../models/couponModel.js';
 
 // Retrieve access token from PayPal using basic auth credentials
 const getPayPalAccessToken = async () => {
@@ -98,7 +99,7 @@ export const subscribePayPal = async (req, res, next) => {
 // @access  Private
 export const checkoutPayPal = async (req, res, next) => {
   try {
-    const { contentId } = req.body;
+    const { contentId, couponCode } = req.body;
 
     if (!contentId) {
       res.status(400);
@@ -116,8 +117,21 @@ export const checkoutPayPal = async (req, res, next) => {
       throw new Error('Este contenido no requiere un pago único');
     }
 
+    let couponDiscount = 0;
+    if (couponCode) {
+      const uppercaseCode = couponCode.toUpperCase().trim();
+      const coupon = await Coupon.findOne({ code: uppercaseCode, active: true });
+      if (coupon) {
+        if (coupon.applyToAll || (coupon.applicableCourses && coupon.applicableCourses.some(id => id.toString() === contentId.toString()))) {
+          couponDiscount = coupon.discountPercentage || 0;
+          coupon.usedCount = (coupon.usedCount || 0) + 1;
+          await coupon.save();
+        }
+      }
+    }
+
     // Calculate final price with dynamic discounts helper
-    const finalPrice = calculatePrice(req.user, content, 'USD');
+    const finalPrice = calculatePrice(req.user, content, 'USD', couponDiscount);
 
     const accessToken = await getPayPalAccessToken();
     const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';

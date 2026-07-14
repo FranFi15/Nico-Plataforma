@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoArrowBack, IoStatsChart, IoShieldCheckmark, IoDocumentText, IoDownloadOutline } from 'react-icons/io5';
+import { IoArrowBack, IoStatsChart, IoShieldCheckmark, IoDocumentText, IoDownloadOutline, IoChevronDownOutline } from 'react-icons/io5';
 import tobilloImg from '../assets/tobillo.webp';
 import hombroImg from '../assets/hombro.webp';
 import imtpImg from '../assets/imtp.webp';
@@ -9,8 +9,52 @@ import saltoImg from '../assets/salto.webp';
 import sprintImg from '../assets/sprint.webp';
 import api from '../services/api';
 
+const ACCENT_COLORS = [
+  '#1f75f5', // primary blue
+  '#0284c7', // sky blue
+  '#2563eb', // royal blue
+  '#0d9488', // teal
+  '#1e40af', // deep blue
+  '#4f46e5', // indigo
+];
+
+const FEATURES = [
+  {
+    title: 'Rango Óptimo de Movimiento',
+    description: 'Dorsiflexión de tobillo • Elevación de pierna recta',
+    image: tobilloImg
+  },
+  {
+    title: 'Fuerza y Estabilidad de Hombro',
+    description: 'Test ASH (Athletic Shoulder Test) • Prensa de brazos con flexión a 90°',
+    image: hombroImg
+  },
+  {
+    title: 'Fuerza Isométrica Multiarticular',
+    description: 'IMTP (Mid-Thigh Pull) para evaluar la máxima fuerza de tracción del tren inferior y espalda.',
+    image: imtpImg
+  },
+  {
+    title: 'Rodilla & Fuerza Máxima Isométrica',
+    description: 'Flexión de rodilla en decúbito prono a 90° • Extensión de rodilla en sedestación a 90° • RATIO IQ (Isquiotibiales y Cuádriceps)',
+    image: rodillaImg
+  },
+  {
+    title: 'Fuerza Reactiva & Explosiva',
+    description: 'CMJ (Salto con contramovimiento) • ABK — Abalakov Jump (Salto con Brazos) • Drop Jump — RSI',
+    image: saltoImg
+  },
+  {
+    title: 'Test de Sprint 20m / 30m (K-Power)',
+    description: 'Tiempos por sector con fotocélulas de precisión (Splits: 10m, 20m, 30m • Vmax • F0 • V0)',
+    image: sprintImg
+  }
+];
+
 const EvaluacionesColectivo = () => {
   const navigate = useNavigate();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [openDropdowns, setOpenDropdowns] = useState({ porQue: false, kinvent: false });
   const [evalConfig, setEvalConfig] = useState({
     colectivoPdfUrl: '/Evaluaciones_Kinvent.pdf',
     colectivoFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform'
@@ -33,7 +77,7 @@ const EvaluacionesColectivo = () => {
 
   const handleDownload = async (url, defaultFilename) => {
     if (!url) return;
-    
+
     // If it's a simple local static asset (/something.pdf not in /uploads), download directly
     if (url.startsWith('/') && !url.startsWith('//') && !url.includes('/uploads/')) {
       const a = document.createElement('a');
@@ -49,10 +93,10 @@ const EvaluacionesColectivo = () => {
       setIsDownloading(true);
       const downloadEndpoint = `/evaluations/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(defaultFilename || 'Evaluaciones_Deportes_Equipo.pdf')}`;
       const response = await api.get(downloadEndpoint, { responseType: 'blob' });
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = defaultFilename || 'Evaluaciones_Deportes_Equipo.pdf';
@@ -120,88 +164,84 @@ const EvaluacionesColectivo = () => {
         </a>
       </header>
 
-      {/* Intro Section - Vertical Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', margin: '40px auto 60px auto', maxWidth: '1000px' }}>
+      {/* Intro Section - Animated Dropdowns */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', margin: '40px auto 60px auto', maxWidth: '1240px' }}>
 
         {/* Card 1: ¿Por qué evaluar a tu plantel? */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--border)',
-          borderRadius: '24px',
-          padding: '40px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <h3 style={{
-              fontSize: '26px',
-              fontWeight: '900',
-              color: 'var(--dark)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              marginBottom: '16px'
-            }}>
+        <div className={`intro-dropdown${openDropdowns.porQue ? ' open' : ''}`}>
+          <button
+            type="button"
+            className="intro-dropdown__header"
+            onClick={() => setOpenDropdowns(prev => ({ ...prev, porQue: !prev.porQue }))}
+            aria-expanded={openDropdowns.porQue}
+          >
+            <h3 className="intro-dropdown__title">
               ¿Por qué evaluar a tu plantel?
             </h3>
-            <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '16px' }}>
-              Como preparador físico o entrenador, tomamos decisiones de entrenamiento todos los días. Pero ¿cuántas de esas decisiones están respaldadas por datos objetivos y cuántas por observación o intuición?
-            </p>
-            <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '24px' }}>
-              Sin una evaluación del plantel, no sabemos cuáles son los jugadores con mayor riesgo de lesión, cuáles tienen déficits de fuerza que limitan su rendimiento en cancha, o al mismo tiempo dónde hacer foco para potenciar sus cualidades.
-            </p>
-          </div>
-          <div style={{
-            background: 'var(--light)',
-            borderLeft: '4px solid var(--primary)',
-            padding: '18px 20px',
-            borderRadius: '0 12px 12px 0'
-          }}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--dark)', margin: 0, fontStyle: 'italic' }}>
-              «Eso no es solo información. Es la base de un programa de entrenamiento eficaz.»
-            </p>
+            <div className="intro-dropdown__chevron">
+              <IoChevronDownOutline size={22} />
+            </div>
+          </button>
+          <div className="intro-dropdown__content">
+            <div className="intro-dropdown__inner">
+              <div className="intro-dropdown__body">
+                <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '16px', marginTop: 0 }}>
+                  Como preparador físico o entrenador, tomamos decisiones de entrenamiento todos los días. Pero ¿cuántas de esas decisiones están respaldadas por datos objetivos y cuántas por observación o intuición?
+                </p>
+                <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '24px' }}>
+                  Sin una evaluación del plantel, no sabemos cuáles son los jugadores con mayor riesgo de lesión, cuáles tienen déficits de fuerza que limitan su rendimiento en cancha, o al mismo tiempo dónde hacer foco para potenciar sus cualidades.
+                </p>
+                <div style={{
+                  background: 'var(--light)',
+                  borderLeft: '4px solid var(--primary)',
+                  padding: '18px 20px',
+                  borderRadius: '0 12px 12px 0'
+                }}>
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--dark)', margin: 0, fontStyle: 'italic' }}>
+                    «Eso no es solo información. Es la base de un programa de entrenamiento eficaz.»
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Card 2: Tecnología Kinvent & Rol */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--border)',
-          borderRadius: '24px',
-          padding: '40px',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.03)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <h3 style={{
-              fontSize: '26px',
-              fontWeight: '900',
-              color: 'var(--dark)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              marginBottom: '16px'
-            }}>
+        <div className={`intro-dropdown${openDropdowns.kinvent ? ' open' : ''}`}>
+          <button
+            type="button"
+            className="intro-dropdown__header"
+            onClick={() => setOpenDropdowns(prev => ({ ...prev, kinvent: !prev.kinvent }))}
+            aria-expanded={openDropdowns.kinvent}
+          >
+            <h3 className="intro-dropdown__title">
               Tecnología Kinvent
             </h3>
-            <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '16px' }}>
-              Todas las evaluaciones se realizan con sensores <strong>Kinvent Biomecanique</strong>, empresa presente en más de 80 países, utilizada por más de 6.000 profesionales del rendimiento y la salud, y con más de 213.000 atletas evaluados en todo el mundo.
-            </p>
-            <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '24px' }}>
-              En el contexto de un equipo deportivo, permite evaluar un plantel completo en una sola jornada, obtener resultados en tiempo real y generar un informe grupal comparativo que ordena a los jugadores por nivel de rendimiento en cada capacidad.
-            </p>
-          </div>
-          <div style={{
-            background: 'var(--light)',
-            borderLeft: '4px solid var(--dark)',
-            padding: '18px 20px',
-            borderRadius: '0 12px 12px 0'
-          }}>
-            <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gray-600)', margin: 0 }}>
-              Garantía de tecnología validada científicamente, feedback técnico de primer nivel y resultados comparables con estándares del deporte de alto rendimiento.
-            </p>
+            <div className="intro-dropdown__chevron">
+              <IoChevronDownOutline size={22} />
+            </div>
+          </button>
+          <div className="intro-dropdown__content">
+            <div className="intro-dropdown__inner">
+              <div className="intro-dropdown__body">
+                <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '16px', marginTop: 0 }}>
+                  Todas las evaluaciones se realizan con sensores <strong>Kinvent Biomecanique</strong>, empresa presente en más de 80 países, utilizada por más de 6.000 profesionales del rendimiento y la salud, y con más de 213.000 atletas evaluados en todo el mundo.
+                </p>
+                <p style={{ fontSize: '16px', lineHeight: '1.7', color: '#4b5563', marginBottom: '24px' }}>
+                  En el contexto de un equipo deportivo, permite evaluar un plantel completo en una sola jornada, obtener resultados en tiempo real y generar un informe grupal comparativo que ordena a los jugadores por nivel de rendimiento en cada capacidad.
+                </p>
+                <div style={{
+                  background: 'var(--light)',
+                  borderLeft: '4px solid var(--dark)',
+                  padding: '18px 20px',
+                  borderRadius: '0 12px 12px 0'
+                }}>
+                  <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gray-600)', margin: 0 }}>
+                    Garantía de tecnología validada científicamente, feedback técnico de primer nivel y resultados comparables con estándares del deporte de alto rendimiento.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -209,7 +249,7 @@ const EvaluacionesColectivo = () => {
 
       {/* Batería de Evaluaciones Section Header */}
       <header style={{ textAlign: 'center', padding: '20px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h2 className="premium-title" style={{ fontSize: 'px' }}>
+        <h2 className="premium-title" >
           Batería de Evaluaciones
         </h2>
         <div className="accent-divider"></div>
@@ -218,150 +258,40 @@ const EvaluacionesColectivo = () => {
         </p>
       </header>
 
-      {/* Batería de Evaluaciones (Formato de Lista Limpia sin Checks ni Numeración) */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid var(--border)',
-        borderRadius: '24px',
-        padding: '50px',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.03)',
-        marginTop: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '40px',
-        maxWidth: '1000px',
-        margin: '20px auto 0 auto'
-      }}>
+      {/* Batería de Evaluaciones (Estilo Tarjetas Expandibles Accordion) */}
+      <div className="features-accordion" role="tablist" aria-label="Batería de Evaluaciones" style={{ marginTop: '30px' }}>
+        {FEATURES.map((feature, index) => {
+          const isActive = activeIndex === index;
 
-        {/* 1. Rango Óptimo de Movimiento (Texto Izq, Imagen Der) */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Rango Óptimo de Movimiento (K-Move)
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Dorsiflexión de tobillo
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Elevación de pierna recta
-              </li>
-            </ul>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={tobilloImg} alt="Rango Óptimo de Movimiento" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Fuerza y Estabilidad de Hombro (Imagen Izq, Texto Der) */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Fuerza y Estabilidad de Hombro
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={hombroImg} alt="Fuerza y Estabilidad de Hombro" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Test ASH (Athletic Shoulder Test)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Prensa de brazos con flexión a 90°
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* 3. Fuerza Isométrica Multiarticular (Texto Izq, Imagen Der) */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Fuerza Isométrica Multiarticular
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                IMTP (Mid-Thigh Pull)
-              </li>
-            </ul>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={imtpImg} alt="Fuerza Isométrica Multiarticular" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Fuerza Máxima Isométrica & Salud de Rodilla (Imagen Izq, Texto Der) */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Fuerza Máxima Isométrica & Salud de Rodilla
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={rodillaImg} alt="Salud de Rodilla" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Flexión de rodilla en decúbito prono con flexión de 90°
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Extensión de rodilla en sedestación con flexión de 90°
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                RATIO IQ (Isquiotibiales y Cuádriceps)
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* 5. Fuerza Reactiva & Explosiva (Texto Izq, Imagen Der) */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Fuerza Reactiva & Explosiva
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                CMJ (Salto con contramovimiento)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                ABK — Abalakov Jump (Salto con Brazos)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Drop Jump — RSI
-              </li>
-            </ul>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={saltoImg} alt="Fuerza Reactiva & Explosiva" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* 6. Test de Sprint 20m / 30m (Imagen Izq, Texto Der) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'var(--dark)', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, textAlign: 'center' }}>
-            Test de Sprint 20m / 30m (K-Power)
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={sprintImg} alt="Test de Sprint" style={{ width: '100%', maxWidth: '340px', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: '16px', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }} />
-            </div>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '28px', margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Tiempos por sector (Splits: 10m, 20m, 30m)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Velocidad máxima (Vmax)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Fuerza horizontal máxima (F0)
-              </li>
-              <li style={{ fontSize: '19px', fontWeight: '600', color: '#334155', lineHeight: '1.5' }}>
-                Velocidad teórica máxima (V0) & Mejor ventana de 10m
-              </li>
-            </ul>
-          </div>
-        </div>
-
+          return (
+            <button
+              key={feature.title}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`feature-panel-${index}`}
+              id={`feature-tab-${index}`}
+              className={`features-accordion__option${isActive ? ' active' : ''}`}
+              style={{
+                '--optionAccent': ACCENT_COLORS[index % ACCENT_COLORS.length],
+                '--optionImage': `url("${feature.image}")`,
+              }}
+              onClick={() => setActiveIndex(index)}
+            >
+              <div className="features-accordion__label">
+                <div
+                  className="features-accordion__info"
+                  id={`feature-panel-${index}`}
+                  role="tabpanel"
+                  aria-labelledby={`feature-tab-${index}`}
+                >
+                  <div className="features-accordion__main">{feature.title}</div>
+                  <div className="features-accordion__sub">{feature.description}</div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Bottom Call to Action */}

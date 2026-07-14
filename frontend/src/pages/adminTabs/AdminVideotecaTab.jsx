@@ -543,7 +543,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                     onChange={(e) => setCAccessType(e.target.value)}
                     style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
                   >
-                    <option value="free">Acceso Gratuito</option>
+                    <option value="free">Acceso Libre</option>
                     <option value="subscription">Membresía Premium (Suscritos)</option>
                     <option value="one-time-purchase">Pago Único (Compra Directa)</option>
                   </select>
@@ -675,7 +675,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
               style={{ height: '40px', fontSize: '13px', backgroundColor: '#ffffff', cursor: 'pointer', padding: '8px 12px' }}
             >
               <option value="all">Todos los accesos</option>
-              <option value="free">Acceso Gratuito</option>
+              <option value="free">Acceso Libre</option>
               <option value="subscription">Membresía Premium</option>
               <option value="one-time-purchase">Pago Único</option>
             </select>
@@ -714,7 +714,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                 <div>
                   <h4 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0', color: '#2B2D2F' }}>{c.title}</h4>
                   <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Gratuito' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
+                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Acceso Libre' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
                     {c.videoFolder && ` • Carpeta: ${c.videoFolder?.name || 'Sin asignar'}`}
                     {c.videoLink && (
                       <> • <a href={c.videoLink} target="_blank" rel="noreferrer" style={{ color: '#1f75f5ff', fontWeight: 'bold' }}>Ver Video</a></>

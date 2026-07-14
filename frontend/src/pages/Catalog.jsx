@@ -224,7 +224,7 @@ const Catalog = () => {
                 }}
               >
                 <option value="">Todos</option>
-                <option value="free">Acceso Gratuito</option>
+                <option value="free">Acceso Libre</option>
                 <option value="subscription">Suscripción Premium</option>
                 <option value="one-time-purchase">Pago Único</option>
               </select>

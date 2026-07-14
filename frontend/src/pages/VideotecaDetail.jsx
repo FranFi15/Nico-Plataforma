@@ -183,7 +183,7 @@ const VideotecaDetail = () => {
             </span>
           )}
           <span style={{ fontSize: '13px', color: 'var(--gray-500)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <IoPlay size={12} /> Video {content.accessType === 'free' ? 'Gratuito' : content.accessType === 'subscription' ? 'Membresía' : 'Pago Único'}
+            <IoPlay size={12} /> Video {content.accessType === 'free' ? 'con Acceso Libre' : content.accessType === 'subscription' ? 'Membresía' : 'Pago Único'}
           </span>
         </div>
 

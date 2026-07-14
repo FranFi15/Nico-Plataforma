@@ -89,6 +89,10 @@ const contentSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    memberDiscountPercentage: {
+      type: Number,
+      default: 0,
+    },
     cardImage: {
       type: String,
       default: '',

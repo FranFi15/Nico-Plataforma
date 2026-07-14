@@ -1,12 +1,14 @@
 import { MercadoPagoConfig, Preference, PreApproval, Payment } from 'mercadopago';
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
+import Coupon from '../models/couponModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 
 // Initialize Mercado Pago config using ACCESS_TOKEN from env
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
 });
+
 
 // @desc    Create Mercado Pago Subscription Link (PreApproval)
 // @route   POST /api/payments/mercadopago/subscribe
@@ -51,7 +53,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
 // @access  Private
 export const checkoutMercadoPago = async (req, res, next) => {
   try {
-    const { contentId } = req.body;
+    const { contentId, couponCode } = req.body;
 
     if (!contentId) {
       res.status(400);
@@ -69,8 +71,21 @@ export const checkoutMercadoPago = async (req, res, next) => {
       throw new Error('Este contenido no requiere un pago único');
     }
 
-    // Calculate final price with helper (applies 20% discount if premium/subscribed)
-    const finalPrice = calculatePrice(req.user, content, 'ARS');
+    let couponDiscount = 0;
+    if (couponCode) {
+      const uppercaseCode = couponCode.toUpperCase().trim();
+      const coupon = await Coupon.findOne({ code: uppercaseCode, active: true });
+      if (coupon) {
+        if (coupon.applyToAll || (coupon.applicableCourses && coupon.applicableCourses.some(id => id.toString() === contentId.toString()))) {
+          couponDiscount = coupon.discountPercentage || 0;
+          coupon.usedCount = (coupon.usedCount || 0) + 1;
+          await coupon.save();
+        }
+      }
+    }
+
+    // Calculate final price with helper (applies member discount and/or coupon discount)
+    const finalPrice = calculatePrice(req.user, content, 'ARS', couponDiscount);
 
     const preference = new Preference(client);
 

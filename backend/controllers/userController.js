@@ -67,3 +67,31 @@ export const updateUserRole = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Mark user notifications as read
+// @route   PUT /api/users/notifications/read
+// @access  Private
+export const markNotificationsRead = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+
+    user.notifications = user.notifications.map((n) => {
+      n.read = true;
+      return n;
+    });
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Notificaciones marcadas como leídas',
+      data: user.notifications
+    });
+  } catch (error) {
+    next(error);
+  }
+};

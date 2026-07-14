@@ -49,6 +49,15 @@ const userSchema = new mongoose.Schema(
         ref: 'Content',
       },
     ],
+    notifications: [
+      {
+        title: { type: String, required: true },
+        message: { type: String, required: true },
+        link: { type: String, default: '' },
+        read: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
   },
   {
     timestamps: true,

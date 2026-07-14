@@ -51,7 +51,7 @@ const MiPerfil = () => {
   const roleText = user.role === 'admin' ? 'Administrador (Nico)' : 'Preparador Físico / Entrenador';
   const membershipText = (user.membership === 'premium' || user.isSubscribed)
     ? '★ Membresía Premium Activa'
-    : 'Acceso Gratuito';
+    : 'Acceso Libre';
 
   const joinedDate = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString('es-ES', {

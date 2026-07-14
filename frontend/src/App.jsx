@@ -24,6 +24,7 @@ import EvaluacionesIndividual from './pages/EvaluacionesIndividual';
 import EvaluacionesColectivo from './pages/EvaluacionesColectivo';
 import AdminTraining from './pages/AdminTraining';
 import MisAlumnos from './pages/MisAlumnos';
+import CharlasZoom from './pages/CharlasZoom';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
           <Route path="mis-cursos" element={<MisCursos />} />
           <Route path="mis-carpetas" element={<MisCarpetas />} />
           <Route path="mi-perfil" element={<MiPerfil />} />
+          <Route path="charlas-zoom" element={<CharlasZoom />} />
         </Route>
       </Routes>
     </Router>

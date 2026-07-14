@@ -149,7 +149,7 @@ const Blogs = () => {
             style={{ height: '44px', fontSize: '14px', backgroundColor: '#ffffff', cursor: 'pointer' }}
           >
             <option value="all">Todos los accesos</option>
-            <option value="free">Acceso Gratuito</option>
+            <option value="free">Acceso Libre</option>
             <option value="subscription">Membresía Premium</option>
             <option value="one-time-purchase">Pago Único</option>
           </select>

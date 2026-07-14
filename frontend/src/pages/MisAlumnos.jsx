@@ -100,7 +100,7 @@ const MisAlumnos = () => {
         accessReason = student.role === 'admin' ? 'Acceso Total (Admin)' : 'Acceso Total (Docente)';
       } else if (content.accessType === 'free') {
         hasAccess = true;
-        accessReason = 'Gratuito';
+        accessReason = 'Acceso Libre';
       } else if (content.accessType === 'subscription' && isPremium) {
         hasAccess = true;
         accessReason = 'Suscripción Premium';
@@ -292,7 +292,7 @@ const MisAlumnos = () => {
                       letterSpacing: '1px'
                     }}>
                       {isPremium ? <IoStar /> : null}
-                      {isPremium ? 'Membresía Premium' : 'Plan Gratuito'}
+                      {isPremium ? 'Membresía Premium' : 'Plan Acceso Libre'}
                     </div>
 
                     {/* Expand indicator icon */}
@@ -347,8 +347,8 @@ const MisAlumnos = () => {
                                 <span style={{
                                   fontSize: '10px',
                                   fontWeight: '800',
-                                  backgroundColor: c.reason === 'Gratuito' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(31, 117, 245, 0.08)',
-                                  color: c.reason === 'Gratuito' ? '#10b981' : 'var(--primary)',
+                                  backgroundColor: c.reason === 'Acceso Libre' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(31, 117, 245, 0.08)',
+                                  color: c.reason === 'Acceso Libre' ? '#10b981' : 'var(--primary)',
                                   padding: '3px 8px',
                                   borderRadius: '4px',
                                   textTransform: 'uppercase'
@@ -389,8 +389,8 @@ const MisAlumnos = () => {
                                 <span style={{
                                   fontSize: '10px',
                                   fontWeight: '800',
-                                  backgroundColor: w.reason === 'Gratuito' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(31, 117, 245, 0.08)',
-                                  color: w.reason === 'Gratuito' ? '#10b981' : 'var(--primary)',
+                                  backgroundColor: w.reason === 'Acceso Libre' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(31, 117, 245, 0.08)',
+                                  color: w.reason === 'Acceso Libre' ? '#10b981' : 'var(--primary)',
                                   padding: '3px 8px',
                                   borderRadius: '4px',
                                   textTransform: 'uppercase'

@@ -29,6 +29,14 @@ export const getContents = async (req, res, next) => {
       filter.accessType = req.query.accessType;
     }
 
+    const isPrivileged = req.user && ['admin', 'professor', 'profe', 'instructor'].includes(req.user.role);
+    if (!isPrivileged && req.query.includeDrafts !== 'true') {
+      filter.$and = [
+        { isPublished: { $ne: false } },
+        { status: { $ne: 'draft' } }
+      ];
+    }
+
     const contents = await Content.find(filter).populate('category').populate('videoFolder');
 
     res.status(200).json({
@@ -46,7 +54,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -63,6 +71,7 @@ export const createContent = async (req, res, next) => {
       priceUsd: priceUsd !== undefined ? priceUsd : (price || 0),
       priceArs: priceArs !== undefined ? priceArs : 0,
       price: priceUsd !== undefined ? priceUsd : (price || 0),
+      memberDiscountPercentage: memberDiscountPercentage !== undefined ? Number(memberDiscountPercentage) : 0,
       cardImage: cardImage || '',
       cardImagePosition: cardImagePosition || '50%',
       publishDate: publishDate || undefined,
@@ -178,7 +187,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -194,6 +203,9 @@ export const updateContent = async (req, res, next) => {
     content.priceUsd = priceUsd !== undefined ? priceUsd : content.priceUsd;
     content.priceArs = priceArs !== undefined ? priceArs : content.priceArs;
     content.price = priceUsd !== undefined ? priceUsd : (price !== undefined ? price : content.price);
+    if (memberDiscountPercentage !== undefined) {
+      content.memberDiscountPercentage = Number(memberDiscountPercentage);
+    }
     content.cardImage = cardImage !== undefined ? cardImage : content.cardImage;
     content.cardImagePosition = cardImagePosition !== undefined ? cardImagePosition : content.cardImagePosition;
     content.publishDate = publishDate !== undefined ? publishDate : content.publishDate;
@@ -380,3 +392,105 @@ export const uploadContentFile = async (req, res, next) => {
   }
 };
 
+// @desc    Notify students of a new module or lesson
+// @route   POST /api/content/:id/notify-students
+// @access  Private/Admin/Professor
+export const notifyStudents = async (req, res, next) => {
+  try {
+    const { title, message } = req.body;
+    const content = await Content.findById(req.params.id);
+
+    if (!content) {
+      res.status(404);
+      throw new Error('Contenido no encontrado');
+    }
+
+    if (!title || !message) {
+      res.status(400);
+      throw new Error('Por favor, ingresa el título y mensaje de la notificación');
+    }
+
+    // Determine target users based on content accessType
+    let targetUsers = [];
+    if (content.accessType === 'free') {
+      targetUsers = await User.find({ role: 'student' });
+    } else if (content.accessType === 'subscription') {
+      targetUsers = await User.find({
+        $or: [
+          { membership: 'premium' },
+          { isSubscribed: true },
+          { purchasedItems: content._id }
+        ]
+      });
+    } else {
+      targetUsers = await User.find({ purchasedItems: content._id });
+    }
+
+    // Push notification to every target user
+    const notificationObj = {
+      title,
+      message,
+      link: `/cursos/${content._id}`,
+      read: false,
+      createdAt: new Date()
+    };
+
+    let notifiedCount = 0;
+    for (const u of targetUsers) {
+      if (!u.notifications) u.notifications = [];
+      u.notifications.unshift(notificationObj);
+      await u.save();
+      notifiedCount++;
+    }
+
+    res.status(200).json({
+      success: true,
+      count: notifiedCount,
+      message: `Se ha notificado con éxito a ${notifiedCount} alumno(s) sobre el nuevo contenido.`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route   POST /api/content/:id/enroll
+// @access  Private (Logged-in users)
+export const enrollInContent = async (req, res, next) => {
+  try {
+    const content = await Content.findById(req.params.id);
+    if (!content) {
+      res.status(404);
+      throw new Error('Contenido o curso no encontrado');
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+
+    if (!user.purchasedItems) {
+      user.purchasedItems = [];
+    }
+
+    const alreadyEnrolled = user.purchasedItems.some(
+      (item) => (item._id || item).toString() === content._id.toString()
+    );
+
+    if (!alreadyEnrolled) {
+      user.purchasedItems.push(content._id);
+      await user.save();
+    }
+
+    const updatedUser = await User.findById(user._id).select('-password').populate('purchasedItems');
+
+    res.status(200).json({
+      success: true,
+      alreadyEnrolled,
+      message: alreadyEnrolled ? 'Ya te encontrabas inscrito en este curso.' : '¡Te has inscrito exitosamente a esta formación!',
+      user: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};

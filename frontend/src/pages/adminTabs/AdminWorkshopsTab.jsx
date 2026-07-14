@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import TiptapEditor from '../../components/TiptapEditor';
-import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen } from 'react-icons/io5';
+import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen, IoEyeOutline, IoEyeOffOutline, IoNotificationsOutline, IoSend } from 'react-icons/io5';
 
 const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [contents, setContents] = useState([]);
@@ -19,6 +19,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cAccessType, setCAccessType] = useState('free');
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
+  const [cMemberDiscountPercentage, setCMemberDiscountPercentage] = useState(0);
   const [cSubtype, setCSubtype] = useState('course'); // 'course' or 'workshop'
   const [cModules, setCModules] = useState([]);
   const [cCertificate, setCCertificate] = useState(true);
@@ -30,6 +31,13 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cCategory, setCCCategory] = useState('');
   const [cardImageUploading, setCardImageUploading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [cIsPublished, setCIsPublished] = useState(true);
+
+  // Notify students state
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifyTitle, setNotifyTitle] = useState('');
+  const [notifyMessage, setNotifyMessage] = useState('');
+  const [notifyingLoading, setNotifyingLoading] = useState(false);
 
   // Category Manager & Quick Category states
   const [showCategoryManager, setShowCategoryManager] = useState(false);
@@ -77,6 +85,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType('free');
     setCPriceUsd(0);
     setCPriceArs(0);
+    setCMemberDiscountPercentage(0);
     setCSubtype('course');
     setCModules([]);
     setCCertificate(true);
@@ -86,6 +95,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCCardImagePosition('50%');
     setCVideoLink('');
     setCCCategory('');
+    setCIsPublished(true);
     setShowContentForm(false);
   };
 
@@ -96,6 +106,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType(item.accessType || 'free');
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
+    setCMemberDiscountPercentage(item.memberDiscountPercentage || 0);
     setCSubtype(item.contentType === 'workshop' ? 'workshop' : 'course');
     setCModules(item.modules || []);
     setCCertificate(item.certificate !== undefined ? item.certificate : true);
@@ -105,8 +116,31 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCCardImagePosition(item.cardImagePosition || '50%');
     setCVideoLink(item.videoLink || '');
     setCCCategory(item.category?._id || item.category || '');
+    setCIsPublished(item.isPublished !== false && item.status !== 'draft');
     setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
+  };
+
+  const handleNotifySubmit = async (e) => {
+    e.preventDefault();
+    if (!notifyTitle.trim() || !notifyMessage.trim() || !editingItem) return;
+    setNotifyingLoading(true);
+    try {
+      const res = await api.post(`/content/${editingItem._id}/notify-students`, {
+        title: notifyTitle.trim(),
+        message: notifyMessage.trim()
+      });
+      if (res.data?.success) {
+        alert(res.data.message || 'Alumnos notificados con éxito');
+        setShowNotifyModal(false);
+        setNotifyTitle('');
+        setNotifyMessage('');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al enviar la notificación');
+    } finally {
+      setNotifyingLoading(false);
+    }
   };
 
   const handleAddCategory = async (e) => {
@@ -280,13 +314,16 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         priceUsd: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
         priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
         price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
+        memberDiscountPercentage: cAccessType === 'one-time-purchase' ? Number(cMemberDiscountPercentage) : 0,
         cardImage: cCardImage,
         cardImagePosition: cCardImagePosition,
         videoLink: cVideoLink,
         category: cCategory || undefined,
         modules: cModules,
         certificate: cCertificate,
-        duration: cDuration
+        duration: cDuration,
+        isPublished: cIsPublished,
+        status: cIsPublished ? 'published' : 'draft'
       };
 
       if (editingItem) {
@@ -637,7 +674,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                     onChange={(e) => setCAccessType(e.target.value)}
                     style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
                   >
-                    <option value="free">Acceso Gratuito</option>
+                    <option value="free">Acceso Libre</option>
                     <option value="subscription">Membresía Premium (Suscritos)</option>
                     <option value="one-time-purchase">Pago Único (Compra Directa)</option>
                   </select>
@@ -656,7 +693,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
               </div>
 
               {cAccessType === 'one-time-purchase' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label className="form-label">Precio en USD ($)</label>
                     <input
@@ -681,6 +718,20 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                       onChange={(e) => setCPriceArs(e.target.value)}
                       placeholder="Ej. 65000"
                       required
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      className="premium-input"
+                      value={cMemberDiscountPercentage}
+                      onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                      placeholder="Ej. 20 (20% OFF)"
+                      style={{ border: '1.5px solid #3b82f6' }}
                     />
                   </div>
                 </div>
@@ -730,6 +781,60 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                   </div>
                 </label>
               </div>
+            </div>
+
+            {/* Switch de Estado: Borrador vs Publicado */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px',
+              backgroundColor: cIsPublished ? '#ecfdf5' : '#fffbeb',
+              border: `1px solid ${cIsPublished ? '#6ee7b7' : '#fcd34d'}`,
+              borderRadius: '16px',
+              marginBottom: '24px',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {cIsPublished ? (
+                  <IoEyeOutline size={22} color="#059669" />
+                ) : (
+                  <IoEyeOffOutline size={22} color="#d97706" />
+                )}
+                <div>
+                  <strong style={{ fontSize: '15px', color: cIsPublished ? '#065f46' : '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {cIsPublished ? 'Estado: Publicado y Visible' : 'Estado: Borrador Oculto'}
+                  </strong>
+                  <span style={{ fontSize: '13px', color: cIsPublished ? '#047857' : '#b45309' }}>
+                    {cIsPublished
+                      ? 'El curso/workshop será visible públicamente para los usuarios en el catálogo y su panel.'
+                      : 'Guardado en borrador. No se mostrará al público ni en el listado de cursos hasta que actives la publicación.'}
+                  </span>
+                </div>
+              </div>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                cursor: 'pointer',
+                fontWeight: '800',
+                fontSize: '14px',
+                color: '#051020',
+                backgroundColor: '#ffffff',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                border: '1px solid #cbd5e1',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={cIsPublished}
+                  onChange={(e) => setCIsPublished(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#1f75f5ff' }}
+                />
+                Publicar inmediatamente
+              </label>
             </div>
 
             {/* ========================================================
@@ -1044,6 +1149,58 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
               )}
             </div>
 
+            {/* ========================================================
+                CARD 5: NOTIFICACIONES PROGRESIVAS A ALUMNOS
+                ======================================================== */}
+            {editingItem && (
+              <div style={{
+                backgroundColor: '#fefeef',
+                border: '1px solid #fde047',
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#854d0e', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <IoNotificationsOutline size={20} color="#ca8a04" />
+                    ¿Subiste un nuevo módulo o lección a este curso?
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#a16207' }}>
+                    Envía una notificación instantánea y alerta en la plataforma a todos los alumnos que tienen acceso a este curso para avisarles de las nuevas clases disponibles.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotifyTitle(`¡Nuevo contenido en: ${editingItem.title}!`);
+                    setNotifyMessage('Hemos agregado nuevas lecciones y material al curso. ¡Entra ahora para continuar tu aprendizaje!');
+                    setShowNotifyModal(true);
+                  }}
+                  style={{
+                    backgroundColor: '#ca8a04',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 18px',
+                    borderRadius: '12px',
+                    fontWeight: '800',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(202, 138, 4, 0.3)'
+                  }}
+                >
+                  <IoSend size={16} /> Notificar a Alumnos
+                </button>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button
                 type="submit"
@@ -1111,7 +1268,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
               style={{ height: '40px', fontSize: '13px', backgroundColor: '#ffffff', cursor: 'pointer', padding: '8px 12px' }}
             >
               <option value="all">Todos los accesos</option>
-              <option value="free">Acceso Gratuito</option>
+              <option value="free">Acceso Libre</option>
               <option value="subscription">Membresía Premium</option>
               <option value="one-time-purchase">Pago Único</option>
             </select>
@@ -1148,14 +1305,52 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                 }}
               >
                 <div>
-                  <h4 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0', color: '#2B2D2F' }}>{c.title}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <h4 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: '#2B2D2F' }}>{c.title}</h4>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      textTransform: 'uppercase',
+                      backgroundColor: c.isPublished !== false && c.status !== 'draft' ? '#ecfdf5' : '#fffbeb',
+                      color: c.isPublished !== false && c.status !== 'draft' ? '#059669' : '#d97706',
+                      border: `1px solid ${c.isPublished !== false && c.status !== 'draft' ? '#6ee7b7' : '#fcd34d'}`
+                    }}>
+                      {c.isPublished !== false && c.status !== 'draft' ? '🟢 Publicado' : '🟡 Borrador Oculto'}
+                    </span>
+                  </div>
                   <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Gratuito' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
+                    Acceso: <strong style={{ textTransform: 'uppercase' }}>{c.accessType === 'free' ? 'Acceso Libre' : c.accessType === 'subscription' ? 'Membresía' : `Pago Único (USD $${c.priceUsd !== undefined ? c.priceUsd : (c.price || 0)} / ARS $${(c.priceArs || 0).toLocaleString()})`}</strong>
                     {c.category && ` • Categoría: ${typeof c.category === 'object' ? c.category.name : categories.find(cat => cat._id === c.category)?.name || 'Especialización'}`}
                     {` • Tipo: ${c.contentType === 'workshop' ? 'Taller / Workshop' : 'Curso de Especialización'}`}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => {
+                      setEditingItem(c);
+                      setNotifyTitle(`¡Nuevo contenido en: ${c.title}!`);
+                      setNotifyMessage('Hemos subido nuevas lecciones y material para que continúes tu formación.');
+                      setShowNotifyModal(true);
+                    }}
+                    style={{
+                      backgroundColor: '#ca8a04',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      fontWeight: '800',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    title="Notificar a los alumnos que tienen este curso"
+                  >
+                    <IoNotificationsOutline size={15} /> Notificar Alumnos
+                  </button>
                   <button
                     onClick={() => startEditContent(c)}
                     className="btn-primary"
@@ -1176,6 +1371,103 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
           </div>
         )}
       </div>
+
+      {/* Modal para Enviar Notificación Progresiva a Alumnos */}
+      {showNotifyModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.65)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '24px',
+            padding: '30px',
+            width: '100%',
+            maxWidth: '520px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IoNotificationsOutline size={22} color="#ca8a04" /> Notificar a los Alumnos
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowNotifyModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '20px' }}
+              >
+                <IoClose />
+              </button>
+            </div>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5' }}>
+              Esta alerta se enviará directamente a la plataforma para todos los alumnos que tienen acceso al curso <strong>{editingItem?.title}</strong>. Puedes usarlo cuando subes un nuevo módulo, lección o material de estudio progresivo.
+            </p>
+            <form onSubmit={handleNotifySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label className="form-label" style={{ marginBottom: '6px' }}>Título de la Notificación *</label>
+                <input
+                  type="text"
+                  className="premium-input"
+                  value={notifyTitle}
+                  onChange={(e) => setNotifyTitle(e.target.value)}
+                  placeholder="Ej: ¡Nuevo Módulo Disponible!"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label" style={{ marginBottom: '6px' }}>Mensaje para el Alumno *</label>
+                <textarea
+                  className="premium-input"
+                  rows={4}
+                  value={notifyMessage}
+                  onChange={(e) => setNotifyMessage(e.target.value)}
+                  placeholder="Ej: Hemos publicado la Lección 3 sobre Evaluación Práctica. ¡Accede ahora para continuar con el curso!"
+                  style={{ resize: 'vertical' }}
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button
+                  type="submit"
+                  disabled={notifyingLoading}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#1f75f5ff',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    fontWeight: '800',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {notifyingLoading ? 'Enviando alerta...' : <><IoSend /> Enviar Notificación Ahora</>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowNotifyModal(false)}
+                  className="btn-secondary"
+                  style={{ padding: '12px 20px', fontSize: '14px' }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

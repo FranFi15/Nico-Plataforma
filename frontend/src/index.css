@@ -500,6 +500,7 @@ body::before {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -554,25 +555,29 @@ body::before {
   .premium-title {
     font-size: 42px !important;
   }
+
   .detail-title {
     font-size: 26px !important;
     line-height: 1.3 !important;
   }
+
   .detail-actions-bar {
     flex-direction: column;
     align-items: stretch !important;
     gap: 12px;
   }
-  .detail-actions-bar > button {
+
+  .detail-actions-bar>button {
     width: 100%;
     justify-content: center;
   }
+
   .detail-cover-banner {
     height: 240px !important;
     border-radius: 16px !important;
     margin-bottom: 24px !important;
   }
-  
+
   /* general page header padding adjustments */
   header {
     padding: 30px 0 20px 0 !important;
@@ -636,7 +641,8 @@ body::before {
 .mobile-menu-drawer {
   display: none;
   position: fixed;
-  top: 100px; /* height of navbar logo/nav wrapper */
+  top: 100px;
+  /* height of navbar logo/nav wrapper */
   left: 0;
   width: 100%;
   height: calc(100vh - 100px);
@@ -661,19 +667,24 @@ body::before {
   .navbar-main {
     padding: 0px 3% !important;
   }
+
   .navbar-left {
     gap: 16px;
   }
+
   .navbar-logo-img {
     height: 85px;
   }
+
   .nav-menu-desktop {
     gap: 20px !important;
   }
+
   .nav-sponsors-desktop {
     gap: 8px !important;
     padding-left: 14px !important;
   }
+
   .nav-sponsors-desktop img {
     max-height: 38px !important;
   }
@@ -684,12 +695,15 @@ body::before {
   .navbar-main {
     padding: 0px 2.5% !important;
   }
+
   .navbar-logo-img {
     height: 76px;
   }
+
   .nav-menu-desktop {
     gap: 14px !important;
   }
+
   /* En notebooks aspect 16:10 o resoluciones medianas (hasta 1400px de ancho), ocultamos los sponsors del navbar para dar todo el espacio horizontal al menú y que no se vea todo junto ni amontonado */
   .nav-sponsors-desktop {
     display: none !important;
@@ -701,9 +715,11 @@ body::before {
   .nav-menu-desktop {
     display: none !important;
   }
+
   .nav-sponsors-desktop {
     display: none !important;
   }
+
   .burger-btn {
     display: flex !important;
   }
@@ -722,9 +738,9 @@ body::before {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   /* On mobile, put main player first and accordion below, or keep accordion collapsible */
-  .skool-classroom-layout > div:nth-child(2) {
+  .skool-classroom-layout>div:nth-child(2) {
     order: -1;
   }
 }
@@ -734,5 +750,357 @@ body::before {
   .preview-modal-grid {
     grid-template-columns: 1fr !important;
     gap: 24px !important;
+  }
+}
+
+/* ===== Intro Animated Dropdown Accordion ===== */
+.intro-dropdown {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.intro-dropdown:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.06);
+  border-color: rgba(31, 117, 245, 0.3);
+}
+
+.intro-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.intro-dropdown__title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.intro-dropdown__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--light);
+  color: var(--dark);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.intro-dropdown.open .intro-dropdown__chevron {
+  transform: rotate(180deg);
+}
+
+.intro-dropdown__content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.intro-dropdown.open .intro-dropdown__content {
+  grid-template-rows: 1fr;
+}
+
+.intro-dropdown__inner {
+  overflow: hidden;
+}
+
+.intro-dropdown__body {
+  padding: 0 32px 32px 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .intro-dropdown__header {
+    padding: 20px 20px;
+  }
+
+  .intro-dropdown__title {
+    font-size: 18px;
+  }
+
+  .intro-dropdown__body {
+    padding: 0 20px 24px 20px;
+    padding-top: 20px;
+  }
+}
+
+/* ===== Expandable Horizontal Cards Accordion (Evaluaciones Battery) ===== */
+.features-accordion {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  overflow: visible;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  min-height: 480px;
+  height: 480px;
+}
+
+.features-accordion__option {
+  position: relative;
+  overflow: hidden;
+  min-width: 80px;
+  margin: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0;
+  flex-grow: 1;
+  border-radius: 16px;
+  background: #051020bf;
+  background-size: auto 120%;
+  background-position: center;
+  cursor: pointer;
+  transition: 0.5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
+  text-align: left;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.features-accordion__option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.features-accordion__option.active {
+  flex-grow: 10000;
+  max-width: 700px;
+  margin: 0;
+  border-radius: 20px;
+  background-image:
+    linear-gradient(180deg, rgba(5, 16, 32, 0.25) 0%, #051020bf 65%, #051020 100%),
+    var(--optionImage);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.features-accordion__option.active .features-accordion__label {
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+}
+
+.features-accordion__option.active .features-accordion__sub {
+  left: 0;
+  opacity: 1;
+}
+
+.features-accordion__option:not(.active) {
+  overflow: visible;
+}
+
+.features-accordion__option:not(.active) .features-accordion__label {
+  inset: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 10px 20px;
+  gap: 0;
+  max-width: none;
+}
+
+.features-accordion__option:not(.active) .features-accordion__icon {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.features-accordion__option:not(.active) .features-accordion__info {
+  position: static;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transform: none;
+  max-height: none;
+}
+
+.features-accordion__option:not(.active) .features-accordion__main {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.15;
+  display: block;
+  max-height: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: none;
+  padding: 0;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.features-accordion__option:not(.active) .features-accordion__sub {
+  display: none;
+}
+
+.features-accordion__label {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: absolute;
+  right: auto;
+  height: auto;
+  max-width: calc(100% - 24px);
+  transition: 0.5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
+}
+
+.features-accordion__icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 100%;
+  background-color: #fff;
+  color: var(--optionAccent);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.features-accordion__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 0;
+  color: #fff;
+  min-width: 0;
+  flex: 1;
+}
+
+.features-accordion__main {
+  font-weight: 800;
+  font-size: 1.4rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  opacity: 1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.features-accordion__option.active .features-accordion__main {
+  white-space: normal;
+}
+
+.features-accordion__sub {
+  position: relative;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0;
+  left: 20px;
+  white-space: normal;
+  max-width: 36rem;
+  color: rgba(255, 255, 255, 0.92);
+  transition:
+    0.5s cubic-bezier(0.05, 0.61, 0.41, 0.95),
+    opacity 0.5s ease-out;
+  transition-delay: 0.1s;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.features-accordion__option:not(.active) .features-accordion__sub {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .features-accordion {
+    min-height: 420px;
+    height: 420px;
+  }
+}
+
+@media (max-width: 720px) {
+  .features-accordion {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    max-width: 100%;
+  }
+
+  .features-accordion__option {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    min-height: 64px;
+    margin: 8px 0;
+  }
+
+  .features-accordion__option.active {
+    flex-grow: 0;
+    max-width: none;
+    min-height: 220px;
+    margin: 8px 0;
+    border-radius: 14px;
+  }
+
+  .features-accordion__option:not(.active) {
+    border-radius: 12px;
+  }
+
+  .features-accordion__main {
+    white-space: normal;
+  }
+
+  .features-accordion__option:not(.active) .features-accordion__icon {
+    position: static;
+    transform: none;
+  }
+
+  .features-accordion__option:not(.active) .features-accordion__label {
+    inset: auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    bottom: 12px;
+    left: 14px;
+    right: 14px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .features-accordion__option:not(.active) .features-accordion__info {
+    position: static;
+    flex: 1;
+    pointer-events: auto;
+  }
+
+  .features-accordion__option:not(.active) .features-accordion__main {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    font-size: 1.0625rem;
+    letter-spacing: normal;
+    text-transform: none;
+    transform: none;
+    white-space: normal;
+    max-height: none;
+    text-align: left;
+  }
+
+  .features-accordion__option:not(.active) .features-accordion__sub {
+    display: none;
   }
 }

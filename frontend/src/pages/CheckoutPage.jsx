@@ -16,6 +16,11 @@ const CheckoutPage = () => {
   const [processingGateway, setProcessingGateway] = useState(null); // 'mp' or 'paypal'
   const [error, setError] = useState('');
 
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
 
   // Load course details if contentId is provided
@@ -76,6 +81,25 @@ const CheckoutPage = () => {
   };
 
   // One-time checkout actions
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault();
+    if (!couponCodeInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await api.post('/coupons/validate', { code: couponCodeInput.trim(), courseId: contentId });
+      if (res.data && res.data.valid) {
+        setAppliedCoupon(res.data);
+        setCouponError('');
+      }
+    } catch (err) {
+      setAppliedCoupon(null);
+      setCouponError(err.response?.data?.message || 'Cupón inválido o expirado.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   const handlePurchase = async (gateway) => {
     setProcessingGateway(gateway);
     try {
@@ -83,7 +107,10 @@ const CheckoutPage = () => {
         ? '/payments/mercadopago/checkout'
         : '/payments/paypal/checkout';
 
-      const response = await api.post(endpoint, { contentId });
+      const response = await api.post(endpoint, { 
+        contentId,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined
+      });
       if (response.data && response.data.success) {
         // Redirect to gateway init URL
         const redirectUrl = gateway === 'mp'
@@ -192,49 +219,148 @@ const CheckoutPage = () => {
               </p>
               
               {/* Pricing breakdown */}
-              <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '15px', fontWeight: '600', color: '#6b7280', marginTop: '4px' }}>Total a facturar:</span>
-                <div>
-                  {isSubscribed ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                          <span style={{ fontSize: '22px', fontWeight: '900', color: '#051020' }}>
-                            USD ${( (content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)) * 0.8).toFixed(2)}
-                          </span>
-                          <span style={{ fontSize: '14px', color: '#9ca3af', textDecoration: 'line-through' }}>
-                            ${(content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)).toFixed(2)}
-                          </span>
-                        </div>
-                        {content.priceArs > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                            <span style={{ fontSize: '18px', fontWeight: '800', color: '#6b7280' }}>
-                              ARS ${Math.round(content.priceArs * 0.8).toLocaleString()}
-                            </span>
-                            <span style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'line-through' }}>
-                              ${content.priceArs.toLocaleString()}
-                            </span>
+              {(() => {
+                const memberPct = content.memberDiscountPercentage !== undefined && content.memberDiscountPercentage !== null && content.memberDiscountPercentage !== '' ? Number(content.memberDiscountPercentage) : 0;
+                const hasMemberDiscount = isSubscribed && memberPct > 0;
+                const couponPct = appliedCoupon ? Number(appliedCoupon.discountPercentage) : 0;
+
+                const origUsd = content.priceUsd !== undefined ? content.priceUsd : (content.price || 0);
+                const origArs = content.priceArs || 0;
+
+                let calcUsd = origUsd;
+                let calcArs = origArs;
+                if (hasMemberDiscount) {
+                  calcUsd = calcUsd * (1 - memberPct / 100);
+                  calcArs = calcArs * (1 - memberPct / 100);
+                }
+                if (couponPct > 0) {
+                  calcUsd = calcUsd * (1 - couponPct / 100);
+                  calcArs = calcArs * (1 - couponPct / 100);
+                }
+
+                return (
+                  <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '600', color: '#6b7280', marginTop: '4px' }}>Total a facturar:</span>
+                    <div>
+                      {hasMemberDiscount || couponPct > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                              <span style={{ fontSize: '22px', fontWeight: '900', color: '#051020' }}>
+                                USD ${calcUsd.toFixed(2)}
+                              </span>
+                              <span style={{ fontSize: '14px', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                ${origUsd.toFixed(2)}
+                              </span>
+                            </div>
+                            {origArs > 0 && (
+                              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                <span style={{ fontSize: '18px', fontWeight: '800', color: '#6b7280' }}>
+                                  ARS ${Math.round(calcArs).toLocaleString()}
+                                </span>
+                                <span style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                  ${origArs.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <span className="lift-badge " style={{ fontSize: '9px', fontWeight: '800', background: 'rgba(249, 115, 22, 0.12)', color: '#051020', borderColor: 'rgba(249, 115, 22, 0.3)' }}>
-                        ✓ Ahorro del 20% aplicado por ser Miembro Nico Lift Premium
-                      </span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                      <span style={{ fontSize: '22px', fontWeight: '900', color: '#051020' }}>
-                        USD ${(content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)).toFixed(2)}
-                      </span>
-                      {content.priceArs > 0 && (
-                        <span style={{ fontSize: '18px', fontWeight: '800', color: '#6b7280' }}>
-                          ARS ${content.priceArs.toLocaleString()}
-                        </span>
+                          {hasMemberDiscount && (
+                            <span className="lift-badge " style={{ fontSize: '9px', fontWeight: '800', background: 'rgba(249, 115, 22, 0.12)', color: '#051020', borderColor: 'rgba(249, 115, 22, 0.3)' }}>
+                              ✓ Descuento del {memberPct}% por ser Miembro Premium
+                            </span>
+                          )}
+                          {couponPct > 0 && (
+                            <span className="lift-badge " style={{ fontSize: '9px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.12)', color: '#047857', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+                              🎯 Cupón {appliedCoupon.code} aplicado (-{couponPct}%)
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                          <span style={{ fontSize: '22px', fontWeight: '900', color: '#051020' }}>
+                            USD ${origUsd.toFixed(2)}
+                          </span>
+                          {origArs > 0 && (
+                            <span style={{ fontSize: '18px', fontWeight: '800', color: '#6b7280' }}>
+                              ARS ${origArs.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Coupon Code Input Section */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1px dashed #cbd5e1',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              marginBottom: '24px'
+            }}>
+              <form onSubmit={handleApplyCoupon} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="¿Tienes un código de descuento?"
+                  value={couponCodeInput}
+                  onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                  disabled={appliedCoupon !== null || couponLoading}
+                  style={{
+                    flex: 1,
+                    minWidth: '200px',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    color: '#0f172a',
+                    textTransform: 'uppercase'
+                  }}
+                />
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={() => { setAppliedCoupon(null); setCouponCodeInput(''); }}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid #fecaca',
+                      backgroundColor: '#fff1f2',
+                      color: '#ef4444',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Quitar Cupón
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={couponLoading || !couponCodeInput.trim()}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      backgroundColor: '#1f75f5ff',
+                      color: '#ffffff',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {couponLoading ? 'Verificando...' : 'Aplicar'}
+                  </button>
+                )}
+              </form>
+              {couponError && (
+                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#ef4444', fontWeight: '700' }}>
+                  ❌ {couponError}
+                </p>
+              )}
             </div>
 
             {/* Gateway Buttons */}

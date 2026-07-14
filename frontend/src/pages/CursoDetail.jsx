@@ -10,7 +10,7 @@ import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoD
 const CursoDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, refreshUser, loading: authLoading } = useAuth();
 
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,6 +125,27 @@ const CursoDetail = () => {
     }
   }, [progressPercent, content, user, id]);
 
+  // Access check logic calculated safely at top level
+  const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
+  const isFree = content?.accessType === 'free';
+  const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
+  const isOwned = user && user.purchasedItems && content && user.purchasedItems.some(
+    (item) => (item._id || item) === content._id
+  );
+  const hasAccess = isPrivileged || isFree || (content?.accessType === 'subscription' && isSubscribed) || (content?.accessType === 'one-time-purchase' && isOwned);
+
+  useEffect(() => {
+    if (content && user && !isPrivileged && !isOwned && hasAccess && (content.contentType === 'course' || content.contentType === 'workshop')) {
+      api.post(`/content/${content._id}/enroll`)
+        .then(res => {
+          if (res.data?.success && refreshUser) {
+            refreshUser();
+          }
+        })
+        .catch(err => console.error('Error auto-enrolling in course detail:', err));
+    }
+  }, [content, user, isPrivileged, isOwned, hasAccess, refreshUser]);
+
   if (loading || authLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '120px 0', fontSize: '18px', color: 'var(--gray-500)', fontFamily: 'var(--font-sans)' }}>
@@ -152,14 +173,25 @@ const CursoDetail = () => {
     );
   }
 
-  // Access check logic
-  const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
-  const isFree = content.accessType === 'free';
-  const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
-  const isOwned = user && user.purchasedItems && user.purchasedItems.some(
-    (item) => (item._id || item) === content._id
-  );
-  const hasAccess = isPrivileged || isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && isOwned);
+  // Access calculation already defined at top level for hook rules
+
+  const handleEnrollManual = async () => {
+    if (!user) {
+      alert('Por favor, inicia sesión para anotarte en este curso.');
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await api.post(`/content/${content._id}/enroll`);
+      if (res.data?.success && refreshUser) {
+        await refreshUser();
+        alert('✔ ¡Te has inscrito/anotado exitosamente en esta formación! Ahora recibirás las invitaciones a charlas Zoom y notificaciones de nuevos módulos.');
+      }
+    } catch (err) {
+      console.error('Error manual enrollment:', err);
+      alert('Hubo un error al registrar la inscripción.');
+    }
+  };
 
   const handleAction = () => {
     if (!user) {
@@ -393,7 +425,7 @@ const CursoDetail = () => {
               gap: '6px'
             }}>
               {hasAccess ? <IoCheckmarkCircle size={14} /> : <IoLockClosed size={14} />}
-              {isFree ? 'Acceso Gratuito' : content.accessType === 'subscription' ? 'Membresía Premium' : `USD $${content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)} / ARS $${(content.priceArs || 0).toLocaleString()}`}
+              {isFree ? 'Acceso Libre' : content.accessType === 'subscription' ? 'Membresía Premium' : `USD $${content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)} / ARS $${(content.priceArs || 0).toLocaleString()}`}
             </span>
           </div>
 
@@ -552,7 +584,55 @@ const CursoDetail = () => {
             </div>
 
             {/* RIGHT MAIN PANEL: Skool Active Lesson / Quiz Player */}
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+              {/* ENROLLMENT BANNER FOR COURSES / WORKSHOPS */}
+              {user && !isPrivileged && (
+                <div style={{
+                  backgroundColor: isOwned ? '#ecfdf5' : '#eff6ff',
+                  border: `1px solid ${isOwned ? '#10b981' : '#3b82f6'}`,
+                  borderRadius: '16px',
+                  padding: '16px 24px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '24px' }}>{isOwned ? '🎓' : '📢'}</span>
+                    <div>
+                      <h4 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 4px 0', color: isOwned ? '#065f46' : '#1e3a8a' }}>
+                        {isOwned ? 'Estás oficialmente inscrito en esta formación' : 'Estado de inscripción oficial'}
+                      </h4>
+                      <p style={{ fontSize: '13px', margin: 0, color: isOwned ? '#047857' : '#1d4ed8' }}>
+                        {isOwned
+                          ? 'Recibirás las notificaciones de nuevos módulos y accesos directos a charlas Zoom de este curso.'
+                          : 'Haz clic en "Anotarme" para registrarte formalmente y recibir alertas de reuniones Zoom en vivo.'}
+                      </p>
+                    </div>
+                  </div>
+                  {!isOwned && (
+                    <button
+                      onClick={handleEnrollManual}
+                      style={{
+                        backgroundColor: '#1f75f5ff',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        fontWeight: '800',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(31, 117, 245, 0.35)',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      🎓 Anotarme en este curso
+                    </button>
+                  )}
+                </div>
+              )}
+
               {currentItem ? (
                 <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
 

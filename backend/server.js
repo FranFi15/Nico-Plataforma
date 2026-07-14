@@ -14,6 +14,9 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import folderRoutes from './routes/folderRoutes.js';
 import videotecaFolderRoutes from './routes/videotecaFolderRoutes.js';
 import evaluationRoutes from './routes/evaluationRoutes.js';
+import zoomEventRoutes from './routes/zoomEventRoutes.js';
+import benefitRoutes from './routes/benefitRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 // Load environment variables (from .env file)
@@ -51,6 +54,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/folders', folderRoutes);
 app.use('/api/videoteca-folders', videotecaFolderRoutes);
 app.use('/api/evaluations', evaluationRoutes);
+app.use('/api/zoomevents', zoomEventRoutes);
+app.use('/api/benefits', benefitRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // Custom Error Handling Middlewares
 app.use(notFound);

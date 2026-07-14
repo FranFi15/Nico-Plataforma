@@ -334,7 +334,7 @@ const Home = () => {
             textTransform: 'uppercase',
             letterSpacing: '0.5px'
           }}>
-            Detrás de cada resultado hay un sistema, un equipo y un compromiso genuino con tu proceso, sin importar dónde estés.
+            Detrás de cada resultado hay un sistema, un equipo y un compromiso genuino con tu proceso sin importar dónde estés.
           </h1>
 
           <p style={{
@@ -480,7 +480,7 @@ const Home = () => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: 'rgba(5, 16, 32, 0.75)',
+                    backgroundColor: '#051020bf',
                     transition: 'background-color 0.3s ease',
                     zIndex: 1
                   }} />

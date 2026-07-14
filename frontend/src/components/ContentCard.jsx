@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 import AddToFolderModal from './AddToFolderModal';
 import CoursePreviewModal from './CoursePreviewModal';
 import { IoFolderOpen, IoCheckmarkCircle, IoLockClosed } from 'react-icons/io5';
@@ -32,7 +33,7 @@ const getYouTubeThumbnail = (url) => {
 
 const ContentCard = ({ content }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [buying, setBuying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,7 +131,12 @@ const ContentCard = ({ content }) => {
       actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop && hasStarted ? 'Continuar curso' : 'Ver ahora');
       handleAction = navigateToDetail;
     } else {
-      actionText = 'Comprar ahora';
+      const memberPctCalc = content.memberDiscountPercentage !== undefined && content.memberDiscountPercentage !== null && content.memberDiscountPercentage !== '' ? Number(content.memberDiscountPercentage) : 0;
+      if (isSubscribed && memberPctCalc > 0) {
+        actionText = `Comprar con Descuento (-${memberPctCalc}%)`;
+      } else {
+        actionText = 'Comprar ahora';
+      }
       handleAction = () => {
         if (!user) {
           alert('Por favor, inicia sesión para realizar la compra');
@@ -143,11 +149,12 @@ const ContentCard = ({ content }) => {
   }
 
   // Price rendering calculation
-  const showDiscount = content.accessType === 'one-time-purchase' && !isOwned && isSubscribed;
+  const memberPct = content.memberDiscountPercentage !== undefined && content.memberDiscountPercentage !== null && content.memberDiscountPercentage !== '' ? Number(content.memberDiscountPercentage) : 0;
+  const showDiscount = content.accessType === 'one-time-purchase' && !isOwned && isSubscribed && memberPct > 0;
   const originalPriceUsd = content.priceUsd !== undefined ? content.priceUsd : (content.price || 0);
   const originalPriceArs = content.priceArs || 0;
-  const discountedPriceUsd = originalPriceUsd * 0.8;
-  const discountedPriceArs = originalPriceArs * 0.8;
+  const discountedPriceUsd = originalPriceUsd * (1 - memberPct / 100);
+  const discountedPriceArs = originalPriceArs * (1 - memberPct / 100);
 
   // Badge mapping
   const typeNameSp = content.contentType === 'course'
@@ -349,9 +356,7 @@ const ContentCard = ({ content }) => {
                         ${originalPriceUsd.toFixed(2)}
                       </span>
                     </div>
-                    <span className="lift-badge" style={{ fontSize: '9px', width: 'fit-content' }}>
-                      -20% MIEMBROS
-                    </span>
+
                   </>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -495,7 +500,7 @@ const ContentCard = ({ content }) => {
                 <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {content.accessType === 'subscription' && 'Premium'}
                   {content.accessType === 'one-time-purchase' && 'Compra'}
-                  {content.accessType === 'free' && 'Gratis'}
+                  {content.accessType === 'free' && 'Acceso Libre'}
                 </span>
               </div>
 
@@ -548,7 +553,7 @@ const ContentCard = ({ content }) => {
                         </span>
                       </div>
                       <span className="lift-badge" style={{ fontSize: '9px', padding: '4px 10px', width: 'fit-content' }}>
-                        -20% MIEMBROS
+                        -{memberPct}% MIEMBROS
                       </span>
                     </>
                   ) : (
@@ -611,8 +616,16 @@ const ContentCard = ({ content }) => {
         content={content}
         hasAccess={hasAccess}
         user={user}
-        onContinue={() => {
+        onContinue={async () => {
           if (hasAccess) {
+            if (user && !isPrivileged && !isOwned && (content.contentType === 'course' || content.contentType === 'workshop')) {
+              try {
+                await api.post(`/content/${content._id}/enroll`);
+                if (refreshUser) refreshUser();
+              } catch (e) {
+                console.error('Error auto-enrolling from card:', e);
+              }
+            }
             navigateToDetail();
           } else {
             handleAction();

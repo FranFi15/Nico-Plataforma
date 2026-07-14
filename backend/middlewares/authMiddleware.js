@@ -62,6 +62,12 @@ export const checkAccess = async (req, res, next) => {
       return next();
     }
 
+    // If content is draft, non-privileged users cannot access it
+    if (content.isPublished === false || content.status === 'draft') {
+      res.status(403);
+      return next(new Error('Este contenido está en borrador y no está disponible públicamente aún.'));
+    }
+
     // Cursos and Workshops require login even if they are free
     if (content.contentType === 'course' || content.contentType === 'workshop') {
       if (!req.user) {
