@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import { IoWarningOutline, IoTicketOutline, IoCloseCircleOutline } from 'react-icons/io5';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -162,7 +163,9 @@ const CheckoutPage = () => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <div className="premium-card" style={{ width: '100%', maxWidth: '440px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-          <div style={{ fontSize: '40px', marginBottom: '20px' }}>⚠️</div>
+          <div style={{ marginBottom: '20px' }}>
+            <IoWarningOutline size={44} color="#ef4444" />
+          </div>
           <h2 style={{ color: '#ef4444', fontSize: '28px', fontWeight: '900', marginBottom: '12px', textTransform: 'uppercase' }}>
             Error de Pago
           </h2>
@@ -270,8 +273,8 @@ const CheckoutPage = () => {
                             </span>
                           )}
                           {couponPct > 0 && (
-                            <span className="lift-badge " style={{ fontSize: '9px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.12)', color: '#047857', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
-                              🎯 Cupón {appliedCoupon.code} aplicado (-{couponPct}%)
+                            <span className="lift-badge " style={{ fontSize: '10px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.12)', color: '#047857', borderColor: 'rgba(16, 185, 129, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <IoTicketOutline size={13} /> Cupón {appliedCoupon.code} aplicado (-{couponPct}%)
                             </span>
                           )}
                         </div>
@@ -357,8 +360,8 @@ const CheckoutPage = () => {
                 )}
               </form>
               {couponError && (
-                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#ef4444', fontWeight: '700' }}>
-                  ❌ {couponError}
+                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#ef4444', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IoCloseCircleOutline size={16} /> {couponError}
                 </p>
               )}
             </div>

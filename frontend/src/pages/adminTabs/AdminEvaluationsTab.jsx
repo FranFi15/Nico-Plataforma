@@ -1,19 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { IoSaveOutline } from 'react-icons/io5';
+import { IoSaveOutline, IoTrashOutline, IoAddCircleOutline } from 'react-icons/io5';
 
 const AdminEvaluationsTab = () => {
   const navigate = useNavigate();
   const [evalConfig, setEvalConfig] = useState({
     colectivoPdfUrl: '/Evaluaciones_Kinvent.pdf',
     colectivoFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform',
+    colectivoVideos: [],
     individualPdfUrl: '/Evaluaciones_Kinvent.pdf',
-    individualFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform'
+    individualFormLink: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform',
+    individualVideos: []
   });
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalUploading, setEvalUploading] = useState({ colectivo: false, individual: false });
   const [evalMessage, setEvalMessage] = useState('');
+
+  const [newIndividualVideo, setNewIndividualVideo] = useState('');
+  const [newColectivoVideo, setNewColectivoVideo] = useState('');
+
+  const handleAddVideo = (type) => {
+    if (type === 'individual' && newIndividualVideo.trim()) {
+      setEvalConfig(prev => ({
+        ...prev,
+        individualVideos: [...(prev.individualVideos || []), newIndividualVideo.trim()]
+      }));
+      setNewIndividualVideo('');
+    } else if (type === 'colectivo' && newColectivoVideo.trim()) {
+      setEvalConfig(prev => ({
+        ...prev,
+        colectivoVideos: [...(prev.colectivoVideos || []), newColectivoVideo.trim()]
+      }));
+      setNewColectivoVideo('');
+    }
+  };
+
+  const handleRemoveVideo = (type, indexToRemove) => {
+    if (type === 'individual') {
+      setEvalConfig(prev => ({
+        ...prev,
+        individualVideos: (prev.individualVideos || []).filter((_, idx) => idx !== indexToRemove)
+      }));
+    } else if (type === 'colectivo') {
+      setEvalConfig(prev => ({
+        ...prev,
+        colectivoVideos: (prev.colectivoVideos || []).filter((_, idx) => idx !== indexToRemove)
+      }));
+    }
+  };
 
   const fetchEvalConfig = async () => {
     try {
@@ -148,6 +183,53 @@ const AdminEvaluationsTab = () => {
                   </p>
                 )}
               </div>
+
+              <div className="form-group" style={{ marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Videos Shorts (Demostración Individual)</span>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>YouTube Shorts / Reels</span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="url"
+                    className="premium-input"
+                    value={newIndividualVideo}
+                    onChange={(e) => setNewIndividualVideo(e.target.value)}
+                    placeholder="https://www.youtube.com/shorts/..."
+                    style={{ flex: 1, fontSize: '13px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddVideo('individual')}
+                    className="btn-primary"
+                    style={{ padding: '8px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                  >
+                    <IoAddCircleOutline size={16} /> Agregar URL
+                  </button>
+                </div>
+
+                {(!evalConfig.individualVideos || evalConfig.individualVideos.length === 0) ? (
+                  <p style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No hay videos cargados aún.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {evalConfig.individualVideos.map((url, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
+                        <span style={{ fontSize: '12px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }} title={url}>
+                          {url}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVideo('individual', idx)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                          title="Eliminar video"
+                        >
+                          <IoTrashOutline size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Evaluación Colectiva Configuration */}
@@ -181,6 +263,53 @@ const AdminEvaluationsTab = () => {
                   <p style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
                     Actual: <a href={evalConfig.colectivoPdfUrl} target="_blank" rel="noreferrer" style={{ color: '#1f75f5ff', fontWeight: 'bold' }}>Ver PDF asignado</a>
                   </p>
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Videos Shorts (Demostración Colectiva)</span>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>YouTube Shorts / Reels</span>
+                </label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="url"
+                    className="premium-input"
+                    value={newColectivoVideo}
+                    onChange={(e) => setNewColectivoVideo(e.target.value)}
+                    placeholder="https://www.youtube.com/shorts/..."
+                    style={{ flex: 1, fontSize: '13px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddVideo('colectivo')}
+                    className="btn-primary"
+                    style={{ padding: '8px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
+                  >
+                    <IoAddCircleOutline size={16} /> Agregar URL
+                  </button>
+                </div>
+
+                {(!evalConfig.colectivoVideos || evalConfig.colectivoVideos.length === 0) ? (
+                  <p style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', margin: 0 }}>No hay videos cargados aún.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {evalConfig.colectivoVideos.map((url, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
+                        <span style={{ fontSize: '12px', color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }} title={url}>
+                          {url}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVideo('colectivo', idx)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                          title="Eliminar video"
+                        >
+                          <IoTrashOutline size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

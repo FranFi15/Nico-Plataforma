@@ -45,6 +45,24 @@ const FEATURES = [
   }
 ];
 
+const getEmbedUrl = (url) => {
+  if (!url) return '';
+  let videoId = '';
+  if (url.includes('/shorts/')) {
+    videoId = url.split('/shorts/')[1].split('?')[0].split('/')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1].split('?')[0].split('/')[0];
+  } else if (url.includes('youtube.com/watch?v=')) {
+    videoId = url.split('v=')[1].split('&')[0];
+  } else if (url.includes('instagram.com/reel/') || url.includes('instagram.com/p/')) {
+    const parts = url.split('/');
+    const codeIndex = parts.findIndex(p => p === 'reel' || p === 'p') + 1;
+    if (parts[codeIndex]) return `https://www.instagram.com/p/${parts[codeIndex]}/embed/`;
+  }
+  if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+  return url;
+};
+
 const EvaluacionesIndividual = () => {
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -309,20 +327,18 @@ const EvaluacionesIndividual = () => {
         marginTop: '60px',
         textAlign: 'center',
         padding: '50px 30px',
-        backgroundColor: 'var(--dark)',
-        color: '#ffffff',
-        borderRadius: '24px',
-        boxShadow: '0 15px 35px rgba(5,16,32,0.15)',
+        backgroundColor: 'transparent',
+        color: '#0f172a',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         maxWidth: '1000px',
         margin: '60px auto 0 auto'
       }}>
-        <h3 style={{ fontSize: '28px', fontWeight: '900', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>
+        <h3 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>
           ¿Querés conocer tu perfil físico y optimizar tu rendimiento?
         </h3>
-        <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.85)', maxWidth: '650px', margin: '0 0 32px 0', lineHeight: '1.6' }}>
+        <p style={{ fontSize: '16px', color: '#334155', maxWidth: '650px', margin: '0 0 32px 0', lineHeight: '1.6' }}>
           Coordiná tu sesión de evaluación individual con tecnología Kinvent. Obtené datos precisos, identifica tus puntos de mejora y elevá tu preparación física al siguiente nivel.
         </p>
 
@@ -337,9 +353,9 @@ const EvaluacionesIndividual = () => {
               alignItems: 'center',
               gap: '10px',
               borderRadius: '12px',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
+              border: '2px solid #0f172a',
               backgroundColor: 'transparent',
-              color: '#ffffff',
+              color: '#0f172a',
               fontWeight: '700',
               cursor: isDownloading ? 'wait' : 'pointer',
               transition: 'all 0.2s ease'
@@ -354,12 +370,12 @@ const EvaluacionesIndividual = () => {
             style={{
               padding: '16px 36px',
               fontSize: '15px',
-              backgroundColor: '#ffffff',
-              color: 'var(--dark)',
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
               fontWeight: '800',
               borderRadius: '12px',
               textDecoration: 'none',
-              boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+              boxShadow: '0 8px 25px rgba(15,23,42,0.25)',
               transition: 'transform 0.2s ease',
               display: 'inline-flex',
               alignItems: 'center'
@@ -369,7 +385,61 @@ const EvaluacionesIndividual = () => {
           </a>
         </div>
       </div>
+      {/* Así evaluamos - Sección de Shorts */}
+      <div style={{ marginTop: '80px', textAlign: 'center' }}>
+        <h2 className="premium-title" style={{ marginBottom: '8px' }}>
+          Así evaluamos
+        </h2>
+        <div className="accent-divider"></div>
+        <p style={{ color: 'var(--gray-500)', fontSize: '18px', fontWeight: '600', maxWidth: '750px', lineHeight: '1.6', textAlign: 'center', margin: '0 auto 40px auto' }}>
+          Cada test, un dato. Cada dato, una decisión de entrenamiento.
+        </p>
 
+        {evalConfig.individualVideos && evalConfig.individualVideos.length > 0 && (
+          <div style={{
+            display: 'flex',
+            gap: '24px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            padding: '10px 0'
+          }}>
+            {evalConfig.individualVideos.map((vidUrl, idx) => {
+              const embedUrl = getEmbedUrl(vidUrl);
+              const isMp4 = embedUrl.endsWith('.mp4') || embedUrl.endsWith('.webm') || embedUrl.endsWith('.mov');
+              return (
+                <div key={idx} style={{
+                  width: '280px',
+                  height: '500px',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+                  backgroundColor: '#000000',
+                  position: 'relative',
+                  border: '3px solid var(--primary)',
+                  flexShrink: 0
+                }}>
+                  {isMp4 ? (
+                    <video
+                      src={embedUrl}
+                      controls
+                      playsInline
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <iframe
+                      src={embedUrl}
+                      title={`Video Demostración ${idx + 1}`}
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

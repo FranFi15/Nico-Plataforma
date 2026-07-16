@@ -33,7 +33,7 @@ export const getEvaluationConfig = async (req, res, next) => {
 // @access  Private/Admin
 export const updateEvaluationConfig = async (req, res, next) => {
   try {
-    const { colectivoPdfUrl, colectivoFormLink, individualPdfUrl, individualFormLink } = req.body;
+    const { colectivoPdfUrl, colectivoFormLink, individualPdfUrl, individualFormLink, colectivoVideos, individualVideos } = req.body;
 
     let config = await Evaluation.findOne();
 
@@ -45,6 +45,8 @@ export const updateEvaluationConfig = async (req, res, next) => {
     if (colectivoFormLink !== undefined) config.colectivoFormLink = colectivoFormLink;
     if (individualPdfUrl !== undefined) config.individualPdfUrl = individualPdfUrl;
     if (individualFormLink !== undefined) config.individualFormLink = individualFormLink;
+    if (colectivoVideos !== undefined) config.colectivoVideos = colectivoVideos;
+    if (individualVideos !== undefined) config.individualVideos = individualVideos;
 
     const updatedConfig = await config.save();
 

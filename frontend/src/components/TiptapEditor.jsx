@@ -19,7 +19,7 @@ import {
   IoDocumentAttachOutline
 } from 'react-icons/io5';
 
-const TiptapEditor = ({ content, onChange }) => {
+const TiptapEditor = ({ content, onChange, stickyTopOffset = '115px' }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
 
@@ -227,8 +227,8 @@ const TiptapEditor = ({ content, onChange }) => {
       {/* Editor Toolbar (Sticky so it follows you when scrolling down) */}
       <div style={{
         position: 'sticky',
-        top: '16px',
-        zIndex: 100,
+        top: stickyTopOffset,
+        zIndex: 90,
         display: 'flex',
         alignItems: 'center',
         gap: '8px',

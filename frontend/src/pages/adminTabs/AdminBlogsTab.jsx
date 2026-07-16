@@ -780,6 +780,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
               <div style={{ minHeight: '350px' }}>
                 <TiptapEditor
                   content={cBody}
+                  stickyTopOffset="115px"
                   onChange={(html) => {
                     setCBody(html);
                   }}

@@ -15,7 +15,8 @@ import {
   IoStar,
   IoNewspaperOutline,
   IoCloseOutline,
-  IoListOutline
+  IoListOutline,
+  IoRocketOutline
 } from 'react-icons/io5';
 
 const CharlasZoom = () => {
@@ -639,10 +640,13 @@ const CharlasZoom = () => {
                           fontWeight: '800',
                           fontSize: '14px',
                           cursor: 'pointer',
-                          boxShadow: '0 4px 14px rgba(31, 117, 245, 0.35)'
+                          boxShadow: '0 4px 14px rgba(31, 117, 245, 0.35)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
                         }}
                       >
-                        🚀 Activar Acceso Premium
+                        <IoRocketOutline size={18} /> Activar Acceso Premium
                       </button>
                     </div>
                   )}

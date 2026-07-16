@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import AddToFolderModal from '../components/AddToFolderModal';
 import ReviewModal from '../components/ReviewModal';
-import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoDocumentText, IoSchool, IoTime, IoChevronDown, IoChevronUp, IoCheckmarkDone, IoDownloadOutline, IoHelpCircleOutline, IoStar } from 'react-icons/io5';
+import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoDocumentText, IoSchool, IoTime, IoChevronDown, IoChevronUp, IoCheckmarkDone, IoDownloadOutline, IoHelpCircleOutline, IoStar, IoSchoolOutline, IoMegaphoneOutline, IoDocumentTextOutline, IoInformationCircleOutline, IoTrophyOutline, IoCloseCircleOutline, IoRefreshOutline, IoChatbubbleOutline } from 'react-icons/io5';
 
 const CursoDetail = () => {
   const { id } = useParams();
@@ -149,7 +149,7 @@ const CursoDetail = () => {
   if (loading || authLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '120px 0', fontSize: '18px', color: 'var(--gray-500)', fontFamily: 'var(--font-sans)' }}>
-        <div style={{ fontSize: '40px', marginBottom: '16px' }}>🎓</div>
+        <IoSchoolOutline size={48} color="#1f75f5ff" style={{ marginBottom: '16px' }} />
         Cargando aula virtual y contenidos...
       </div>
     );
@@ -304,6 +304,82 @@ const CursoDetail = () => {
 
   return (
     <div className="animate-fade-in" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
+      <style>{`
+        @keyframes headerFadeSlideIn {
+          0% { opacity: 0; transform: translateY(-30px) scale(0.98); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes coverPulse {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.08); }
+        }
+        @keyframes sidebarPopIn {
+          0% { opacity: 0; transform: translateX(-25px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes accordionExpand {
+          0% { opacity: 0; transform: translateY(-10px); max-height: 0; }
+          100% { opacity: 1; transform: translateY(0); max-height: 2000px; }
+        }
+        @keyframes lessonContentPop {
+          0% { opacity: 0; transform: translateY(20px) scale(0.99); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes attachmentCardPop {
+          0% { opacity: 0; transform: translateY(15px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes reviewCardEntry {
+          0% { opacity: 0; transform: translateY(30px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes starPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+          50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+        }
+        @keyframes floatInBottom {
+          0% { opacity: 0; transform: translateY(40px) scale(0.85); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animated-course-header {
+          animation: headerFadeSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animated-cover-img {
+          animation: coverPulse 12s infinite alternate ease-in-out;
+        }
+        .animated-sidebar {
+          animation: sidebarPopIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+          opacity: 0;
+        }
+        .animated-accordion-body {
+          animation: accordionExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animated-lesson-container {
+          animation: lessonContentPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animated-attachment-card {
+          animation: attachmentCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+        .animated-review-card {
+          animation: reviewCardEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+        .animated-star-btn {
+          animation: starPulse 2.5s infinite;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animated-star-btn:hover {
+          transform: translateY(-3px) scale(1.03);
+          background-color: #dbeafe !important;
+        }
+        .animated-lesson-btn {
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animated-lesson-btn:hover {
+          transform: translateX(4px);
+        }
+      `}</style>
 
       {/* Top Navigation Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -336,6 +412,7 @@ const CursoDetail = () => {
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setShowReviewModal(true); }}
+              className="animated-star-btn"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -348,11 +425,8 @@ const CursoDetail = () => {
                 color: '#1f75f5ff',
                 border: '1px solid #bfdbfe',
                 fontWeight: '800',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                cursor: 'pointer'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dbeafe'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#eff6ff'; }}
             >
               <IoStar size={18} color="#f59e0b" />
               Dejar mi Reseña
@@ -360,7 +434,9 @@ const CursoDetail = () => {
             <button
               onClick={handleAddToFolderClick}
               className="btn-translucent"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '14px', margin: 0 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', fontSize: '14px', margin: 0, transition: 'all 0.2s ease' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               <IoFolderOpen size={18} color="#1f75f5ff" />
               Guardar en mi carpeta de estudio
@@ -370,7 +446,7 @@ const CursoDetail = () => {
       </div>
 
       {/* Course Header Banner */}
-      <div style={{
+      <div className="animated-course-header" style={{
         backgroundColor: '#051020',
         borderRadius: '24px',
         padding: '32px 40px',
@@ -381,7 +457,7 @@ const CursoDetail = () => {
         marginBottom: '32px',
         border: '1px solid rgba(255,255,255,0.08)'
       }}>
-        <div style={{
+        <div className="animated-cover-img" style={{
           position: 'absolute',
           top: 0,
           right: 0,
@@ -485,7 +561,7 @@ const CursoDetail = () => {
           <div className="skool-classroom-layout">
 
             {/* LEFT SIDEBAR: Skool Curriculum Accordion */}
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)', position: 'sticky', top: '24px', maxHeight: '82vh', overflowY: 'auto' }}>
+            <div className="animated-sidebar" style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)', position: 'sticky', top: '24px', maxHeight: '82vh', overflowY: 'auto' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
                 Módulos y Lecciones
               </h3>
@@ -523,7 +599,7 @@ const CursoDetail = () => {
 
                       {/* Lessons inside Module */}
                       {isActiveMod && (
-                        <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
+                        <div className="animated-accordion-body" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
                           {(mod.lessons || []).map((item, itemIndex) => {
                             const isSelected = activeModuleIdx === modIndex && activeLessonIdx === itemIndex;
                             const isDone = completedItems.includes(item.id);
@@ -533,6 +609,7 @@ const CursoDetail = () => {
                               <button
                                 key={item.id}
                                 onClick={() => setActiveLessonIdx(itemIndex)}
+                                className="animated-lesson-btn"
                                 style={{
                                   width: '100%',
                                   display: 'flex',
@@ -545,7 +622,6 @@ const CursoDetail = () => {
                                   color: isSelected ? '#0f172a' : '#475569',
                                   cursor: 'pointer',
                                   textAlign: 'left',
-                                  transition: 'all 0.15s ease',
                                   boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
                                 }}
                               >
@@ -556,7 +632,7 @@ const CursoDetail = () => {
                                     </div>
                                   ) : isQuiz ? (
                                     <div style={{ width: '20px', height: '20px', borderRadius: '6px', backgroundColor: isSelected ? '#38bdf8' : '#e0f2fe', color: '#051020', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px' }}>
-                                      ❓
+                                      <IoHelpCircleOutline size={14} />
                                     </div>
                                   ) : (
                                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: isSelected ? '#051020' : '#e2e8f0', color: isSelected ? '#38bdf8' : '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -599,7 +675,7 @@ const CursoDetail = () => {
                   gap: '16px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '24px' }}>{isOwned ? '🎓' : '📢'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>{isOwned ? <IoSchoolOutline size={26} color="#065f46" /> : <IoMegaphoneOutline size={26} color="#1e3a8a" />}</span>
                     <div>
                       <h4 style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 4px 0', color: isOwned ? '#065f46' : '#1e3a8a' }}>
                         {isOwned ? 'Estás oficialmente inscrito en esta formación' : 'Estado de inscripción oficial'}
@@ -624,17 +700,20 @@ const CursoDetail = () => {
                         fontSize: '13px',
                         cursor: 'pointer',
                         boxShadow: '0 4px 12px rgba(31, 117, 245, 0.35)',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
                       }}
                     >
-                      🎓 Anotarme en este curso
+                      <IoSchoolOutline size={16} /> Anotarme en este curso
                     </button>
                   )}
                 </div>
               )}
 
               {currentItem ? (
-                <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                <div key={currentItem.id} className="animated-lesson-container" style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
 
                   {/* Breadcrumb & Item Title */}
                   <div style={{ marginBottom: '24px' }}>
@@ -667,7 +746,7 @@ const CursoDetail = () => {
                         }}
                       >
                         <IoCheckmarkCircle size={18} color={completedItems.includes(currentItem.id) ? '#10b981' : '#94a3b8'} />
-                        {completedItems.includes(currentItem.id) ? 'Completada ✔' : 'Marcar como Completada'}
+                        {completedItems.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
                       </button>
                     </div>
                   </div>
@@ -697,7 +776,7 @@ const CursoDetail = () => {
                             gap: '6px'
                           }}
                         >
-                          📝 Notas y Temario
+                          <IoDocumentTextOutline size={18} /> Notas y Temario
                         </button>
                         <button
                           onClick={() => setLessonTab('attachments')}
@@ -715,7 +794,7 @@ const CursoDetail = () => {
                             gap: '6px'
                           }}
                         >
-                          📂 Recursos Descargables ({currentItem.attachments?.length || 0})
+                          <IoFolderOpen size={18} /> Recursos Descargables ({currentItem.attachments?.length || 0})
                         </button>
                       </div>
 
@@ -745,6 +824,7 @@ const CursoDetail = () => {
                                   href={att.url}
                                   target="_blank"
                                   rel="noreferrer"
+                                  className="animated-attachment-card"
                                   style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -757,7 +837,8 @@ const CursoDetail = () => {
                                     color: '#0f172a',
                                     fontWeight: '800',
                                     transition: 'all 0.2s ease',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                                    animationDelay: `${attIdx * 0.1}s`
                                   }}
                                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -856,8 +937,9 @@ const CursoDetail = () => {
                                 </div>
 
                                 {quizSubmitted && q.explanation && (
-                                  <div style={{ marginTop: '12px', padding: '10px 14px', backgroundColor: '#f1f5f9', borderRadius: '10px', fontSize: '13px', color: '#475569' }}>
-                                    💡 <b>Explicación:</b> {q.explanation}
+                                  <div style={{ marginTop: '12px', padding: '10px 14px', backgroundColor: '#f1f5f9', borderRadius: '10px', fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <IoInformationCircleOutline size={18} color="#3b82f6" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                    <div><b>Explicación:</b> {q.explanation}</div>
                                   </div>
                                 )}
                               </div>
@@ -882,17 +964,21 @@ const CursoDetail = () => {
                             </button>
                           ) : (
                             <div style={{ padding: '20px', borderRadius: '16px', backgroundColor: quizScore >= (currentItem.passingScore || 70) ? '#ecfdf5' : '#fef2f2', border: `2px solid ${quizScore >= (currentItem.passingScore || 70) ? '#10b981' : '#ef4444'}` }}>
-                              <h4 style={{ fontSize: '18px', fontWeight: '900', color: quizScore >= (currentItem.passingScore || 70) ? '#059669' : '#dc2626', margin: '0 0 6px 0' }}>
-                                {quizScore >= (currentItem.passingScore || 70) ? '🎉 ¡Felicitaciones! Has aprobado el examen' : '❌ No alcanzaste el puntaje mínimo de aprobación'}
+                              <h4 style={{ fontSize: '18px', fontWeight: '900', color: quizScore >= (currentItem.passingScore || 70) ? '#059669' : '#dc2626', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {quizScore >= (currentItem.passingScore || 70) ? (
+                                  <><IoTrophyOutline size={22} /> ¡Felicitaciones! Has aprobado el examen</>
+                                ) : (
+                                  <><IoCloseCircleOutline size={22} /> No alcanzaste el puntaje mínimo de aprobación</>
+                                )}
                               </h4>
                               <p style={{ fontSize: '14px', color: '#334155', margin: '0 0 14px 0' }}>
                                 Tu puntaje obtenido fue <b>{quizScore}%</b> (Mínimo requerido: {currentItem.passingScore || 70}%).
                               </p>
                               <button
                                 onClick={() => setQuizSubmitted(false)}
-                                style={{ padding: '8px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}
+                                style={{ padding: '8px 18px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', fontWeight: '800', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                               >
-                                🔄 Reintentar Examen
+                                <IoRefreshOutline size={16} /> Reintentar Examen
                               </button>
                             </div>
                           )}
@@ -906,9 +992,10 @@ const CursoDetail = () => {
                     <button
                       onClick={() => toggleItemCompleted(currentItem.id)}
                       className={completedItems.includes(currentItem.id) ? 'btn-translucent' : 'btn-primary'}
-                      style={{ padding: '12px 24px', fontSize: '14px', margin: 0 }}
+                      style={{ padding: '12px 24px', fontSize: '14px', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                     >
-                      {completedItems.includes(currentItem.id) ? '✔ Completada' : '✔ Marcar como Completada'}
+                      <IoCheckmarkCircle size={18} />
+                      {completedItems.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
                     </button>
 
                     <button
@@ -991,6 +1078,7 @@ const CursoDetail = () => {
             {content.reviews.map((r, idx) => (
               <div
                 key={idx}
+                className="animated-review-card"
                 style={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #cbd5e1',
@@ -1000,7 +1088,8 @@ const CursoDetail = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '14px',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  animationDelay: `${idx * 0.12}s`
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(31, 117, 245, 0.08)'; e.currentTarget.style.borderColor = '#1f75f5'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
@@ -1047,7 +1136,9 @@ const CursoDetail = () => {
             borderRadius: '20px',
             color: '#64748b'
           }}>
-            <div style={{ fontSize: '36px', marginBottom: '10px' }}>💬</div>
+            <div style={{ marginBottom: '10px' }}>
+              <IoChatbubbleOutline size={44} color="#94a3b8" />
+            </div>
             <strong style={{ display: 'block', fontSize: '16px', color: '#334155', marginBottom: '4px' }}>
               Aún no hay reseñas publicadas para esta formación
             </strong>
@@ -1095,7 +1186,7 @@ const CursoDetail = () => {
             fontSize: '13px',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            animation: 'fadeIn 0.2s ease-out'
+            animation: 'floatInBottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#38bdf8'; e.currentTarget.style.color = '#051020'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#051020'; e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.transform = 'translateY(0)'; }}

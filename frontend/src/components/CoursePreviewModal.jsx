@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IoClose, IoDocumentTextOutline, IoTimeOutline, IoRibbonOutline, IoSchoolOutline, IoCheckmarkCircle, IoPlay, IoPlayCircleOutline, IoVideocamOutline } from 'react-icons/io5';
+import { IoClose, IoDocumentTextOutline, IoTimeOutline, IoRibbonOutline, IoSchoolOutline, IoCheckmarkCircle, IoPlay, IoPlayCircleOutline, IoVideocamOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import nico from '../assets/nico.webp';
 import fedeImg from '../assets/fede.webp';
 
@@ -510,8 +510,8 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                             </span>
                           )}
                           {!isSubscribed && (
-                            <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
-                              💡 <strong style={{ color: '#0f172a' }}>¿Eres miembro Premium?</strong> Tienes un <strong style={{ color: '#1f75f5ff' }}>{memberPct}% de descuento</strong> al comprar.
+                            <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#64748b', lineHeight: '1.4', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <IoInformationCircleOutline size={16} color="#3b82f6" /> <span><strong style={{ color: '#0f172a' }}>¿Eres miembro Premium?</strong> Tienes un <strong style={{ color: '#1f75f5ff' }}>{memberPct}% de descuento</strong> al comprar.</span>
                             </p>
                           )}
                         </div>
@@ -527,8 +527,8 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                       <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
                         <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#1f75f5ff', borderRadius: '4px', transition: 'width 0.4s ease' }} />
                       </div>
-                      <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '700' }}>
-                        {effectiveAccess ? (progressPercent === 100 ? '✔ Completado al 100%' : progressPercent > 0 ? 'En Progreso' : 'Listo para comenzar') : 'Requiere activación para ingresar'}
+                      <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        {effectiveAccess ? (progressPercent === 100 ? <><IoCheckmarkCircle size={15} color="#10b981" /> Completado al 100%</> : progressPercent > 0 ? 'En Progreso' : 'Listo para comenzar') : 'Requiere activación para ingresar'}
                       </span>
                     </div>
                   )}

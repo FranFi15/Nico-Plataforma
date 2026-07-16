@@ -108,7 +108,9 @@ const Catalog = () => {
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           <div className="premium-card" style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '28px', marginBottom: '16px' }}>🏋️</div>
+            <div style={{ marginBottom: '16px' }}>
+              <IoFitnessOutline size={36} color="#1f75f5" />
+            </div>
             <h3 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--dark)' }}>Formaciones de Fuerza</h3>
             <p style={{ color: 'var(--gray-500)', fontSize: '14px', lineHeight: '1.6' }}>
               Cursos en profundidad sobre biomecánica básica y avanzada, hipertrofia muscular y programación científica del entrenamiento de fuerza.
@@ -116,7 +118,9 @@ const Catalog = () => {
           </div>
           
           <div className="premium-card" style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '28px', marginBottom: '16px' }}>⏱️</div>
+            <div style={{ marginBottom: '16px' }}>
+              <IoTimeOutline size={36} color="#1f75f5" />
+            </div>
             <h3 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--dark)' }}>Workshops Biomecánicos</h3>
             <p style={{ color: 'var(--gray-500)', fontSize: '14px', lineHeight: '1.6' }}>
               Talleres en vivo y prácticos donde analizamos la técnica de levantamientos olímpicos, sentadilla y peso muerto en directo.
@@ -124,7 +128,9 @@ const Catalog = () => {
           </div>
 
           <div className="premium-card" style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '28px', marginBottom: '16px' }}>💪</div>
+            <div style={{ marginBottom: '16px' }}>
+              <IoPeopleOutline size={36} color="#1f75f5" />
+            </div>
             <h3 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--dark)' }}>Comunidad de Coaches</h3>
             <p style={{ color: 'var(--gray-500)', fontSize: '14px', lineHeight: '1.6' }}>
               Foros de debate y consultas técnicas directas con preparadores físicos, nutricionistas y kinesiólogos deportivos de alto rendimiento.

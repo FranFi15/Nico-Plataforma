@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import ContentCard from '../components/ContentCard';
+import { IoSchoolOutline } from 'react-icons/io5';
 
 const MisCursos = () => {
   const navigate = useNavigate();
@@ -102,7 +103,9 @@ const MisCursos = () => {
           maxWidth: '600px',
           margin: '0 auto'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎓</div>
+          <div style={{ marginBottom: '16px' }}>
+            <IoSchoolOutline size={56} color="#94a3b8" />
+          </div>
           <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--dark)', marginBottom: '10px' }}>
             Aún no estás inscrito en ninguna formación
           </h3>

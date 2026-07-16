@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import TiptapEditor from '../../components/TiptapEditor';
-import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen, IoEyeOutline, IoEyeOffOutline, IoNotificationsOutline, IoSend } from 'react-icons/io5';
+import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen, IoEyeOutline, IoEyeOffOutline, IoNotificationsOutline, IoSend, IoCheckmarkCircleOutline, IoHelpCircleOutline, IoListOutline, IoChevronDown, IoChevronUp, IoInformationCircleOutline, IoPricetagOutline, IoImageOutline, IoBookmarkOutline } from 'react-icons/io5';
 
 const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [contents, setContents] = useState([]);
@@ -12,6 +12,12 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   // Editing & Form state
   const [editingItem, setEditingItem] = useState(null);
   const [showContentForm, setShowContentForm] = useState(false);
+
+  // Accordion / Dropdown section state for compact editing
+  const [openSections, setOpenSections] = useState({ card1: true, card2: false, card3: false, card4: true, card5: false });
+  const toggleSection = (sectionKey) => {
+    setOpenSections(prev => ({ ...prev, [sectionKey]: !prev[sectionKey] }));
+  };
 
   // Form fields
   const [cTitle, setCTitle] = useState('');
@@ -118,6 +124,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCCCategory(item.category?._id || item.category || '');
     setCIsPublished(item.isPublished !== false && item.status !== 'draft');
     setShowContentForm(true);
+    setOpenSections({ card1: false, card2: false, card3: false, card4: true, card5: false });
     window.scrollTo({ top: 200, behavior: 'smooth' });
   };
 
@@ -281,6 +288,139 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     }));
   };
 
+  // Helper para actualizar propiedades de una pregunta dentro de un examen/evaluación
+  const handleUpdateLessonQuestion = (modId, lesId, questionId, updatedQuestionProps) => {
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          const currentQuestions = l.questions || [];
+          return {
+            ...l,
+            questions: currentQuestions.map(q => q.id === questionId ? { ...q, ...updatedQuestionProps } : q)
+          };
+        })
+      };
+    }));
+  };
+
+  const handleAddQuestionToLesson = (modId, lesId) => {
+    const newQuestion = {
+      id: 'q_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      questionText: '¿Nueva pregunta del examen?',
+      options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+      correctOptionIndex: 0,
+      explanation: ''
+    };
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          return {
+            ...l,
+            questions: [...(l.questions || []), newQuestion]
+          };
+        })
+      };
+    }));
+  };
+
+  const handleDeleteQuestionFromLesson = (modId, lesId, questionId) => {
+    if (!window.confirm('¿Eliminar esta pregunta del examen múltiple choice?')) return;
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          return {
+            ...l,
+            questions: (l.questions || []).filter(q => q.id !== questionId)
+          };
+        })
+      };
+    }));
+  };
+
+  const handleAddOptionToQuestion = (modId, lesId, questionId) => {
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          return {
+            ...l,
+            questions: (l.questions || []).map(q => {
+              if (q.id !== questionId) return q;
+              const opts = q.options || [];
+              return {
+                ...q,
+                options: [...opts, `Opción ${opts.length + 1}`]
+              };
+            })
+          };
+        })
+      };
+    }));
+  };
+
+  const handleUpdateOptionInQuestion = (modId, lesId, questionId, optionIndex, newOptionText) => {
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          return {
+            ...l,
+            questions: (l.questions || []).map(q => {
+              if (q.id !== questionId) return q;
+              const opts = [...(q.options || [])];
+              opts[optionIndex] = newOptionText;
+              return { ...q, options: opts };
+            })
+          };
+        })
+      };
+    }));
+  };
+
+  const handleDeleteOptionFromQuestion = (modId, lesId, questionId, optionIndex) => {
+    setCModules(cModules.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id !== lesId) return l;
+          return {
+            ...l,
+            questions: (l.questions || []).map(q => {
+              if (q.id !== questionId) return q;
+              const opts = [...(q.options || [])];
+              if (opts.length <= 2) {
+                alert('La pregunta debe tener al menos 2 opciones de respuesta.');
+                return q;
+              }
+              opts.splice(optionIndex, 1);
+              let newCorrectIdx = q.correctOptionIndex || 0;
+              if (newCorrectIdx === optionIndex) {
+                newCorrectIdx = 0;
+              } else if (newCorrectIdx > optionIndex) {
+                newCorrectIdx = newCorrectIdx - 1;
+              }
+              return { ...q, options: opts, correctOptionIndex: newCorrectIdx };
+            })
+          };
+        })
+      };
+    }));
+  };
+
   const handleDeleteLesson = (modId, lesId) => {
     if (!window.confirm('¿Eliminar este ítem del módulo?')) return;
     setCModules(cModules.map(m => {
@@ -412,7 +552,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
             {!showContentForm && !editingItem && (
               <button
                 type="button"
-                onClick={() => setShowContentForm(true)}
+                onClick={() => { resetContentForm(); setShowContentForm(true); setOpenSections({ card1: true, card2: false, card3: false, card4: true, card5: false }); }}
                 className="btn-primary"
                 style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
@@ -485,302 +625,399 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
 
         {showContentForm && (
           <form onSubmit={handleContentSubmit}>
+            {/* ACCORDION QUICK CONTROLS BAR */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', color: '#ffffff', padding: '18px 24px', borderRadius: '16px', marginBottom: '24px', flexWrap: 'wrap', gap: '14px', boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)' }}>
+              <div>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '17px', fontWeight: '900', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <IoInformationCircleOutline size={22} />
+                  {editingItem ? `Editando: ${editingItem.title}` : 'Crear Nuevo Curso / Workshop'}
+                </h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
+                  Las secciones funcionan como dropdowns (acordeón) para que edites de forma enfocada sin hacer scroll por toda la pantalla.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setOpenSections({ card1: true, card2: true, card3: true, card4: true, card5: true })}
+                  style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  ↓ Desplegar Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenSections({ card1: false, card2: false, card3: false, card4: false, card5: false })}
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#cbd5e1', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  ↑ Contraer Todas
+                </button>
+              </div>
+            </div>
+
             {/* ========================================================
                 CARD 1: TIPO DE FORMACIÓN, TÍTULO Y CATEGORÍA
                 ======================================================== */}
             <div style={{
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: openSections.card1 ? '#f8fafc' : '#ffffff',
+              border: `1px solid ${openSections.card1 ? '#3b82f6' : '#cbd5e1'}`,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px'
+              padding: openSections.card1 ? '24px' : '16px 24px',
+              marginBottom: '20px',
+              transition: 'all 0.2s ease',
+              boxShadow: openSections.card1 ? '0 8px 24px rgba(31, 117, 245, 0.06)' : '0 2px 6px rgba(0,0,0,0.02)'
             }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 18px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ backgroundColor: '#1f75f5ff', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>1</span>
-                Tipo de Formación, Título y Categoría
-              </h3>
-
-              {/* Selector de Tipo (Curso o Workshop) */}
-              <div style={{ marginBottom: '20px' }}>
-                <label className="form-label" style={{ marginBottom: '10px', display: 'block' }}>¿Qué tipo de programa estás creando? *</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div
-                    onClick={() => setCSubtype('course')}
-                    style={{
-                      border: `2px solid ${cSubtype === 'course' ? '#1f75f5ff' : '#cbd5e1'}`,
-                      backgroundColor: cSubtype === 'course' ? '#eff6ff' : '#ffffff',
-                      padding: '16px',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '12px'
-                    }}
-                  >
-                    <div style={{ fontSize: '24px', color: cSubtype === 'course' ? '#1f75f5ff' : '#64748b' }}>
-                      <IoSchoolOutline />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: cSubtype === 'course' ? '#1e3a8a' : '#0f172a' }}>Curso de Especialización</h4>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>Formación integral estructurada por módulos y lecciones de estudio.</p>
-                    </div>
+              <div
+                onClick={() => toggleSection('card1')}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  marginBottom: openSections.card1 ? '20px' : '0',
+                  paddingBottom: openSections.card1 ? '16px' : '0',
+                  borderBottom: openSections.card1 ? '1px solid #cbd5e1' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ backgroundColor: openSections.card1 ? '#1f75f5ff' : '#64748b', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800' }}>1</span>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                      Tipo de Formación, Título y Categoría
+                    </h3>
+                    {!openSections.card1 && (
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                        {cTitle ? `Resumen: [${cSubtype.toUpperCase()}] ${cTitle}` : 'Click para desplegar y editar título y tipo'}
+                      </span>
+                    )}
                   </div>
-
-                  <div
-                    onClick={() => setCSubtype('workshop')}
-                    style={{
-                      border: `2px solid ${cSubtype === 'workshop' ? '#1f75f5ff' : '#cbd5e1'}`,
-                      backgroundColor: cSubtype === 'workshop' ? '#eff6ff' : '#ffffff',
-                      padding: '16px',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '12px'
-                    }}
-                  >
-                    <div style={{ fontSize: '24px', color: cSubtype === 'workshop' ? '#1f75f5ff' : '#64748b' }}>
-                      <IoConstructOutline />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: cSubtype === 'workshop' ? '#1e3a8a' : '#0f172a' }}>Taller Práctico / Workshop</h4>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>Capacitación intensiva sobre una temática específica y aplicación biomecánica.</p>
-                    </div>
-                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card1 ? '#1f75f5ff' : '#64748b', fontWeight: '800', fontSize: '13px' }}>
+                  <span>{openSections.card1 ? 'Contraer' : 'Desplegar'}</span>
+                  {openSections.card1 ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Título del Programa *</label>
-                  <input
-                    type="text"
-                    className="premium-input"
-                    value={cTitle}
-                    onChange={(e) => setCTitle(e.target.value)}
-                    placeholder={cSubtype === 'course' ? "Ej. Especialización en Hipertrofia y Biomecánica" : "Ej. Workshop: Selección de Ejercicios de Glúteos"}
-                    required
-                  />
-                </div>
+              {openSections.card1 && (
+                <div>
+                  {/* Selector de Tipo (Curso o Workshop) */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <label className="form-label" style={{ marginBottom: '10px', display: 'block' }}>¿Qué tipo de programa estás creando? *</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                      <div
+                        onClick={() => setCSubtype('course')}
+                        style={{
+                          border: `2px solid ${cSubtype === 'course' ? '#1f75f5ff' : '#cbd5e1'}`,
+                          backgroundColor: cSubtype === 'course' ? '#eff6ff' : '#ffffff',
+                          padding: '16px',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px'
+                        }}
+                      >
+                        <div style={{ fontSize: '24px', color: cSubtype === 'course' ? '#1f75f5ff' : '#64748b' }}>
+                          <IoSchoolOutline />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: cSubtype === 'course' ? '#1e3a8a' : '#0f172a' }}>Curso de Especialización</h4>
+                          <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>Formación integral estructurada por módulos y lecciones de estudio.</p>
+                        </div>
+                      </div>
 
-                <div className="form-group" style={{ margin: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <label className="form-label" style={{ margin: 0 }}>Categoría</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickCategory(!showQuickCategory)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#1f75f5ff',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        padding: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      {showQuickCategory ? <><IoClose size={14} /> Cerrar</> : <><IoAdd size={14} /> Nueva Categoría</>}
-                    </button>
-                  </div>
-
-                  {showQuickCategory && (
-                    <div style={{
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      marginBottom: '12px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
-                    }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <input
-                          type="text"
-                          className="premium-input"
-                          placeholder="Ej. Glúteos y Piernas"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          style={{ height: '36px', fontSize: '13px', padding: '8px 12px' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCategory}
-                          className="btn-primary"
-                          style={{ padding: '0 12px', height: '36px', fontSize: '11px', textTransform: 'none' }}
-                        >
-                          Agregar
-                        </button>
+                      <div
+                        onClick={() => setCSubtype('workshop')}
+                        style={{
+                          border: `2px solid ${cSubtype === 'workshop' ? '#1f75f5ff' : '#cbd5e1'}`,
+                          backgroundColor: cSubtype === 'workshop' ? '#eff6ff' : '#ffffff',
+                          padding: '16px',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px'
+                        }}
+                      >
+                        <div style={{ fontSize: '24px', color: cSubtype === 'workshop' ? '#1f75f5ff' : '#64748b' }}>
+                          <IoConstructOutline />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: cSubtype === 'workshop' ? '#1e3a8a' : '#0f172a' }}>Taller Práctico / Workshop</h4>
+                          <p style={{ margin: 0, fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>Capacitación intensiva sobre una temática específica y aplicación biomecánica.</p>
+                        </div>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  <select
-                    className="premium-input"
-                    value={cCategory}
-                    onChange={(e) => setCCCategory(e.target.value)}
-                    style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
-                  >
-                    <option value="">Selecciona una Categoría</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Título del Programa *</label>
+                      <input
+                        type="text"
+                        className="premium-input"
+                        value={cTitle}
+                        onChange={(e) => setCTitle(e.target.value)}
+                        placeholder={cSubtype === 'course' ? "Ej. Especialización en Hipertrofia y Biomecánica" : "Ej. Workshop: Selección de Ejercicios de Glúteos"}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <label className="form-label" style={{ margin: 0 }}>Categoría *</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowQuickCategory(!showQuickCategory)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#1f75f5ff',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {showQuickCategory ? <><IoClose size={14} /> Cerrar</> : <><IoAdd size={14} /> Nueva Categoría</>}
+                        </button>
+                      </div>
+
+                      {showQuickCategory && (
+                        <div style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          marginBottom: '12px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                              type="text"
+                              className="premium-input"
+                              placeholder="Ej. Glúteos y Piernas"
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                              style={{ height: '36px', fontSize: '13px', padding: '8px 12px' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddCategory}
+                              className="btn-primary"
+                              style={{ padding: '0 12px', height: '36px', fontSize: '11px', textTransform: 'none' }}
+                            >
+                              Agregar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <select
+                        className="premium-input"
+                        value={cCategory}
+                        onChange={(e) => setCCCategory(e.target.value)}
+                        style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
+                        required
+                      >
+                        <option value="">Selecciona una Categoría...</option>
+                        {categories.map((cat) => (
+                          <option key={cat._id} value={cat._id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ margin: '20px 0 0 0' }}>
+                    <label className="form-label">Descripción / Resumen de la Capacitación *</label>
+                    <textarea
+                      className="premium-input"
+                      rows="3"
+                      value={cDescription}
+                      onChange={(e) => setCDescription(e.target.value)}
+                      placeholder="Describe de qué trata esta formación, a quién va dirigida y qué aprenderá el alumno..."
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-
-              <div className="form-group" style={{ margin: '20px 0 0 0' }}>
-                <label className="form-label">Descripción / Resumen de la Capacitación *</label>
-                <textarea
-                  className="premium-input"
-                  rows="3"
-                  value={cDescription}
-                  onChange={(e) => setCDescription(e.target.value)}
-                  placeholder="Describe de qué trata esta formación, a quién va dirigida y qué aprenderá el alumno..."
-                  required
-                />
-              </div>
+              )}
             </div>
 
             {/* ========================================================
                 CARD 2: ACCESO, PRECIO, DURACIÓN Y CERTIFICACIÓN
                 ======================================================== */}
             <div style={{
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: openSections.card2 ? '#f8fafc' : '#ffffff',
+              border: `1px solid ${openSections.card2 ? '#3b82f6' : '#cbd5e1'}`,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px'
+              padding: openSections.card2 ? '24px' : '16px 24px',
+              marginBottom: '20px',
+              transition: 'all 0.2s ease',
+              boxShadow: openSections.card2 ? '0 8px 24px rgba(31, 117, 245, 0.06)' : '0 2px 6px rgba(0,0,0,0.02)'
             }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 18px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ backgroundColor: '#1f75f5ff', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>2</span>
-                Acceso, Precio, Duración y Certificación
-              </h3>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Tipo de Acceso *</label>
-                  <select
-                    className="premium-input"
-                    value={cAccessType}
-                    onChange={(e) => setCAccessType(e.target.value)}
-                    style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
-                  >
-                    <option value="free">Acceso Libre</option>
-                    <option value="subscription">Membresía Premium (Suscritos)</option>
-                    <option value="one-time-purchase">Pago Único (Compra Directa)</option>
-                  </select>
+              <div
+                onClick={() => toggleSection('card2')}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  marginBottom: openSections.card2 ? '20px' : '0',
+                  paddingBottom: openSections.card2 ? '16px' : '0',
+                  borderBottom: openSections.card2 ? '1px solid #cbd5e1' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ backgroundColor: openSections.card2 ? '#1f75f5ff' : '#64748b', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800' }}>2</span>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                      Acceso, Precio, Duración y Certificación
+                    </h3>
+                    {!openSections.card2 && (
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                        {cAccessType === 'free' ? 'Acceso Libre (Gratuito)' : cAccessType === 'subscription' ? 'Membresía Premium (Suscritos)' : `Pago Único ($${cPriceUsd} USD)`} • {cDuration || 'Sin duración especificada'} • {cCertificate ? 'Certificado incluido' : 'Sin certificado'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Duración Total Estimada</label>
-                  <input
-                    type="text"
-                    className="premium-input"
-                    value={cDuration}
-                    onChange={(e) => setCDuration(e.target.value)}
-                    placeholder="Ej. 45 minutos / 4 módulos / 12 horas"
-                  />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card2 ? '#1f75f5ff' : '#64748b', fontWeight: '800', fontSize: '13px' }}>
+                  <span>{openSections.card2 ? 'Contraer' : 'Desplegar'}</span>
+                  {openSections.card2 ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
                 </div>
               </div>
 
-              {cAccessType === 'one-time-purchase' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Precio en USD ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="premium-input"
-                      value={cPriceUsd}
-                      onChange={(e) => setCPriceUsd(e.target.value)}
-                      placeholder="Ej. 49.99"
-                      required
-                    />
+              {openSections.card2 && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Tipo de Acceso *</label>
+                      <select
+                        className="premium-input"
+                        value={cAccessType}
+                        onChange={(e) => setCAccessType(e.target.value)}
+                        style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
+                      >
+                        <option value="free">Acceso Libre</option>
+                        <option value="subscription">Membresía Premium (Suscritos)</option>
+                        <option value="one-time-purchase">Pago Único (Compra Directa)</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Duración Total Estimada</label>
+                      <input
+                        type="text"
+                        className="premium-input"
+                        value={cDuration}
+                        onChange={(e) => setCDuration(e.target.value)}
+                        placeholder="Ej. 45 minutos / 4 módulos / 12 horas"
+                      />
+                    </div>
                   </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label">Precio en ARS ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      className="premium-input"
-                      value={cPriceArs}
-                      onChange={(e) => setCPriceArs(e.target.value)}
-                      placeholder="Ej. 65000"
-                      required
-                    />
-                  </div>
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      className="premium-input"
-                      value={cMemberDiscountPercentage}
-                      onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
-                      placeholder="Ej. 20 (20% OFF)"
-                      style={{ border: '1.5px solid #3b82f6' }}
-                    />
+
+                  {cAccessType === 'one-time-purchase' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px', backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Precio en USD ($)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="premium-input"
+                          value={cPriceUsd}
+                          onChange={(e) => setCPriceUsd(parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                          style={{ border: '1.5px solid #3b82f6' }}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Precio en ARS ($)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          className="premium-input"
+                          value={cPriceArs}
+                          onChange={(e) => setCPriceArs(parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                          style={{ border: '1.5px solid #3b82f6' }}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">% Descuento Suscriptores</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="premium-input"
+                          value={cMemberDiscountPercentage}
+                          onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                          placeholder="Ej. 20 (20% OFF)"
+                          style={{ border: '1.5px solid #3b82f6' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Switch de Certificación */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>¿Incluye Certificación Oficial?</h4>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Si se activa, el alumno podrá descargar un certificado digital al completar las lecciones/exámenes.</p>
+                    </div>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: cCertificate ? '#1f75f5ff' : '#64748b' }}>
+                        {cCertificate ? 'Sí, incluye' : 'No incluye'}
+                      </span>
+                      <div
+                        onClick={() => setCCertificate(!cCertificate)}
+                        style={{
+                          width: '48px',
+                          height: '26px',
+                          backgroundColor: cCertificate ? '#1f75f5ff' : '#cbd5e1',
+                          borderRadius: '13px',
+                          position: 'relative',
+                          transition: 'background-color 0.2s ease',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: '#ffffff',
+                          borderRadius: '50%',
+                          position: 'absolute',
+                          top: '3px',
+                          left: cCertificate ? '25px' : '3px',
+                          transition: 'left 0.2s ease',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        }} />
+                      </div>
+                    </label>
                   </div>
                 </div>
               )}
-
-              {/* Switch de Certificación */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px',
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div>
-                  <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>¿Incluye Certificación Oficial?</h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Si se activa, el alumno podrá descargar un certificado digital al completar las lecciones/exámenes.</p>
-                </div>
-                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: cCertificate ? '#1f75f5ff' : '#64748b' }}>
-                    {cCertificate ? 'Sí, incluye' : 'No incluye'}
-                  </span>
-                  <div
-                    onClick={() => setCCertificate(!cCertificate)}
-                    style={{
-                      width: '48px',
-                      height: '26px',
-                      backgroundColor: cCertificate ? '#1f75f5ff' : '#cbd5e1',
-                      borderRadius: '13px',
-                      position: 'relative',
-                      transition: 'background-color 0.2s ease',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: '#ffffff',
-                      borderRadius: '50%',
-                      position: 'absolute',
-                      top: '3px',
-                      left: cCertificate ? '25px' : '3px',
-                      transition: 'left 0.2s ease',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                    }} />
-                  </div>
-                </label>
-              </div>
             </div>
 
             {/* Switch de Estado: Borrador vs Publicado */}
@@ -841,310 +1078,637 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                 CARD 3: PORTADA VISUAL Y VIDEO INTRODUCTORIO
                 ======================================================== */}
             <div style={{
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: openSections.card3 ? '#f8fafc' : '#ffffff',
+              border: `1px solid ${openSections.card3 ? '#3b82f6' : '#cbd5e1'}`,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px'
+              padding: openSections.card3 ? '24px' : '16px 24px',
+              marginBottom: '20px',
+              transition: 'all 0.2s ease',
+              boxShadow: openSections.card3 ? '0 8px 24px rgba(31, 117, 245, 0.06)' : '0 2px 6px rgba(0,0,0,0.02)'
             }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 18px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ backgroundColor: '#1f75f5ff', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>3</span>
-                Portada Visual y Video Introductorio
-              </h3>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Imagen de Portada (Card Image)</label>
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/jpg, image/webp"
-                    onChange={handleCardImageUpload}
-                    style={{ display: 'block', margin: '8px 0' }}
-                  />
-                  {cardImageUploading && <p style={{ fontSize: '12px', color: '#051020', fontWeight: 'bold' }}>Subiendo imagen de portada...</p>}
-                  {cCardImage && (
-                    <div style={{ marginTop: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <label className="form-label" style={{ margin: 0 }}>Previsualización de Portada</label>
-                        <button
-                          type="button"
-                          onClick={() => { setCCardImage(''); setCCardImagePosition('50%'); }}
-                          style={{
-                            backgroundColor: '#ef4444',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '4px 10px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          Quitar Imagen
-                        </button>
-                      </div>
-                      <div style={{
-                        width: '100%',
-                        height: '160px',
-                        borderRadius: '12px',
-                        border: '1px solid #cbd5e1',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        backgroundColor: '#f1f5f9'
-                      }}>
-                        <img
-                          src={cCardImage}
-                          alt="Previsualización"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            objectPosition: `center ${cCardImagePosition}`
-                          }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>Posición Vertical:</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={parseInt(cCardImagePosition) || 50}
-                          onChange={(e) => setCCardImagePosition(e.target.value + '%')}
-                          style={{ flex: 1, cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '13px', fontWeight: '800', width: '40px', textAlign: 'right' }}>{cCardImagePosition}</span>
-                      </div>
-                    </div>
-                  )}
+              <div
+                onClick={() => toggleSection('card3')}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  marginBottom: openSections.card3 ? '20px' : '0',
+                  paddingBottom: openSections.card3 ? '16px' : '0',
+                  borderBottom: openSections.card3 ? '1px solid #cbd5e1' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ backgroundColor: openSections.card3 ? '#1f75f5ff' : '#64748b', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800' }}>3</span>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                      Portada Visual y Video Introductorio
+                    </h3>
+                    {!openSections.card3 && (
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                        {cCardImage ? 'Imagen de portada cargada' : 'Sin imagen de portada'} • {cVideoLink ? 'Video introductorio cargado' : 'Sin video introductorio'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Video de Introducción / Tráiler (Enlace)</label>
-                  <input
-                    type="url"
-                    className="premium-input"
-                    value={cVideoLink}
-                    onChange={(e) => setCVideoLink(e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=... o Vimeo/Cloudinary"
-                  />
-                  <p style={{ fontSize: '12px', color: '#64748b', marginTop: '6px', lineHeight: '1.4' }}>
-                    Se mostrará en la cabecera de la capacitación como presentación del curso antes de que el usuario comience con los módulos.
-                  </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card3 ? '#1f75f5ff' : '#64748b', fontWeight: '800', fontSize: '13px' }}>
+                  <span>{openSections.card3 ? 'Contraer' : 'Desplegar'}</span>
+                  {openSections.card3 ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
                 </div>
               </div>
+
+              {openSections.card3 && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Imagen de Portada (Card Image)</label>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg, image/webp"
+                        onChange={handleCardImageUpload}
+                        style={{ display: 'block', margin: '8px 0' }}
+                      />
+                      {cardImageUploading && <p style={{ fontSize: '12px', color: '#051020', fontWeight: 'bold' }}>Subiendo imagen de portada...</p>}
+                      {cCardImage && (
+                        <div style={{ marginTop: '12px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <label className="form-label" style={{ margin: 0 }}>Previsualización de Portada</label>
+                            <button
+                              type="button"
+                              onClick={() => { setCCardImage(''); setCCardImagePosition('50%'); }}
+                              style={{
+                                backgroundColor: '#ef4444',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '4px 10px',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              Eliminar Portada
+                            </button>
+                          </div>
+                          <div style={{
+                            width: '100%',
+                            height: '180px',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            border: '1px solid #cbd5e1',
+                            position: 'relative'
+                          }}>
+                            <img
+                              src={cCardImage}
+                              alt="Previsualización Portada"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                objectPosition: `50% ${cCardImagePosition}`
+                              }}
+                            />
+                          </div>
+                          <div style={{ marginTop: '12px', backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>
+                              Encuadre Vertical del Rostro / Elemento ({cCardImagePosition})
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={parseInt(cCardImagePosition) || 50}
+                              onChange={(e) => setCCardImagePosition(`${e.target.value}%`)}
+                              style={{ width: '100%', cursor: 'pointer' }}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                              <span>Arriba (0%)</span>
+                              <span>Centro (50%)</span>
+                              <span>Abajo (100%)</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Video de Introducción o Presentación (Opcional)</label>
+                      <input
+                        type="text"
+                        className="premium-input"
+                        placeholder="Ej. https://www.youtube.com/watch?v=... o https://vimeo.com/..."
+                        value={cVideoLink}
+                        onChange={(e) => setCVideoLink(e.target.value)}
+                      />
+                      <p style={{ fontSize: '12px', color: '#64748b', margin: '6px 0 0 0' }}>
+                        Se mostrará en la cabecera de la capacitación como presentación del curso antes de que el usuario comience con los módulos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ========================================================
                 CARD 4: PLAN DE ESTUDIOS Y MÓDULOS (ESTILO SKOOL)
                 ======================================================== */}
             <div style={{
-              backgroundColor: '#ffffff',
-              border: '2px solid #1f75f5ff',
+              backgroundColor: openSections.card4 ? '#ffffff' : '#f8fafc',
+              border: `2px solid ${openSections.card4 ? '#1f75f5ff' : '#cbd5e1'}`,
               borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '30px'
+              padding: openSections.card4 ? '24px' : '18px 24px',
+              marginBottom: '30px',
+              transition: 'all 0.2s ease',
+              boxShadow: openSections.card4 ? '0 12px 30px rgba(31, 117, 245, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ backgroundColor: '#1f75f5ff', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>4</span>
-                    Plan de Estudios y Módulos (Estilo Skool Classroom)
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Estructura las clases por módulos y lecciones a la izquierda, y edita el contenido del ítem seleccionado a la derecha.</p>
+              <div
+                onClick={() => toggleSection('card4')}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  marginBottom: openSections.card4 ? '20px' : '0',
+                  paddingBottom: openSections.card4 ? '16px' : '0',
+                  borderBottom: openSections.card4 ? '1px solid #e2e8f0' : 'none',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
+                  <span style={{ backgroundColor: openSections.card4 ? '#1f75f5ff' : '#64748b', color: '#fff', width: '30px', height: '30px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '800' }}>4</span>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Plan de Estudios y Módulos (Estilo Skool Classroom)
+                    </h3>
+                    {openSections.card4 ? (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Estructura las clases por módulos y lecciones a la izquierda, y edita el contenido del ítem seleccionado a la derecha.</p>
+                    ) : (
+                      <span style={{ fontSize: '13px', color: '#1f75f5ff', fontWeight: '700', marginTop: '2px', display: 'block' }}>
+                        {cModules.length === 0 ? 'Sin módulos aún • Click para expandir y agregar módulos' : `${cModules.length} módulo(s) configurado(s) • Click para desplegar plan de estudios`}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddModule}
-                  className="btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '13px' }}
-                >
-                  + Agregar Módulo
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {openSections.card4 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleAddModule(); }}
+                      className="btn-primary"
+                      style={{ padding: '8px 16px', fontSize: '13px' }}
+                    >
+                      + Agregar Módulo
+                    </button>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card4 ? '#1f75f5ff' : '#64748b', fontWeight: '800', fontSize: '13px' }}>
+                    <span>{openSections.card4 ? 'Contraer' : 'Desplegar'}</span>
+                    {openSections.card4 ? <IoChevronUp size={22} /> : <IoChevronDown size={22} />}
+                  </div>
+                </div>
               </div>
 
-              {cModules.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#64748b' }}>
-                  Aún no has creado ningún módulo. Haz clic en <strong>+ Agregar Módulo</strong> para comenzar a construir el plan de estudios.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' }}>
-                  {/* Top Column: Module & Lesson Tree */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '500px', overflowY: 'auto', paddingRight: '4px', width: '100%' }}>
-                    {cModules.map((mod, modIdx) => (
-                      <div key={mod.id} style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
-                          <input
-                            type="text"
-                            value={mod.title}
-                            onChange={(e) => handleUpdateModule(mod.id, { title: e.target.value })}
-                            className="premium-input"
-                            style={{ fontWeight: '800', fontSize: '14px', height: '36px', flex: 1 }}
-                            placeholder="Nombre del Módulo"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteModule(mod.id)}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center' }}
-                            title="Eliminar módulo"
-                          >
-                            <IoTrashOutline size={18} />
-                          </button>
-                        </div>
+              {openSections.card4 && (
+                <div>
 
-                        <div style={{ marginBottom: '12px' }}>
-                          <textarea
-                            value={mod.description || ''}
-                            onChange={(e) => handleUpdateModule(mod.id, { description: e.target.value })}
-                            className="premium-input"
-                            rows={2}
-                            style={{ fontSize: '13px', width: '100%', resize: 'vertical', padding: '8px 12px', color: '#334155', minHeight: '48px' }}
-                            placeholder="Descripción o temario del módulo que se mostrará en el plan de estudios..."
-                          />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '12px', borderLeft: '2px solid #e2e8f0' }}>
-                          {mod.lessons && mod.lessons.map((les) => {
-                            const isSelected = activeEditingLessonId && activeEditingLessonId.lessonId === les.id;
-                            return (
-                              <div
-                                key={les.id}
-                                onClick={() => setActiveEditingLessonId({ moduleId: mod.id, lessonId: les.id })}
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  padding: '10px 14px',
-                                  borderRadius: '8px',
-                                  backgroundColor: isSelected ? '#1f75f5ff' : '#ffffff',
-                                  color: isSelected ? '#ffffff' : '#0f172a',
-                                  border: '1px solid #e2e8f0',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s ease'
-                                }}
+                  {cModules.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#64748b' }}>
+                      Aún no has creado ningún módulo. Haz clic en <strong>+ Agregar Módulo</strong> para comenzar a construir el plan de estudios.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' }}>
+                      {/* Top Column: Module & Lesson Tree */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '500px', overflowY: 'auto', paddingRight: '4px', width: '100%' }}>
+                        {cModules.map((mod, modIdx) => (
+                          <div key={mod.id} style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
+                              <input
+                                type="text"
+                                value={mod.title}
+                                onChange={(e) => handleUpdateModule(mod.id, { title: e.target.value })}
+                                className="premium-input"
+                                style={{ fontWeight: '800', fontSize: '14px', height: '36px', flex: 1 }}
+                                placeholder="Nombre del Módulo"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteModule(mod.id)}
+                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                title="Eliminar módulo"
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                                    {les.type === 'quiz' ? <IoDocumentTextOutline size={16} /> : <IoPlayCircleOutline size={16} />}
-                                  </span>
-                                  <span style={{ fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {les.title || 'Sin título'}
-                                  </span>
-                                </div>
+                                <IoTrashOutline size={18} />
+                              </button>
+                            </div>
+
+                            <div style={{ marginBottom: '12px' }}>
+                              <textarea
+                                value={mod.description || ''}
+                                onChange={(e) => handleUpdateModule(mod.id, { description: e.target.value })}
+                                className="premium-input"
+                                rows={2}
+                                style={{ fontSize: '13px', width: '100%', resize: 'vertical', padding: '8px 12px', color: '#334155', minHeight: '48px' }}
+                                placeholder="Descripción o temario del módulo que se mostrará en el plan de estudios..."
+                              />
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '12px', borderLeft: '2px solid #e2e8f0' }}>
+                              {mod.lessons && mod.lessons.map((les) => {
+                                const isSelected = activeEditingLessonId && activeEditingLessonId.lessonId === les.id;
+                                return (
+                                  <div
+                                    key={les.id}
+                                    onClick={() => setActiveEditingLessonId({ moduleId: mod.id, lessonId: les.id })}
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      padding: '10px 14px',
+                                      borderRadius: '8px',
+                                      backgroundColor: isSelected ? '#1f75f5ff' : '#ffffff',
+                                      color: isSelected ? '#ffffff' : '#0f172a',
+                                      border: '1px solid #e2e8f0',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                                        {les.type === 'quiz' ? <IoDocumentTextOutline size={16} /> : <IoPlayCircleOutline size={16} />}
+                                      </span>
+                                      <span style={{ fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {les.title || 'Sin título'}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleDeleteLesson(mod.id, les.id); }}
+                                      style={{ background: 'none', border: 'none', color: isSelected ? '#ffffff' : '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px', display: 'flex', alignItems: 'center' }}
+                                      title="Eliminar ítem"
+                                    >
+                                      <IoClose size={16} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteLesson(mod.id, les.id); }}
-                                  style={{ background: 'none', border: 'none', color: isSelected ? '#ffffff' : '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px', display: 'flex', alignItems: 'center' }}
-                                  title="Eliminar ítem"
+                                  onClick={() => handleAddLesson(mod.id, 'lesson')}
+                                  style={{ flex: 1, background: '#ffffff', border: '1px dashed #cbd5e1', padding: '8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', color: '#1f75f5ff', cursor: 'pointer' }}
                                 >
-                                  <IoClose size={16} />
+                                  + Lección
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddLesson(mod.id, 'quiz')}
+                                  style={{ flex: 1, background: '#ffffff', border: '1px dashed #cbd5e1', padding: '8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', color: '#d97706', cursor: 'pointer' }}
+                                >
+                                  + Examen
                                 </button>
                               </div>
-                            );
-                          })}
-
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                            <button
-                              type="button"
-                              onClick={() => handleAddLesson(mod.id, 'lesson')}
-                              style={{ flex: 1, background: '#ffffff', border: '1px dashed #cbd5e1', padding: '8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', color: '#1f75f5ff', cursor: 'pointer' }}
-                            >
-                              + Lección
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAddLesson(mod.id, 'quiz')}
-                              style={{ flex: 1, background: '#ffffff', border: '1px dashed #cbd5e1', padding: '8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', color: '#d97706', cursor: 'pointer' }}
-                            >
-                              + Examen
-                            </button>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Bottom Column: Selected Lesson / Quiz Editor */}
-                  <div style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '24px', backgroundColor: '#ffffff', minHeight: '380px', width: '100%' }}>
-                    {!activeEditingLessonId ? (
-                      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
-                        Selecciona una lección o evaluación en la parte superior para editar su contenido (videos, texto enriquecido y recursos descargables).
-                      </div>
-                    ) : (() => {
-                      const mod = cModules.find(m => m.id === activeEditingLessonId.moduleId);
-                      const les = mod ? mod.lessons.find(l => l.id === activeEditingLessonId.lessonId) : null;
-                      if (!les) return <div style={{ color: '#64748b' }}>El ítem seleccionado ya no existe.</div>;
-
-                      return (
-                        <div>
-                          <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '20px' }}>
-                            <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                {les.type === 'quiz' ? <><IoDocumentTextOutline size={20} color="#d97706" /> Evaluación</> : <><IoPlayCircleOutline size={20} color="#1f75f5ff" /> Lección</>}
-                              </span> • <span style={{ color: '#1f75f5ff' }}>{les.title || 'Sin título'}</span>
-                            </h4>
+                      {/* Bottom Column: Selected Lesson / Quiz Editor */}
+                      <div style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '24px', backgroundColor: '#ffffff', minHeight: '380px', width: '100%' }}>
+                        {!activeEditingLessonId ? (
+                          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+                            Selecciona una lección o evaluación en la parte superior para editar su contenido (videos, texto enriquecido y recursos descargables).
                           </div>
+                        ) : (() => {
+                          const mod = cModules.find(m => m.id === activeEditingLessonId.moduleId);
+                          const les = mod ? mod.lessons.find(l => l.id === activeEditingLessonId.lessonId) : null;
+                          if (!les) return <div style={{ color: '#64748b' }}>El ítem seleccionado ya no existe.</div>;
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                            <div className="form-group" style={{ margin: 0 }}>
-                              <label className="form-label">Título del Ítem</label>
-                              <input
-                                type="text"
-                                value={les.title}
-                                onChange={(e) => handleUpdateLesson(mod.id, les.id, { title: e.target.value })}
-                                className="premium-input"
-                                placeholder="Ej. Lección 1: Introducción biomecánica"
-                              />
-                            </div>
-
-                            <div className="form-group" style={{ margin: 0 }}>
-                              <label className="form-label">Duración Estimada</label>
-                              <input
-                                type="text"
-                                value={les.duration}
-                                onChange={(e) => handleUpdateLesson(mod.id, les.id, { duration: e.target.value })}
-                                className="premium-input"
-                                placeholder="Ej. 15 min"
-                              />
-                            </div>
-                          </div>
-
-                          {les.type === 'quiz' ? (
-                            <div style={{ marginTop: '16px' }}>
-                              <p style={{ fontSize: '13px', color: '#64748b' }}>
-                                * Próximamente se cargará el editor detallado de preguntas múltiple choice para esta evaluación.
-                              </p>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="form-group" style={{ marginBottom: '24px' }}>
-                                <label className="form-label">Enlace de Video (YouTube / Vimeo / Cloudinary)</label>
-                                <input
-                                  type="url"
-                                  value={les.videoLink || ''}
-                                  onChange={(e) => handleUpdateLesson(mod.id, les.id, { videoLink: e.target.value })}
-                                  className="premium-input"
-                                  placeholder="https://youtube.com/watch?v=..."
-                                />
+                          return (
+                            <div>
+                              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '16px', marginBottom: '24px' }}>
+                                <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    {les.type === 'quiz' ? <><IoDocumentTextOutline size={20} color="#d97706" /> Evaluación</> : <><IoPlayCircleOutline size={20} color="#1f75f5ff" /> Lección</>}
+                                  </span> • <span style={{ color: '#1f75f5ff' }}>{les.title || 'Sin título'}</span>
+                                </h4>
                               </div>
 
-                              <div className="form-group">
-                                <label className="form-label" style={{ marginBottom: '10px' }}>Contenido de Texto / Apuntes de la Lección</label>
-                                <div style={{ minHeight: '320px' }}>
-                                  <TiptapEditor
-                                    content={les.body || ''}
-                                    onChange={(html) => handleUpdateLesson(mod.id, les.id, { body: html })}
-                                    placeholder="Escribe aquí notas adicionales, explicaciones, inserta videos o imágenes y puntos clave..."
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                                <div className="form-group" style={{ margin: 0 }}>
+                                  <label className="form-label">Título del Ítem</label>
+                                  <input
+                                    type="text"
+                                    value={les.title}
+                                    onChange={(e) => handleUpdateLesson(mod.id, les.id, { title: e.target.value })}
+                                    className="premium-input"
+                                    placeholder="Ej. Lección 1: Introducción biomecánica"
+                                  />
+                                </div>
+
+                                <div className="form-group" style={{ margin: 0 }}>
+                                  <label className="form-label">Duración Estimada</label>
+                                  <input
+                                    type="text"
+                                    value={les.duration}
+                                    onChange={(e) => handleUpdateLesson(mod.id, les.id, { duration: e.target.value })}
+                                    className="premium-input"
+                                    placeholder="Ej. 15 min"
                                   />
                                 </div>
                               </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
+
+                              {les.type === 'quiz' ? (
+                                <div style={{ marginTop: '24px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '24px' }}>
+
+                                  {/* ENCABEZADO Y CONFIGURACIÓN GENERAL DEL EXAMEN */}
+                                  <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '20px', marginBottom: '24px' }}>
+                                    <h3 style={{ fontSize: '17px', fontWeight: '900', color: '#0f172a', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <IoCheckmarkCircleOutline size={22} color="#d97706" />
+                                      Configuración de la Evaluación (Multiple Choice)
+                                    </h3>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                                      <div className="form-group" style={{ margin: 0 }}>
+                                        <label className="form-label">Puntaje Mínimo de Aprobación (%)</label>
+                                        <input
+                                          type="number"
+                                          min="10"
+                                          max="100"
+                                          value={les.passingScore || 70}
+                                          onChange={(e) => handleUpdateLesson(mod.id, les.id, { passingScore: parseInt(e.target.value) || 70 })}
+                                          className="premium-input"
+                                          style={{ fontWeight: '800', color: '#d97706' }}
+                                        />
+                                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                                          Porcentaje de respuestas correctas para aprobar el módulo.
+                                        </span>
+                                      </div>
+
+                                      <div className="form-group" style={{ margin: 0 }}>
+                                        <label className="form-label">Instrucciones / Descripción del Examen</label>
+                                        <input
+                                          type="text"
+                                          value={les.description || ''}
+                                          onChange={(e) => handleUpdateLesson(mod.id, les.id, { description: e.target.value })}
+                                          className="premium-input"
+                                          placeholder="Ej. Responde correctamente cada pregunta para desbloquear la siguiente clase."
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* LISTADO DE PREGUNTAS */}
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                                    <h4 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <IoListOutline size={20} color="#1f75f5" />
+                                      Preguntas Configuradas ({(les.questions || []).length})
+                                    </h4>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddQuestionToLesson(mod.id, les.id)}
+                                      style={{
+                                        backgroundColor: '#1f75f5',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        padding: '10px 18px',
+                                        borderRadius: '12px',
+                                        fontWeight: '800',
+                                        fontSize: '13px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        boxShadow: '0 4px 12px rgba(31, 117, 245, 0.3)'
+                                      }}
+                                    >
+                                      <IoAdd size={18} /> Agregar Pregunta
+                                    </button>
+                                  </div>
+
+                                  {(les.questions || []).length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                                      <IoHelpCircleOutline size={48} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                                      <h5 style={{ fontSize: '16px', fontWeight: '800', color: '#334155', margin: '0 0 8px 0' }}>
+                                        No hay preguntas creadas
+                                      </h5>
+                                      <p style={{ color: '#64748b', fontSize: '13px', maxWidth: '420px', margin: '0 auto 18px auto' }}>
+                                        Haz clic en el botón para agregar tu primera pregunta de opción múltiple a esta evaluación.
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddQuestionToLesson(mod.id, les.id)}
+                                        className="btn-primary"
+                                        style={{ padding: '10px 20px', fontSize: '13px' }}
+                                      >
+                                        + Crear Primera Pregunta
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                      {(les.questions || []).map((q, qIdx) => (
+                                        <div
+                                          key={q.id || qIdx}
+                                          style={{
+                                            backgroundColor: '#ffffff',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '16px',
+                                            padding: '20px',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                                            position: 'relative'
+                                          }}
+                                        >
+                                          {/* Cabecera de la Pregunta */}
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px', marginBottom: '16px' }}>
+                                            <span style={{ fontSize: '14px', fontWeight: '900', color: '#1f75f5', backgroundColor: '#eff6ff', padding: '4px 12px', borderRadius: '8px' }}>
+                                              Pregunta #{qIdx + 1}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleDeleteQuestionFromLesson(mod.id, les.id, q.id)}
+                                              style={{
+                                                backgroundColor: '#fef2f2',
+                                                color: '#ef4444',
+                                                border: '1px solid #fecaca',
+                                                padding: '6px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '12px',
+                                                fontWeight: '700',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px'
+                                              }}
+                                            >
+                                              <IoTrashOutline /> Eliminar Pregunta
+                                            </button>
+                                          </div>
+
+                                          {/* Enunciado */}
+                                          <div className="form-group" style={{ marginBottom: '18px' }}>
+                                            <label className="form-label" style={{ fontWeight: '800' }}>Enunciado de la Pregunta</label>
+                                            <input
+                                              type="text"
+                                              value={q.questionText || ''}
+                                              onChange={(e) => handleUpdateLessonQuestion(mod.id, les.id, q.id, { questionText: e.target.value })}
+                                              className="premium-input"
+                                              placeholder="Ej. ¿Cuál es el principal motor flexor de la cadera en el sprint?"
+                                            />
+                                          </div>
+
+                                          {/* Opciones de Respuesta */}
+                                          <div style={{ marginBottom: '18px' }}>
+                                            <label className="form-label" style={{ fontWeight: '800', marginBottom: '10px', display: 'block' }}>
+                                              Opciones de Respuesta (Selecciona la opción correcta haciendo clic en el círculo o botón)
+                                            </label>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                              {(q.options || []).map((opt, optIdx) => {
+                                                const isCorrect = q.correctOptionIndex === optIdx;
+                                                return (
+                                                  <div
+                                                    key={optIdx}
+                                                    style={{
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      gap: '10px',
+                                                      backgroundColor: isCorrect ? '#ecfdf5' : '#f8fafc',
+                                                      border: `2px solid ${isCorrect ? '#10b981' : '#e2e8f0'}`,
+                                                      padding: '10px 14px',
+                                                      borderRadius: '12px',
+                                                      transition: 'all 0.15s ease'
+                                                    }}
+                                                  >
+                                                    {/* Botón de Respuesta Correcta */}
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleUpdateLessonQuestion(mod.id, les.id, q.id, { correctOptionIndex: optIdx })}
+                                                      style={{
+                                                        backgroundColor: isCorrect ? '#10b981' : '#ffffff',
+                                                        color: isCorrect ? '#ffffff' : '#64748b',
+                                                        border: `2px solid ${isCorrect ? '#10b981' : '#cbd5e1'}`,
+                                                        borderRadius: '8px',
+                                                        padding: '6px 12px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '800',
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'nowrap',
+                                                        transition: 'all 0.15s ease'
+                                                      }}
+                                                      title="Marcar como respuesta correcta"
+                                                    >
+                                                      {isCorrect ? '✓ Correcta' : 'Marcar Correcta'}
+                                                    </button>
+
+                                                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#475569', minWidth: '22px' }}>
+                                                      {String.fromCharCode(65 + optIdx)})
+                                                    </span>
+
+                                                    <input
+                                                      type="text"
+                                                      value={opt}
+                                                      onChange={(e) => handleUpdateOptionInQuestion(mod.id, les.id, q.id, optIdx, e.target.value)}
+                                                      className="premium-input"
+                                                      style={{ margin: 0, padding: '8px 12px', fontSize: '14px', flex: 1 }}
+                                                      placeholder={`Escribe el texto para la Opción ${String.fromCharCode(65 + optIdx)}...`}
+                                                    />
+
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleDeleteOptionFromQuestion(mod.id, les.id, q.id, optIdx)}
+                                                      style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: '#94a3b8',
+                                                        fontSize: '18px',
+                                                        cursor: 'pointer',
+                                                        padding: '4px',
+                                                        display: 'flex',
+                                                        alignItems: 'center'
+                                                      }}
+                                                      title="Eliminar esta opción"
+                                                    >
+                                                      ×
+                                                    </button>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+
+                                            <button
+                                              type="button"
+                                              onClick={() => handleAddOptionToQuestion(mod.id, les.id, q.id)}
+                                              style={{
+                                                marginTop: '10px',
+                                                backgroundColor: '#ffffff',
+                                                color: '#1f75f5',
+                                                border: '1px dashed #3b82f6',
+                                                padding: '8px 14px',
+                                                borderRadius: '10px',
+                                                fontSize: '12px',
+                                                fontWeight: '800',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px'
+                                              }}
+                                            >
+                                              + Añadir otra opción
+                                            </button>
+                                          </div>
+
+                                          {/* Explicación / Justificación */}
+                                          <div className="form-group" style={{ margin: 0 }}>
+                                            <label className="form-label" style={{ fontSize: '12px', color: '#475569' }}>
+                                              💡 Explicación de la Respuesta Correcta (Opcional - se muestra al alumno al calificar)
+                                            </label>
+                                            <input
+                                              type="text"
+                                              value={q.explanation || ''}
+                                              onChange={(e) => handleUpdateLessonQuestion(mod.id, les.id, q.id, { explanation: e.target.value })}
+                                              className="premium-input"
+                                              style={{ fontSize: '13px' }}
+                                              placeholder="Ej. La opción correcta es B porque la articulación coxofemoral..."
+                                            />
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="form-group" style={{ marginBottom: '24px' }}>
+                                    <label className="form-label">Enlace de Video (YouTube / Vimeo / Cloudinary)</label>
+                                    <input
+                                      type="url"
+                                      value={les.videoLink || ''}
+                                      onChange={(e) => handleUpdateLesson(mod.id, les.id, { videoLink: e.target.value })}
+                                      className="premium-input"
+                                      placeholder="https://youtube.com/watch?v=..."
+                                    />
+                                  </div>
+
+                                  <div className="form-group">
+                                    <label className="form-label" style={{ marginBottom: '10px' }}>Contenido de Texto / Apuntes de la Lección</label>
+                                    <div style={{ minHeight: '320px' }}>
+                                      <TiptapEditor
+                                        content={les.body || ''}
+                                        onChange={(html) => handleUpdateLesson(mod.id, les.id, { body: html })}
+                                        placeholder="Escribe aquí notas adicionales, explicaciones, inserta videos o imágenes y puntos clave..."
+                                      />
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1154,50 +1718,84 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                 ======================================================== */}
             {editingItem && (
               <div style={{
-                backgroundColor: '#fefeef',
-                border: '1px solid #fde047',
+                backgroundColor: openSections.card5 ? '#fefeef' : '#ffffff',
+                border: `1px solid ${openSections.card5 ? '#ca8a04' : '#fde047'}`,
                 borderRadius: '16px',
-                padding: '24px',
+                padding: openSections.card5 ? '24px' : '16px 24px',
                 marginBottom: '24px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '16px'
+                transition: 'all 0.2s ease',
+                boxShadow: openSections.card5 ? '0 8px 24px rgba(202, 138, 4, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)'
               }}>
-                <div>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#854d0e', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <IoNotificationsOutline size={20} color="#ca8a04" />
-                    ¿Subiste un nuevo módulo o lección a este curso?
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#a16207' }}>
-                    Envía una notificación instantánea y alerta en la plataforma a todos los alumnos que tienen acceso a este curso para avisarles de las nuevas clases disponibles.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotifyTitle(`¡Nuevo contenido en: ${editingItem.title}!`);
-                    setNotifyMessage('Hemos agregado nuevas lecciones y material al curso. ¡Entra ahora para continuar tu aprendizaje!');
-                    setShowNotifyModal(true);
-                  }}
+                <div
+                  onClick={() => toggleSection('card5')}
                   style={{
-                    backgroundColor: '#ca8a04',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '10px 18px',
-                    borderRadius: '12px',
-                    fontWeight: '800',
-                    fontSize: '13px',
-                    cursor: 'pointer',
                     display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 12px rgba(202, 138, 4, 0.3)'
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    marginBottom: openSections.card5 ? '20px' : '0',
+                    paddingBottom: openSections.card5 ? '16px' : '0',
+                    borderBottom: openSections.card5 ? '1px solid #fef08a' : 'none'
                   }}
                 >
-                  <IoSend size={16} /> Notificar a Alumnos
-                </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ backgroundColor: openSections.card5 ? '#ca8a04' : '#a16207', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800' }}>5</span>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#854d0e', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <IoNotificationsOutline size={20} color="#ca8a04" />
+                        Notificar a Alumnos sobre Nuevas Lecciones / Contenido
+                      </h3>
+                      {!openSections.card5 && (
+                        <span style={{ fontSize: '12px', color: '#a16207', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                          Click para desplegar y enviar una alerta por correo / plataforma a los alumnos del curso
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card5 ? '#ca8a04' : '#a16207', fontWeight: '800', fontSize: '13px' }}>
+                    <span>{openSections.card5 ? 'Contraer' : 'Desplegar'}</span>
+                    {openSections.card5 ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
+                  </div>
+                </div>
+
+                {openSections.card5 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={{ flex: '1 1 300px' }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#854d0e', margin: '0 0 6px 0' }}>
+                        ¿Subiste un nuevo módulo o lección a este curso?
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#a16207', lineHeight: '1.4' }}>
+                        Envía una notificación instantánea y alerta en la plataforma a todos los alumnos que tienen acceso a este curso para avisarles de las nuevas clases disponibles.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotifyTitle(`¡Nuevo contenido en: ${editingItem.title}!`);
+                        setNotifyMessage('Hemos agregado nuevas lecciones y material al curso. ¡Entra ahora para continuar tu aprendizaje!');
+                        setShowNotifyModal(true);
+                      }}
+                      style={{
+                        backgroundColor: '#ca8a04',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '12px 20px',
+                        borderRadius: '12px',
+                        fontWeight: '800',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 12px rgba(202, 138, 4, 0.3)',
+                        transition: 'transform 0.2s ease'
+                      }}
+                    >
+                      <IoSend size={16} /> Notificar a Alumnos
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1473,3 +2071,4 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
 };
 
 export default AdminWorkshopsTab;
+

@@ -217,9 +217,16 @@ const Home = () => {
   useEffect(() => {
     const fetchAthletes = async () => {
       try {
+        // 1. Intentar cargar los atletas propios del carrusel de Home
+        const homeResponse = await api.get('/home-athletes');
+        if (homeResponse.data && homeResponse.data.success && homeResponse.data.data.length > 0) {
+          setAthletePhotos(homeResponse.data.data);
+          return;
+        }
+
+        // 2. Fallback: Si todavía no se subieron atletas a Home, tomar las fotos de los planes de entrenamiento
         const response = await api.get('/trainings');
         if (response.data && response.data.success) {
-          // Flatten all athlete photos from all training plans
           const allPhotos = response.data.data.reduce((acc, training) => {
             if (training.athletePhotos && training.athletePhotos.length > 0) {
               acc.push(...training.athletePhotos);
@@ -227,7 +234,6 @@ const Home = () => {
             return acc;
           }, []);
 
-          // Deduplicate photos by URL
           const uniquePhotos = [];
           const seenUrls = new Set();
           for (const photo of allPhotos) {
@@ -238,7 +244,6 @@ const Home = () => {
             }
           }
 
-          // Shuffle photos to randomize order
           const shuffledPhotos = [...uniquePhotos].sort(() => Math.random() - 0.5);
           setAthletePhotos(shuffledPhotos);
         }

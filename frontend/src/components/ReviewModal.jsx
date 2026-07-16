@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { IoClose, IoStar } from 'react-icons/io5';
+import { IoClose, IoStar, IoCheckmarkCircle } from 'react-icons/io5';
 
 const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle }) => {
   const [rating, setRating] = useState(5);
@@ -119,8 +119,8 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle }) =>
 
         {submitted ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px' }}>
-              ✔
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <IoCheckmarkCircle size={38} color="#10b981" />
             </div>
             <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: 0 }}>
               ¡Muchas gracias por tu reseña!

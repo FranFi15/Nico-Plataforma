@@ -10,6 +10,11 @@ const evaluationSchema = new mongoose.Schema(
       type: String,
       default: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform',
     },
+    colectivoVideos: [
+      {
+        type: String,
+      }
+    ],
     individualPdfUrl: {
       type: String,
       default: '/Evaluaciones_Kinvent.pdf',
@@ -18,6 +23,11 @@ const evaluationSchema = new mongoose.Schema(
       type: String,
       default: 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform',
     },
+    individualVideos: [
+      {
+        type: String,
+      }
+    ],
   },
   {
     timestamps: true,

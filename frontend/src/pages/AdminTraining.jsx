@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Import Modular Tabs
 import AdminTrainingsTab from './adminTabs/AdminTrainingsTab';
+import AdminHomeTab from './adminTabs/AdminHomeTab';
 import AdminBlogsTab from './adminTabs/AdminBlogsTab';
 import AdminWorkshopsTab from './adminTabs/AdminWorkshopsTab';
 import AdminVideotecaTab from './adminTabs/AdminVideotecaTab';
@@ -209,6 +210,7 @@ const AdminTraining = () => {
         flexWrap: 'wrap'
       }}>
         {[
+          { id: 'home', label: 'Home' },
           { id: 'trainings', label: 'Entrenamiento a Distancia' },
           { id: 'blogs', label: 'Blogs & Artículos' },
           { id: 'workshops', label: 'Workshops & Capacitaciones' },
@@ -250,6 +252,9 @@ const AdminTraining = () => {
 
       {/* Render Active Tab Module */}
       <div className="tab-content animate-fade-in">
+        {activeTab === 'home' && (
+          <AdminHomeTab formMessage={formMessage} setFormMessage={setFormMessage} />
+        )}
         {activeTab === 'trainings' && (
           <AdminTrainingsTab formMessage={formMessage} setFormMessage={setFormMessage} />
         )}
