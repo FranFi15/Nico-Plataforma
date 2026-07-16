@@ -20,27 +20,27 @@ const ACCENT_COLORS = [
 const FEATURES = [
   {
     title: 'Rango Óptimo de Movimiento',
-    description: 'Dorsiflexión de tobillo • Elevación de pierna recta',
+    description: 'Utilizamos el sensor K-Move para medir con precisión los ángulos de movilidad articular en tiempo real. Evaluamos tobillo, cadera y hombro, detectando restricciones que puedan comprometer el gesto deportivo o aumentar el riesgo de lesión. Cada dato es objetivo, reproducible y comparable entre sesiones.',
     image: tobilloImg
   },
   {
     title: 'Fuerza y Estabilidad de Hombro',
-    description: 'Test ASH (Athletic Shoulder Test) para análisis isométrico de estabilizadores.',
+    description: 'Con el K-Push evaluamos la capacidad de fuerza de empuje de hombro y sus estabilizadores en distintos ángulos. Medimos fuerza máxima, velocidad de producción de fuerza (RFD) y asimetría entre ambos brazos. Un test clave para detectar desequilibrios en atletas con alta demanda de miembro superior.',
     image: hombroImg
   },
   {
     title: 'Fuerza Máxima Isométrica',
-    description: 'Flexión de rodilla en decúbito prono a 90° • Extensión de rodilla en sedestación a 90° • RATIO IQ',
+    description: 'El K-Pull mide la producción de fuerza isométrica máxima de tracción en distintos grupos musculares. Al no involucrar movimiento articular, es un test altamente sensible y reproducible, ideal para el seguimiento de la fuerza máxima y la evolución durante procesos de readaptación.',
     image: rodillaImg
   },
   {
     title: 'Fuerza Isométrica Multiarticular',
-    description: 'IMTP (Mid-Thigh Pull) para evaluar la máxima fuerza de tracción isométrica general.',
+    description: 'Con las plataformas de fuerza K-Delta realizamos el IMTP (Isometric Mid-Thigh Pull), el test de referencia para la fuerza máxima del tren inferior en cadena cinética cerrada. Medimos la fuerza bilateral y su distribución entre ambas piernas.',
     image: imtpImg
   },
   {
     title: 'Fuerza Reactiva & Explosiva',
-    description: 'CMJ (Salto con contramovimiento) • Prueba de Skipping / Prueba 10/5 RJT o RSI',
+    description: 'Las plataformas K-Delta analizan en profundidad la capacidad de salto mediante CMJ, ABK y Drop Jump, entre otras evaluaciones de salto. Obtenemos altura, potencia relativa, tiempo de vuelo, tiempo de contacto y el Índice de Fuerza Reactiva (RSI): un perfil completo de la explosividad y la reactividad neuromuscular de cada atleta.',
     image: saltoImg
   }
 ];

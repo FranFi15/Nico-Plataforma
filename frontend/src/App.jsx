@@ -25,6 +25,7 @@ import EvaluacionesColectivo from './pages/EvaluacionesColectivo';
 import AdminTraining from './pages/AdminTraining';
 import MisAlumnos from './pages/MisAlumnos';
 import CharlasZoom from './pages/CharlasZoom';
+import Noticias from './pages/Noticias';
 
 function App() {
   return (
@@ -55,6 +56,8 @@ function App() {
           <Route path="mis-carpetas" element={<MisCarpetas />} />
           <Route path="mi-perfil" element={<MiPerfil />} />
           <Route path="charlas-zoom" element={<CharlasZoom />} />
+          <Route path="agenda" element={<CharlasZoom />} />
+          <Route path="noticias" element={<Noticias />} />
         </Route>
       </Routes>
     </Router>

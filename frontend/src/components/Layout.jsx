@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { IoChevronDown, IoSchool, IoFolderOpen, IoPerson, IoLogOut, IoShieldHalf, IoPeople, IoMenu, IoClose, IoNotificationsOutline, IoCheckmarkCircleOutline, IoNewspaperOutline, IoVideocamOutline } from 'react-icons/io5';
+import { IoChevronDown, IoSchool, IoFolderOpen, IoPerson, IoLogOut, IoShieldHalf, IoPeople, IoMenu, IoClose, IoNotificationsOutline, IoCheckmarkCircleOutline, IoNewspaperOutline, IoVideocamOutline, IoCalendarOutline } from 'react-icons/io5';
 import api from '../services/api';
 
 import logoImg from '../assets/logob.webp';
@@ -404,12 +404,20 @@ const Layout = () => {
                     ) : (
                       <>
                         <Link
-                          to="/charlas-zoom"
+                          to="/noticias"
                           onClick={() => setDropdownOpen(false)}
                           style={{ ...dropdownItemStyle, display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', fontWeight: '800' }}
                           className="user-dropdown-item"
                         >
-                          <IoNewspaperOutline size={16} /> Noticias & Agenda
+                          <IoNewspaperOutline size={16} /> Noticias
+                        </Link>
+                        <Link
+                          to="/agenda"
+                          onClick={() => setDropdownOpen(false)}
+                          style={{ ...dropdownItemStyle, display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', fontWeight: '800' }}
+                          className="user-dropdown-item"
+                        >
+                          <IoCalendarOutline size={16} /> Agenda
                         </Link>
                         <Link
                           to="/mis-cursos"
@@ -540,8 +548,11 @@ const Layout = () => {
                 </>
               ) : (
                 <>
-                  <Link to="/charlas-zoom" onClick={() => setMobileMenuOpen(false)} style={{ ...dropdownItemStyle, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', fontWeight: '800' }} className="user-dropdown-item">
-                    <IoNewspaperOutline size={18} /> Noticias & Agenda
+                  <Link to="/noticias" onClick={() => setMobileMenuOpen(false)} style={{ ...dropdownItemStyle, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', fontWeight: '800' }} className="user-dropdown-item">
+                    <IoNewspaperOutline size={18} /> Noticias
+                  </Link>
+                  <Link to="/agenda" onClick={() => setMobileMenuOpen(false)} style={{ ...dropdownItemStyle, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', fontWeight: '800' }} className="user-dropdown-item">
+                    <IoCalendarOutline size={18} /> Agenda
                   </Link>
                   <Link to="/mis-cursos" style={{ ...dropdownItemStyle, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px' }} className="user-dropdown-item">
                     <IoSchool size={18} /> Mis Cursos & Workshops

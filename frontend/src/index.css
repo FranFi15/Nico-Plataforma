@@ -865,8 +865,8 @@ body::before {
   flex-grow: 1;
   border-radius: 16px;
   background: #051020bf;
-  background-size: auto 120%;
-  background-position: center;
+  background-size: auto 100%;
+  background-position: bottom;
   cursor: pointer;
   transition: 0.5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
   text-align: left;
@@ -887,7 +887,7 @@ body::before {
     linear-gradient(180deg, rgba(5, 16, 32, 0.25) 0%, #051020bf 65%, #051020 100%),
     var(--optionImage);
   background-size: cover;
-  background-position: center;
+  background-position: bottom;
   background-repeat: no-repeat;
 }
 
