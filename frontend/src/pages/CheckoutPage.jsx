@@ -8,7 +8,7 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  
+
   const contentId = searchParams.get('contentId');
 
   // Loading and State management
@@ -21,6 +21,8 @@ const CheckoutPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
 
   const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
 
@@ -49,6 +51,19 @@ const CheckoutPage = () => {
       };
 
       fetchCourseDetails();
+    } else {
+      // Load subscription plan details for Flow B
+      const fetchPlan = async () => {
+        try {
+          const res = await api.get('/subscription-plan');
+          if (res.data && res.data.data) {
+            setSubscriptionPlan(res.data.data);
+          }
+        } catch (err) {
+          console.error('Error cargando plan de suscripción:', err);
+        }
+      };
+      fetchPlan();
     }
   }, [contentId]);
 
@@ -56,8 +71,8 @@ const CheckoutPage = () => {
   const handleSubscribe = async (gateway) => {
     setProcessingGateway(gateway);
     try {
-      const endpoint = gateway === 'mp' 
-        ? '/payments/mercadopago/subscribe' 
+      const endpoint = gateway === 'mp'
+        ? '/payments/mercadopago/subscribe'
         : '/payments/paypal/subscribe';
 
       const response = await api.post(endpoint);
@@ -108,7 +123,7 @@ const CheckoutPage = () => {
         ? '/payments/mercadopago/checkout'
         : '/payments/paypal/checkout';
 
-      const response = await api.post(endpoint, { 
+      const response = await api.post(endpoint, {
         contentId,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined
       });
@@ -184,7 +199,7 @@ const CheckoutPage = () => {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
       <div className="premium-card" style={{ width: '100%', maxWidth: '680px', border: '1px solid #e5e5e5' }}>
-        
+
         {contentId && content ? (
           /* FLOW A: SINGLE CONTENT PURCHASE CHECKOUT */
           <div>
@@ -196,31 +211,30 @@ const CheckoutPage = () => {
             </p>
 
             {/* Course Breakdown Invoice Card */}
-            <div style={{ 
-              background: '#ffffff', 
-              border: '1px solid #e5e5e5', 
-              borderRadius: '16px', 
-              padding: '24px', 
-              marginBottom: '30px' 
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e5e5e5',
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '30px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <span className={`lift-badge ${
-                  content.contentType === 'course' ? 'badge-course' : content.contentType === 'workshop' ? '' : 'badge-blog'
-                }`}>
+                <span className={`lift-badge ${content.contentType === 'course' ? 'badge-course' : content.contentType === 'workshop' ? '' : 'badge-blog'
+                  }`}>
                   {content.contentType === 'course' ? 'Curso Práctico' : content.contentType === 'workshop' ? 'Taller / Workshop' : 'Artículo Científico'}
                 </span>
                 <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase' }}>
                   Pago Único
                 </span>
               </div>
-              
+
               <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#fff', marginBottom: '10px' }}>
                 {content.title}
               </h3>
               <p style={{ color: '#6b7280', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
                 {content.description}
               </p>
-              
+
               {/* Pricing breakdown */}
               {(() => {
                 const memberPct = content.memberDiscountPercentage !== undefined && content.memberDiscountPercentage !== null && content.memberDiscountPercentage !== '' ? Number(content.memberDiscountPercentage) : 0;
@@ -371,27 +385,27 @@ const CheckoutPage = () => {
               Selecciona tu pasarela de pago:
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <button 
+              <button
                 onClick={() => handlePurchase('mp')}
                 disabled={processingGateway !== null}
-                className="btn-primary" 
-                style={{ 
-                  width: '100%', 
-                  background: 'linear-gradient(135deg, #00b1ea 0%, #009ee3 100%)', 
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #00b1ea 0%, #009ee3 100%)',
                   boxShadow: '0 4px 15px rgba(0, 158, 227, 0.2)',
                   padding: '14px'
                 }}
               >
                 {processingGateway === 'mp' ? 'Procesando conexión...' : 'Pagar de forma segura con Mercado Pago'}
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => handlePurchase('paypal')}
                 disabled={processingGateway !== null}
-                className="btn-primary" 
-                style={{ 
-                  width: '100%', 
-                  background: 'linear-gradient(135deg, #0079c1 0%, #00457c 100%)', 
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #0079c1 0%, #00457c 100%)',
                   boxShadow: '0 4px 15px rgba(0, 121, 193, 0.2)',
                   padding: '14px'
                 }}
@@ -404,71 +418,57 @@ const CheckoutPage = () => {
           /* FLOW B: SUBSCRIPTION PLAN UPGRADE */
           <div>
             <h2 className="" style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              Membresía Nico Lift
+              {subscriptionPlan?.title || 'Suscripción Mensual'}
             </h2>
             <p style={{ color: '#6b7280', fontSize: '15px', marginBottom: '30px', textAlign: 'center' }}>
-              Desbloquea accesos ilimitados y obtén descuentos exclusivos en workshops de biomecánica
+              {subscriptionPlan?.description || 'Acceso exclusivo de la plataforma con todos los contenidos desbloqueados'}
             </p>
 
             {/* Plan Details Card */}
-            <div style={{ 
-              background: '#ffffff', 
-              border: '2px solid rgba(249, 115, 22, 0.25)', 
-              borderRadius: '20px', 
-              padding: '30px 24px', 
-              marginBottom: '30px', 
+            <div style={{
+              background: '#ffffff',
+              border: '2px solid rgba(249, 115, 22, 0.25)',
+              borderRadius: '20px',
+              padding: '30px 24px',
+              marginBottom: '30px',
               textAlign: 'center',
               position: 'relative'
             }}>
-              <div className="lift-badge " style={{ 
-                position: 'absolute', 
-                top: '-12px', 
-                left: '50%', 
-                transform: 'translateX(-50%)',
-                fontSize: '10px',
-                fontWeight: '900',
-                padding: '6px 14px',
-                background: '#051020',
-                color: '#fff',
-                border: 'none',
-                boxShadow: '0 4px 10px rgba(249, 115, 22, 0.4)'
-              }}>
-                RECOMENDADO
-              </div>
-              
+
               <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#051020', marginBottom: '8px', letterSpacing: '0.5px' }}>
-                ACCESO ANUAL / MENSUAL ILIMITADO
+                ACCESO MENSUAL
               </h3>
-              
-              <div style={{ margin: '20px 0' }}>
-                <span style={{ fontSize: '48px', fontWeight: '900', color: '#fff' }}>$19.90</span>
-                <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: '600' }}> / mes</span>
+
+              <div style={{ margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div>
+                  <span style={{ fontSize: '42px', fontWeight: '900', color: '#009ee3' }}>${subscriptionPlan?.mpAmount ?? 1990}</span>
+                  <span style={{ color: '#6b7280', fontSize: '16px', fontWeight: '700' }}> ARS / mes</span>
+                </div>
+                <div style={{ fontSize: '14px', color: '#64748b', fontWeight: '600' }}>
+                  <strong style={{ color: '#003087' }}>US${subscriptionPlan?.paypalAmount ?? 15} USD</strong> / mes
+                </div>
               </div>
-              
-              <ul style={{ 
-                listStyle: 'none', 
-                padding: '0', 
-                margin: '24px 0', 
-                color: '#6b7280', 
-                fontSize: '14px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '12px', 
+
+              <ul style={{
+                listStyle: 'none',
+                padding: '0',
+                margin: '24px 0',
+                color: '#6b7280',
+                fontSize: '14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
                 alignItems: 'flex-start',
                 maxWidth: '440px',
                 margin: '24px auto'
               }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', lineHeight: '1.4' }}>
                   <span style={{ color: '#051020', fontWeight: 'bold', fontSize: '16px' }}>✓</span>
-                  Acceso completo e ilimitado a todos los cursos de preparación física.
+                  Acceso a workshops, artículos y otros contenidos para miembros.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', lineHeight: '1.4' }}>
                   <span style={{ color: '#051020', fontWeight: 'bold', fontSize: '16px' }}>✓</span>
-                  Descuento automático del 20% en talleres prácticos y de biomecánica.
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', lineHeight: '1.4' }}>
-                  <span style={{ color: '#051020', fontWeight: 'bold', fontSize: '16px' }}>✓</span>
-                  Foros de debate prioritario y consultas técnicas con entrenadores y kinesiólogos.
+                  Descuentos excluisvos, en marcas asociadas.
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', lineHeight: '1.4' }}>
                   <span style={{ color: '#051020', fontWeight: 'bold', fontSize: '16px' }}>✓</span>
@@ -482,32 +482,40 @@ const CheckoutPage = () => {
               Selecciona tu método de pago para suscribirte:
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <button 
+              <button
                 onClick={() => handleSubscribe('mp')}
                 disabled={processingGateway !== null}
-                className="btn-primary" 
-                style={{ 
-                  width: '100%', 
-                  background: 'linear-gradient(135deg, #00b1ea 0%, #009ee3 100%)', 
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #00b1ea 0%, #009ee3 100%)',
                   boxShadow: '0 4px 15px rgba(0, 158, 227, 0.2)',
-                  padding: '14px'
+                  padding: '14px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                {processingGateway === 'mp' ? 'Procesando conexión...' : 'Suscribirse de forma segura con Mercado Pago'}
+                {processingGateway === 'mp' ? 'Procesando conexión...' : `Suscribirse con Mercado Pago ($${subscriptionPlan?.mpAmount ?? 1990} ARS)`}
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => handleSubscribe('paypal')}
                 disabled={processingGateway !== null}
-                className="btn-primary" 
-                style={{ 
-                  width: '100%', 
-                  background: 'linear-gradient(135deg, #0079c1 0%, #00457c 100%)', 
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #0079c1 0%, #00457c 100%)',
                   boxShadow: '0 4px 15px rgba(0, 121, 193, 0.2)',
-                  padding: '14px'
+                  padding: '14px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                {processingGateway === 'paypal' ? 'Procesando conexión...' : 'Suscribirse de forma segura con PayPal'}
+                {processingGateway === 'paypal' ? 'Procesando conexión...' : `Suscribirse con PayPal (US$${subscriptionPlan?.paypalAmount ?? 15} USD)`}
               </button>
             </div>
           </div>

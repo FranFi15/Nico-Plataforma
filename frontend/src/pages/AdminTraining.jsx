@@ -11,6 +11,7 @@ import AdminVideotecaTab from './adminTabs/AdminVideotecaTab';
 import AdminEvaluationsTab from './adminTabs/AdminEvaluationsTab';
 import AdminZoomTab from './adminTabs/AdminZoomTab';
 import AdminDiscountsTab from './adminTabs/AdminDiscountsTab';
+import AdminSubscriptionsTab from './adminTabs/AdminSubscriptionsTab';
 
 const AdminTraining = () => {
   const { user, loading: authLoading } = useAuth();
@@ -217,7 +218,8 @@ const AdminTraining = () => {
           { id: 'videoteca', label: 'Videoteca' },
           { id: 'evaluations', label: 'Evaluaciones' },
           { id: 'zoomevents', label: 'Noticias & Zoom' },
-          { id: 'discounts', label: 'Descuentos & Beneficios' }
+          { id: 'discounts', label: 'Descuentos & Beneficios' },
+          { id: 'subscriptions', label: 'Precios & Membresía' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -275,6 +277,9 @@ const AdminTraining = () => {
         )}
         {activeTab === 'discounts' && (
           <AdminDiscountsTab formMessage={formMessage} setFormMessage={setFormMessage} />
+        )}
+        {activeTab === 'subscriptions' && (
+          <AdminSubscriptionsTab formMessage={formMessage} setFormMessage={setFormMessage} />
         )}
       </div>
     </div>

@@ -18,6 +18,7 @@ import evaluationRoutes from './routes/evaluationRoutes.js';
 import zoomEventRoutes from './routes/zoomEventRoutes.js';
 import benefitRoutes from './routes/benefitRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
+import subscriptionPlanRoutes from './routes/subscriptionPlanRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 // Load environment variables (from .env file)
@@ -59,6 +60,7 @@ app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/zoomevents', zoomEventRoutes);
 app.use('/api/benefits', benefitRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/subscription-plan', subscriptionPlanRoutes);
 
 // Custom Error Handling Middlewares
 app.use(notFound);

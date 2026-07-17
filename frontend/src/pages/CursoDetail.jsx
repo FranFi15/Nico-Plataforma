@@ -794,7 +794,7 @@ const CursoDetail = () => {
                             gap: '6px'
                           }}
                         >
-                          <IoFolderOpen size={18} /> Recursos Descargables ({currentItem.attachments?.length || 0})
+                          <IoFolderOpen size={18} /> Recursos Descargables ({((currentItem.attachments || []).length + (content.attachments || []).length)})
                         </button>
                       </div>
 
@@ -810,15 +810,15 @@ const CursoDetail = () => {
                       ) : (
                         <div>
                           <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#051020', marginBottom: '16px' }}>
-                            Archivos y Enlaces Adjuntos a esta Lección
+                            Archivos y Enlaces Adjuntos (Recursos Descargables)
                           </h4>
-                          {(currentItem.attachments || []).length === 0 ? (
+                          {((currentItem.attachments || []).length === 0 && (content.attachments || []).length === 0) ? (
                             <p style={{ color: '#94a3b8', fontStyle: 'italic', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', textAlign: 'center' }}>
-                              No hay archivos adjuntos en esta lección.
+                              No hay archivos adjuntos disponibles en este momento.
                             </p>
                           ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                              {(currentItem.attachments || []).map((att, attIdx) => (
+                              {[...(currentItem.attachments || []), ...(content.attachments || [])].map((att, attIdx) => (
                                 <a
                                   key={attIdx}
                                   href={att.url}

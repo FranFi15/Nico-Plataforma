@@ -2,6 +2,7 @@ import { MercadoPagoConfig, Preference, PreApproval, Payment } from 'mercadopago
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import Coupon from '../models/couponModel.js';
+import SubscriptionPlan from '../models/subscriptionPlanModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 
 // Initialize Mercado Pago config using ACCESS_TOKEN from env
@@ -15,17 +16,20 @@ const client = new MercadoPagoConfig({
 // @access  Private
 export const subscribeMercadoPago = async (req, res, next) => {
   try {
+    const planConfig = (await SubscriptionPlan.findOne({})) || {};
+    const amount = planConfig.mpAmount || 1990;
+
     const preApproval = new PreApproval(client);
 
     // Create PreApproval subscription
     const result = await preApproval.create({
       body: {
         back_url: 'https://yourdomain.com/payments/status', // Redirect back URL after completion
-        reason: 'Suscripción Premium Mensual - Plataforma de Aprendizaje',
+        reason: 'Suscripción Premium Mensual - Plataforma Nico',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: 1990, // Monthly fee amount (e.g., $1990)
+          transaction_amount: amount,
           currency_id: 'ARS',
         },
         payer_email: req.user.email,
@@ -175,18 +179,62 @@ export const webhookMercadoPago = async (req, res, next) => {
       const preApprovalData = await preApproval.get({ id: resourceId });
 
       if (preApprovalData.status === 'authorized' || preApprovalData.status === 'active') {
-        const metadata = JSON.parse(preApprovalData.external_reference);
+        const metadata = preApprovalData.external_reference
+          ? JSON.parse(preApprovalData.external_reference)
+          : null;
+        const userId = metadata?.userId || (await User.findOne({ subscriptionId: resourceId }))?._id;
 
-        if (metadata && metadata.paymentType === 'subscription') {
-          const user = await User.findById(metadata.userId);
+        if (userId) {
+          const user = await User.findById(userId);
           if (user) {
             user.isSubscribed = true;
             user.subscriptionId = resourceId;
             user.membership = 'premium';
+            // Si renueva o activa, quitamos cualquier fecha límite previa de expiración
+            user.membershipExpiresAt = null;
             await user.save();
             console.log(
-              `[Webhook] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${resourceId}`
+              `[Webhook MP] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${resourceId}`
             );
+          }
+        }
+      } else if (
+        preApprovalData.status === 'cancelled' ||
+        preApprovalData.status === 'paused' ||
+        preApprovalData.status === 'expired'
+      ) {
+        const metadata = preApprovalData.external_reference
+          ? JSON.parse(preApprovalData.external_reference)
+          : null;
+        const userId = metadata?.userId || (await User.findOne({ subscriptionId: resourceId }))?._id;
+
+        if (userId) {
+          const user = await User.findById(userId);
+          if (user) {
+            user.isSubscribed = false;
+            // Si Mercado Pago informa la próxima fecha de cobro (next_payment_date) y está en el futuro,
+            // mantenemos la membresía premium activa hasta esa fecha exacta para no cortarle los días ya pagados.
+            const nextPayment = preApprovalData.next_payment_date
+              ? new Date(preApprovalData.next_payment_date)
+              : null;
+            if (nextPayment && nextPayment > new Date()) {
+              user.membershipExpiresAt = nextPayment;
+              console.log(
+                `[Webhook MP] Suscripción cancelada/pausada para usuario: ${user.email}. Acceso mantenido hasta fin de periodo: ${nextPayment.toLocaleDateString('es-ES')}`
+              );
+            } else if (!user.membershipExpiresAt || new Date(user.membershipExpiresAt) <= new Date()) {
+              // Si no hay fecha futura o el periodo ya expiró, revocamos el acceso en el acto
+              user.membership = 'free';
+              user.subscriptionId = null;
+              console.log(
+                `[Webhook MP] Suscripción expirada/cancelada para usuario: ${user.email}. Acceso revocado en el sistema.`
+              );
+            } else {
+              console.log(
+                `[Webhook MP] Suscripción cancelada para usuario: ${user.email}. Acceso mantenido hasta fecha límite previa: ${new Date(user.membershipExpiresAt).toLocaleDateString('es-ES')}`
+              );
+            }
+            await user.save();
           }
         }
       }

@@ -3,6 +3,7 @@ import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 import Coupon from '../models/couponModel.js';
+import SubscriptionPlan from '../models/subscriptionPlanModel.js';
 
 // Retrieve access token from PayPal using basic auth credentials
 const getPayPalAccessToken = async () => {
@@ -206,24 +207,61 @@ export const webhookPayPal = async (req, res) => {
       });
     }
 
-    if (event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+    if (
+      event_type === 'BILLING.SUBSCRIPTION.ACTIVATED' ||
+      event_type === 'BILLING.SUBSCRIPTION.UPDATED' ||
+      event_type === 'BILLING.SUBSCRIPTION.RE-ACTIVATED'
+    ) {
       const subscriptionId = resource.id;
       const customIdStr = resource.custom_id;
+      const userId = customIdStr ? JSON.parse(customIdStr)?.userId : (await User.findOne({ subscriptionId }))?._id;
 
-      if (customIdStr) {
-        const metadata = JSON.parse(customIdStr);
+      if (userId) {
+        const user = await User.findById(userId);
+        if (user) {
+          user.isSubscribed = true;
+          user.subscriptionId = subscriptionId;
+          user.membership = 'premium';
+          user.membershipExpiresAt = null;
+          await user.save();
+          console.log(
+            `[Webhook PayPal] Suscripción Premium activa para usuario: ${user.email} | ID: ${subscriptionId}`
+          );
+        }
+      }
+    } else if (
+      event_type === 'BILLING.SUBSCRIPTION.CANCELLED' ||
+      event_type === 'BILLING.SUBSCRIPTION.EXPIRED' ||
+      event_type === 'BILLING.SUBSCRIPTION.SUSPENDED' ||
+      event_type === 'BILLING.SUBSCRIPTION.PAYMENT.FAILED'
+    ) {
+      const subscriptionId = resource.id;
+      const customIdStr = resource.custom_id;
+      const userId = customIdStr ? JSON.parse(customIdStr)?.userId : (await User.findOne({ subscriptionId }))?._id;
 
-        if (metadata && metadata.paymentType === 'subscription') {
-          const user = await User.findById(metadata.userId);
-          if (user) {
-            user.isSubscribed = true;
-            user.subscriptionId = subscriptionId;
-            user.membership = 'premium';
-            await user.save();
+      if (userId) {
+        const user = await User.findById(userId);
+        if (user) {
+          user.isSubscribed = false;
+          const nextBilling = resource.billing_info?.next_billing_time
+            ? new Date(resource.billing_info.next_billing_time)
+            : null;
+
+          if (nextBilling && nextBilling > new Date()) {
+            user.membershipExpiresAt = nextBilling;
             console.log(
-              `[Webhook PayPal] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${subscriptionId}`
+              `[Webhook PayPal] Suscripción cancelada para usuario: ${user.email}. Acceso conservado hasta fin de periodo: ${nextBilling.toLocaleDateString('es-ES')}`
+            );
+          } else if (!user.membershipExpiresAt || new Date(user.membershipExpiresAt) <= new Date()) {
+            user.membership = 'free';
+            user.subscriptionId = null;
+            console.log(`[Webhook PayPal] Suscripción expirada/cancelada para usuario: ${user.email}. Acceso revocado.`);
+          } else {
+            console.log(
+              `[Webhook PayPal] Suscripción cancelada para usuario: ${user.email}. Acceso conservado hasta fecha previa: ${new Date(user.membershipExpiresAt).toLocaleDateString('es-ES')}`
             );
           }
+          await user.save();
         }
       }
     } else if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {

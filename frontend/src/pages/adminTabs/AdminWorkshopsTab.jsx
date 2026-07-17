@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import TiptapEditor from '../../components/TiptapEditor';
-import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen, IoEyeOutline, IoEyeOffOutline, IoNotificationsOutline, IoSend, IoCheckmarkCircleOutline, IoHelpCircleOutline, IoListOutline, IoChevronDown, IoChevronUp, IoInformationCircleOutline, IoPricetagOutline, IoImageOutline, IoBookmarkOutline } from 'react-icons/io5';
+import { IoSchoolOutline, IoConstructOutline, IoDocumentTextOutline, IoPlayCircleOutline, IoClose, IoTrashOutline, IoPencil, IoAdd, IoFolderOpen, IoEyeOutline, IoEyeOffOutline, IoNotificationsOutline, IoSend, IoCheckmarkCircleOutline, IoHelpCircleOutline, IoListOutline, IoChevronDown, IoChevronUp, IoInformationCircleOutline, IoPricetagOutline, IoImageOutline, IoBookmarkOutline, IoDownloadOutline, IoCloudUploadOutline, IoLinkOutline } from 'react-icons/io5';
 
 const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [contents, setContents] = useState([]);
@@ -36,6 +36,9 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cVideoLink, setCVideoLink] = useState('');
   const [cCategory, setCCCategory] = useState('');
   const [cardImageUploading, setCardImageUploading] = useState(false);
+  const [lessonAttachmentUploading, setLessonAttachmentUploading] = useState(false);
+  const [newAttTitle, setNewAttTitle] = useState('');
+  const [newAttUrl, setNewAttUrl] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [cIsPublished, setCIsPublished] = useState(true);
 
@@ -218,6 +221,63 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     } finally {
       setCardImageUploading(false);
     }
+  };
+
+  const handleLessonAttachmentUpload = async (e, modId, lesId, currentAttachments = []) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLessonAttachmentUploading(true);
+    try {
+      const base64String = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+      const res = await api.post('/content/upload-file', {
+        file: base64String,
+        filename: file.name,
+        fileType: file.type
+      });
+
+      if (res.data && res.data.url) {
+        handleUpdateLesson(modId, lesId, {
+          attachments: [
+            ...currentAttachments,
+            {
+              title: file.name,
+              url: res.data.url
+            }
+          ]
+        });
+      }
+    } catch (err) {
+      console.error('Error uploading lesson attachment:', err);
+      alert('Error al subir el archivo adjunto al servidor.');
+    } finally {
+      setLessonAttachmentUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleAddCustomAttachment = (modId, lesId, currentAttachments = []) => {
+    if (!newAttTitle.trim() || !newAttUrl.trim()) {
+      alert('Por favor, ingresa el título y la URL del recurso.');
+      return;
+    }
+    handleUpdateLesson(modId, lesId, {
+      attachments: [
+        ...currentAttachments,
+        {
+          title: newAttTitle.trim(),
+          url: newAttUrl.trim()
+        }
+      ]
+    });
+    setNewAttTitle('');
+    setNewAttUrl('');
   };
 
   // Skool Module & Lesson / Quiz Handlers
@@ -1241,8 +1301,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px' }}>
                   <span style={{ backgroundColor: openSections.card4 ? '#1f75f5ff' : '#64748b', color: '#fff', width: '30px', height: '30px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '800' }}>4</span>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      Plan de Estudios y Módulos (Estilo Skool Classroom)
+                    <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Plan de Estudios y Módulos
                     </h3>
                     {openSections.card4 ? (
                       <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Estructura las clases por módulos y lecciones a la izquierda, y edita el contenido del ítem seleccionado a la derecha.</p>
@@ -1691,7 +1751,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                                     />
                                   </div>
 
-                                  <div className="form-group">
+                                  <div className="form-group" style={{ marginBottom: '24px' }}>
                                     <label className="form-label" style={{ marginBottom: '10px' }}>Contenido de Texto / Apuntes de la Lección</label>
                                     <div style={{ minHeight: '320px' }}>
                                       <TiptapEditor
@@ -1699,6 +1759,168 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                                         onChange={(html) => handleUpdateLesson(mod.id, les.id, { body: html })}
                                         placeholder="Escribe aquí notas adicionales, explicaciones, inserta videos o imágenes y puntos clave..."
                                       />
+                                    </div>
+                                  </div>
+
+                                  {/* SECCIÓN DE RECURSOS DESCARGABLES DE LA LECCIÓN */}
+                                  <div style={{ marginTop: '30px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '24px' }}>
+                                    <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '16px', marginBottom: '20px' }}>
+                                      <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <IoFolderOpen size={20} color="#1f75f5" />
+                                        Recursos Descargables para esta Lección
+                                      </h3>
+                                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
+                                        Sube archivos PDF, documentos o añade enlaces de descarga (Drive, Dropbox) para que el alumno pueda acceder desde la pestaña "Recursos Descargables".
+                                      </p>
+                                    </div>
+
+                                    {/* Lista de Recursos Existentes */}
+                                    {(les.attachments || []).length > 0 ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                          Archivos adjuntos actuales ({(les.attachments || []).length}):
+                                        </label>
+                                        {(les.attachments || []).map((att, attIdx) => (
+                                          <div
+                                            key={attIdx}
+                                            style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'space-between',
+                                              padding: '12px 16px',
+                                              backgroundColor: '#ffffff',
+                                              border: '1px solid #cbd5e1',
+                                              borderRadius: '12px',
+                                              gap: '12px'
+                                            }}
+                                          >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                                              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#051020', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <IoDownloadOutline size={18} />
+                                              </div>
+                                              <div style={{ overflow: 'hidden' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                  {att.title}
+                                                </div>
+                                                <a href={att.url} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#1f75f5', textDecoration: 'underline', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                                                  {att.url}
+                                                </a>
+                                              </div>
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const updated = (les.attachments || []).filter((_, idx) => idx !== attIdx);
+                                                handleUpdateLesson(mod.id, les.id, { attachments: updated });
+                                              }}
+                                              style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#ef4444',
+                                                cursor: 'pointer',
+                                                padding: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                borderRadius: '6px'
+                                              }}
+                                              title="Eliminar este recurso"
+                                            >
+                                              <IoTrashOutline size={18} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div style={{ padding: '16px', backgroundColor: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', marginBottom: '20px' }}>
+                                        No hay recursos descargables adjuntos a esta lección todavía.
+                                      </div>
+                                    )}
+
+                                    {/* Botones y Formulario de Agregar Recurso */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+                                      {/* Subida Directa de Archivo */}
+                                      <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '14px', border: '1px solid #cbd5e1' }}>
+                                        <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <IoCloudUploadOutline size={16} color="#1f75f5" />
+                                          Subir Archivo al Servidor (PDF, Doc, ZIP)
+                                        </h4>
+                                        <input
+                                          type="file"
+                                          id={`attachment-file-${les.id}`}
+                                          style={{ display: 'none' }}
+                                          onChange={(e) => handleLessonAttachmentUpload(e, mod.id, les.id, les.attachments || [])}
+                                          disabled={lessonAttachmentUploading}
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => document.getElementById(`attachment-file-${les.id}`).click()}
+                                          disabled={lessonAttachmentUploading}
+                                          style={{
+                                            width: '100%',
+                                            padding: '10px 14px',
+                                            backgroundColor: '#051020',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '10px',
+                                            fontWeight: '800',
+                                            fontSize: '13px',
+                                            cursor: lessonAttachmentUploading ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px'
+                                          }}
+                                        >
+                                          <IoCloudUploadOutline size={18} />
+                                          {lessonAttachmentUploading ? 'Subiendo archivo...' : '+ Seleccionar y Subir Archivo'}
+                                        </button>
+                                      </div>
+
+                                      {/* Enlace Externo */}
+                                      <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '14px', border: '1px solid #cbd5e1' }}>
+                                        <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <IoLinkOutline size={16} color="#1f75f5" />
+                                          O Agregar Enlace Externo (Drive, Dropbox, etc.)
+                                        </h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                          <input
+                                            type="text"
+                                            value={newAttTitle}
+                                            onChange={(e) => setNewAttTitle(e.target.value)}
+                                            placeholder="Título (Ej. Temario en PDF)"
+                                            className="premium-input"
+                                            style={{ padding: '8px 12px', fontSize: '13px' }}
+                                          />
+                                          <input
+                                            type="url"
+                                            value={newAttUrl}
+                                            onChange={(e) => setNewAttUrl(e.target.value)}
+                                            placeholder="https://drive.google.com/..."
+                                            className="premium-input"
+                                            style={{ padding: '8px 12px', fontSize: '13px' }}
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => handleAddCustomAttachment(mod.id, les.id, les.attachments || [])}
+                                            style={{
+                                              padding: '10px 14px',
+                                              backgroundColor: '#1f75f5',
+                                              color: '#ffffff',
+                                              border: 'none',
+                                              borderRadius: '10px',
+                                              fontWeight: '800',
+                                              fontSize: '13px',
+                                              cursor: 'pointer',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              gap: '6px'
+                                            }}
+                                          >
+                                            <IoAdd size={18} /> Añadir Enlace a Recursos
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </>
