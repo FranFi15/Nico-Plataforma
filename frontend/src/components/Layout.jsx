@@ -353,7 +353,7 @@ const Layout = () => {
                       color: (user.membership === 'premium' || user.isSubscribed) ? '#1f75f5' : '#9ca3af',
                       textTransform: 'uppercase',
                     }}>
-                      {(user.membership === 'premium' || user.isSubscribed) ? '★ PREMIUM' : 'ENTRENADOR'}
+                      {(user.membership === 'premium' || user.isSubscribed) ? 'MIEMBRO' : 'ENTRENADOR'}
                     </span>
                   </div>
                   <IoChevronDown style={{
@@ -534,7 +534,7 @@ const Layout = () => {
               <div style={{ padding: '0 8px', marginBottom: '8px' }}>
                 <div style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff' }}>{user.name}</div>
                 <div style={{ fontSize: '11px', fontWeight: '800', color: '#1f75f5', textTransform: 'uppercase' }}>
-                  {(user.membership === 'premium' || user.isSubscribed) ? '★ PREMIUM' : 'ENTRENADOR'}
+                  {(user.membership === 'premium' || user.isSubscribed) ? 'MIEMBRO' : 'ENTRENADOR'}
                 </div>
               </div>
               {user.role === 'admin' ? (

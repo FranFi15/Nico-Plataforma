@@ -83,11 +83,13 @@ export const checkAccess = async (req, res, next) => {
 
     // Access rule: Subscription requires premium membership
     if (content.accessType === 'subscription') {
-      if (req.user && req.user.membership === 'premium') {
+      const isPremiumUser = req.user && (req.user.membership === 'premium' || req.user.isSubscribed === true);
+      const isExpired = req.user && req.user.membershipExpiresAt && new Date(req.user.membershipExpiresAt) < new Date();
+      if (isPremiumUser && !isExpired) {
         return next();
       } else {
         res.status(403);
-        return next(new Error('Acceso denegado. Este contenido requiere una suscripción premium.'));
+        return next(new Error('Acceso denegado. Este contenido requiere una suscripción o membresía activa no expirada.'));
       }
     }
 

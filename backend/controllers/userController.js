@@ -68,6 +68,37 @@ export const updateUserRole = async (req, res, next) => {
   }
 };
 
+// @desc    Update user membership and expiration date
+// @route   PUT /api/users/:id/membership
+// @access  Private/Admin
+export const updateUserMembership = async (req, res, next) => {
+  try {
+    const { membership, isSubscribed, membershipExpiresAt } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+
+    if (membership !== undefined) user.membership = membership;
+    if (isSubscribed !== undefined) user.isSubscribed = isSubscribed;
+    if (membershipExpiresAt !== undefined) {
+      user.membershipExpiresAt = membershipExpiresAt ? new Date(membershipExpiresAt) : null;
+    }
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Membresía de usuario actualizada con éxito',
+      data: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Mark user notifications as read
 // @route   PUT /api/users/notifications/read
 // @access  Private

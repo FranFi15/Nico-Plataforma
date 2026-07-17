@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    membershipExpiresAt: {
+      type: Date,
+      default: null,
+    },
     purchasedItems: [
       {
         type: mongoose.Schema.Types.ObjectId,

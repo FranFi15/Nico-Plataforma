@@ -132,6 +132,17 @@ export const updateUserProfile = async (req, res, next) => {
       if (req.body.profession !== undefined) {
         user.profession = req.body.profession;
       }
+      if (req.body.email && req.body.email !== user.email) {
+        const emailExists = await User.findOne({ email: req.body.email });
+        if (emailExists) {
+          res.status(400);
+          throw new Error('El correo electrónico ya está registrado por otro usuario.');
+        }
+        user.email = req.body.email;
+      }
+      if (req.body.password && req.body.password.trim() !== '') {
+        user.password = req.body.password;
+      }
       const updatedUser = await user.save();
 
       res.status(200).json({

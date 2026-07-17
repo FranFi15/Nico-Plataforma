@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUsers, createUser, updateUserRole, markNotificationsRead } from '../controllers/userController.js';
+import { getUsers, createUser, updateUserRole, updateUserMembership, markNotificationsRead } from '../controllers/userController.js';
 import { protect, admin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -12,6 +12,9 @@ router.put('/notifications/read', protect, markNotificationsRead);
 
 router.route('/:id/role')
   .put(protect, admin, updateUserRole);
+
+router.route('/:id/membership')
+  .put(protect, admin, updateUserMembership);
 
 // Protected route to retrieve authenticated user profile
 router.get('/profile', protect, (req, res) => {

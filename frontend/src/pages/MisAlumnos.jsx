@@ -79,13 +79,42 @@ const MisAlumnos = () => {
     }
   };
 
+  const handleMembershipUpdate = async (studentId, membershipData) => {
+    try {
+      const response = await api.put(`/users/${studentId}/membership`, membershipData);
+      if (response.data?.success) {
+        setStudents(students.map(s => s._id === studentId ? { ...s, ...response.data.data } : s));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al actualizar la membresía de usuario');
+    }
+  };
+
+  const handleMembershipToggle = (student) => {
+    const isCurrentlyPremium = student.membership === 'premium' || student.isSubscribed === true;
+    if (isCurrentlyPremium) {
+      handleMembershipUpdate(student._id, {
+        membership: 'free',
+        isSubscribed: false,
+        membershipExpiresAt: null
+      });
+    } else {
+      handleMembershipUpdate(student._id, {
+        membership: 'premium',
+        isSubscribed: true,
+        membershipExpiresAt: student.membershipExpiresAt || null
+      });
+    }
+  };
+
   const toggleExpand = (id) => {
     setExpandedStudentId(expandedStudentId === id ? null : id);
   };
 
   const getStudentAccessDetails = (student) => {
     const isPrivileged = student && ['admin', 'professor', 'profe', 'instructor'].includes(student.role);
-    const isPremium = student.membership === 'premium' || student.isSubscribed === true;
+    const isPremium = (student.membership === 'premium' || student.isSubscribed === true) &&
+      (!student.membershipExpiresAt || new Date(student.membershipExpiresAt) > new Date());
     const ownedIds = student.purchasedItems ? student.purchasedItems.map(item => (item._id || item).toString()) : [];
 
     const accessedCourses = [];
@@ -103,7 +132,10 @@ const MisAlumnos = () => {
         accessReason = 'Acceso Libre';
       } else if (content.accessType === 'subscription' && isPremium) {
         hasAccess = true;
-        accessReason = 'Suscripción Premium';
+        const expiresStr = student.membershipExpiresAt
+          ? `Suscripción (Hasta ${new Date(student.membershipExpiresAt).toLocaleDateString('es-ES')})`
+          : 'Suscripción Premium (Sin límite)';
+        accessReason = expiresStr;
       } else if (ownedIds.includes(content._id.toString())) {
         hasAccess = true;
         accessReason = 'Compra Única';
@@ -130,7 +162,7 @@ const MisAlumnos = () => {
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px 80px 20px', fontFamily: 'var(--font-sans)' }}>
       {/* Header */}
       <header style={{ textAlign: 'center', padding: '60px 0 30px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '40px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--dark)' }}>
+        <h1 style={{ fontSize: '80px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--dark)' }}>
           Gestión de Alumnos
         </h1>
         <div className="accent-divider"></div>
@@ -277,22 +309,162 @@ const MisAlumnos = () => {
                       </select>
                     </div>
 
-                    {/* Subscription status badge */}
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      textTransform: 'uppercase',
-                      padding: '6px 14px',
-                      borderRadius: '20px',
-                      backgroundColor: isPremium ? 'rgba(31, 117, 245, 0.1)' : 'var(--gray-100)',
-                      color: isPremium ? 'var(--primary)' : 'var(--gray-600)',
-                      letterSpacing: '1px'
-                    }}>
-                      {isPremium ? <IoStar /> : null}
-                      {isPremium ? 'Membresía Premium' : 'Plan Acceso Libre'}
+                    {/* Switch de Membresía y Selector de Expiración */}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '6px 14px',
+                        borderRadius: '24px',
+                        backgroundColor: isPremium ? 'rgba(31, 117, 245, 0.08)' : 'var(--gray-100)',
+                        border: isPremium ? '1.5px solid rgba(31, 117, 245, 0.3)' : '1px solid var(--border)',
+                        transition: 'all 0.2s ease',
+                        flexWrap: 'wrap'
+                      }}
+                    >
+                      {/* Toggle Switch */}
+                      <div
+                        onClick={() => handleMembershipToggle(student)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          cursor: 'pointer',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <div style={{
+                          width: '40px',
+                          height: '22px',
+                          borderRadius: '12px',
+                          backgroundColor: isPremium ? 'var(--primary)' : '#cbd5e1',
+                          position: 'relative',
+                          transition: 'background-color 0.2s ease'
+                        }}>
+                          <div style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            backgroundColor: '#ffffff',
+                            position: 'absolute',
+                            top: '2px',
+                            left: isPremium ? '20px' : '2px',
+                            transition: 'left 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                          }} />
+                        </div>
+                        <span style={{
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          color: isPremium ? 'var(--primary)' : 'var(--gray-600)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          {isPremium ? 'Membresía Activa' : 'Sin Membresía'}
+                        </span>
+                      </div>
+
+                      {/* Selector de Fecha de Expiración (Solo si Membresía Activa) */}
+                      {isPremium && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          borderLeft: '1px solid rgba(31, 117, 245, 0.2)',
+                          paddingLeft: '12px',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--gray-500)', textTransform: 'uppercase' }}>
+                            {student.membershipExpiresAt ? 'Vence:' : 'Duración:'}
+                          </span>
+                          {student.membershipExpiresAt ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <input
+                                type="date"
+                                value={(typeof student.membershipExpiresAt === 'string' ? student.membershipExpiresAt : new Date(student.membershipExpiresAt).toISOString()).substring(0, 10)}
+                                onChange={(e) => handleMembershipUpdate(student._id, {
+                                  membership: 'premium',
+                                  isSubscribed: true,
+                                  membershipExpiresAt: e.target.value || null
+                                })}
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--primary)',
+                                  backgroundColor: '#ffffff',
+                                  fontSize: '11px',
+                                  fontWeight: '700',
+                                  color: 'var(--dark)',
+                                  cursor: 'pointer',
+                                  outline: 'none'
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleMembershipUpdate(student._id, {
+                                  membership: 'premium',
+                                  isSubscribed: true,
+                                  membershipExpiresAt: null
+                                })}
+                                title="Quitar fecha (Dejar sin límite)"
+                                style={{
+                                  background: 'var(--primary)',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '3px 8px',
+                                  fontSize: '11px',
+                                  fontWeight: '800',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Sin límite
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: '800',
+                                color: '#065f46',
+                                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                                padding: '2px 8px',
+                                borderRadius: '12px'
+                              }}>
+                                Sin límite de tiempo
+                              </span>
+                              <input
+                                type="date"
+                                value=""
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    handleMembershipUpdate(student._id, {
+                                      membership: 'premium',
+                                      isSubscribed: true,
+                                      membershipExpiresAt: e.target.value
+                                    });
+                                  }
+                                }}
+                                title="Fijar fecha de expiración"
+                                style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '6px',
+                                  border: '1px dashed var(--primary)',
+                                  backgroundColor: '#ffffff',
+                                  fontSize: '11px',
+                                  fontWeight: '700',
+                                  color: 'var(--primary)',
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  width: '120px'
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Expand indicator icon */}
