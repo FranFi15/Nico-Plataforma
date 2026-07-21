@@ -37,7 +37,13 @@ export const getContents = async (req, res, next) => {
       ];
     }
 
-    const contents = await Content.find(filter).populate('category').populate('videoFolder');
+    let query = Content.find(filter).populate('category').populate('videoFolder');
+
+    if (req.query.minimal === 'true') {
+      query = query.select('-body -modules -attachments');
+    }
+
+    const contents = await query;
 
     res.status(200).json({
       success: true,

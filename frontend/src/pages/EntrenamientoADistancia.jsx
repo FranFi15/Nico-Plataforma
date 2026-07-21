@@ -322,7 +322,7 @@ const EntrenamientoADistancia = () => {
         </h1>
         <div className="accent-divider animated-hero-title"></div>
         <p className="animated-hero-text" style={{ color: 'var(--gray-500)', fontSize: '16px', maxWidth: '680px', lineHeight: '1.6', textAlign: 'center', margin: '0 0 20px 0' }}>
-          Visualiza nuestra planificación inteligente, los resultados de nuestros atletas y postúlate para entrenar directamente con Nicolás Sesma y su equipo.
+          Conocé nuestra metodología, los resultados reales de nuestros atletas y postulate para ser parte del equipo NS.
         </p>
       </header>
 

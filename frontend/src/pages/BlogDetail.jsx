@@ -140,7 +140,8 @@ const BlogDetail = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '60px', fontFamily: 'var(--font-sans)', backgroundColor: '#ffffffff' }}>
+    <>
+      <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '60px', fontFamily: 'var(--font-sans)', backgroundColor: '#ffffffff' }}>
       {isDraft && (
         <div style={{ padding: '16px 20px', backgroundColor: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <IoEyeOffOutline size={28} color="#d97706" />
@@ -292,7 +293,7 @@ const BlogDetail = () => {
       ) : (
         <>
           <article
-            className="article-body"
+            className="blog-content"
             style={{
               fontSize: '18px',
               color: 'var(--dark)',
@@ -379,102 +380,31 @@ const BlogDetail = () => {
           )}
         </>
       )}
+    </div>
 
-      {/* Sección Te Puede Interesar: Tres blogs siguientes disponibles */}
-      {relatedBlogs && relatedBlogs.length > 0 && (
-        <div style={{ marginTop: '80px', paddingTop: '60px', borderTop: '2px solid var(--border)' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: '#2B2D2F', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '36px' }}>
+    {/* Sección Te Puede Interesar Full Width */}
+    {relatedBlogs && relatedBlogs.length > 0 && (
+      <div style={{ width: '100%', backgroundColor: '#f8fafc', padding: '80px 40px', borderTop: '1px solid var(--border)', marginTop: '40px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '26px', fontWeight: '900', color: '#2B2D2F', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '36px', textAlign: 'center' }}>
             Te puede interesar
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '30px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
             {relatedBlogs.map((b) => (
               <ContentCard key={b._id} content={b} />
             ))}
           </div>
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Add To Folder Modal */}
-      <AddToFolderModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        contentId={content._id}
-      />
-
-      {/* Custom Styles for Injected HTML elements */}
-      <style>{`
-        .article-body {
-          word-break: break-word;
-          overflow-wrap: break-word;
-          max-width: 100%;
-        }
-        .article-body h2 {
-          font-size: 26px;
-          font-weight: 900;
-          color: var(--dark);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-top: 40px;
-          margin-bottom: 16px;
-          border-bottom: 2px solid var(--border);
-          padding-bottom: 8px;
-        }
-        .article-body h3 {
-          font-size: 22px;
-          font-weight: 800;
-          color: var(--dark);
-          margin-top: 30px;
-          margin-bottom: 12px;
-        }
-        .article-body p {
-          margin-bottom: 24px;
-        }
-        .article-body strong {
-          font-weight: 800;
-        }
-        .article-body em {
-          font-style: italic;
-        }
-        .article-body img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 16px;
-          border: 1px solid var(--border);
-          margin: 32px 0;
-          display: block;
-        }
-        .article-body iframe {
-          max-width: 100%;
-          border-radius: 16px;
-          margin: 24px 0;
-          display: block;
-        }
-        .article-body pre {
-          max-width: 100%;
-          overflow-x: auto;
-          white-space: pre-wrap;
-          word-break: break-all;
-          background-color: var(--gray-50);
-          padding: 16px;
-          border-radius: 8px;
-          border: 1px solid var(--border);
-        }
-        .article-body table {
-          max-width: 100%;
-          overflow-x: auto;
-          display: block;
-          border-collapse: collapse;
-          margin: 24px 0;
-        }
-        .article-body blockquote {
-          border-left: 4px solid var(--primary);
-          padding-left: 20px;
-          font-style: italic;
-          color: var(--gray-500);
-          margin: 30px 0;
-        }
-      `}</style>
-    </div>
+    {/* Add To Folder Modal */}
+    <AddToFolderModal
+      isOpen={modalOpen}
+      onClose={() => setModalOpen(false)}
+      contentId={content._id}
+    />
+  </>
   );
 };
 

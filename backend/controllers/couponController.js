@@ -17,7 +17,7 @@ export const getCoupons = async (req, res) => {
 // @access  Admin
 export const createCoupon = async (req, res) => {
   try {
-    const { code, discountPercentage, applyToAll, applicableCourses, active } = req.body;
+    const { code, discountPercentage, applyToAll, applicableCourses, active, validUntil } = req.body;
 
     if (!code || !discountPercentage) {
       return res.status(400).json({ message: 'Por favor ingresa el código y el porcentaje de descuento.' });
@@ -34,7 +34,8 @@ export const createCoupon = async (req, res) => {
       discountPercentage,
       applyToAll: applyToAll !== undefined ? applyToAll : true,
       applicableCourses: applicableCourses || [],
-      active: active !== undefined ? active : true
+      active: active !== undefined ? active : true,
+      validUntil: validUntil || null
     });
 
     const createdCoupon = await coupon.save();
@@ -50,7 +51,7 @@ export const createCoupon = async (req, res) => {
 // @access  Admin
 export const updateCoupon = async (req, res) => {
   try {
-    const { code, discountPercentage, applyToAll, applicableCourses, active } = req.body;
+    const { code, discountPercentage, applyToAll, applicableCourses, active, validUntil } = req.body;
 
     const coupon = await Coupon.findById(req.params.id);
 
@@ -67,6 +68,7 @@ export const updateCoupon = async (req, res) => {
       if (applyToAll !== undefined) coupon.applyToAll = applyToAll;
       if (applicableCourses !== undefined) coupon.applicableCourses = applicableCourses;
       if (active !== undefined) coupon.active = active;
+      if (validUntil !== undefined) coupon.validUntil = validUntil || null;
 
       const updatedCoupon = await coupon.save();
       const populated = await Coupon.findById(updatedCoupon._id).populate('applicableCourses', 'title');
@@ -113,6 +115,10 @@ export const validateCoupon = async (req, res) => {
 
     if (!coupon) {
       return res.status(404).json({ message: 'Código de descuento inválido o expirado.' });
+    }
+
+    if (coupon.validUntil && new Date() > new Date(coupon.validUntil)) {
+      return res.status(404).json({ message: 'Este código de descuento ha expirado.' });
     }
 
     // Si no aplica a todos los cursos, chequear si el courseId está en applicableCourses

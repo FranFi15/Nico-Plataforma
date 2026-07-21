@@ -33,6 +33,9 @@ const couponSchema = new mongoose.Schema(
     usedCount: {
       type: Number,
       default: 0
+    },
+    validUntil: {
+      type: Date
     }
   },
   {

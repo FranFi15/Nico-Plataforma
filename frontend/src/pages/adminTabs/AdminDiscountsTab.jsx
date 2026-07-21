@@ -33,6 +33,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
   const [cApplyToAll, setCApplyToAll] = useState(true);
   const [cApplicableCourses, setCApplicableCourses] = useState([]);
   const [cActive, setCActive] = useState(true);
+  const [cValidUntil, setCValidUntil] = useState('');
 
   const [saving, setSaving] = useState(false);
 
@@ -62,7 +63,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
         api.get('/content?type=workshop')
       ]);
       setCoupons(couponsRes.data || []);
-      const combinedCourses = [...(coursesRes.data || []), ...(workshopsRes.data || [])];
+      const combinedCourses = [...(coursesRes.data?.data || coursesRes.data || []), ...(workshopsRes.data?.data || workshopsRes.data || [])];
       setCoursesList(combinedCourses);
     } catch (err) {
       console.error('Error cargando cupones y cursos:', err);
@@ -175,6 +176,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       const courseIds = (coupon.applicableCourses || []).map(c => typeof c === 'object' ? c._id : c);
       setCApplicableCourses(courseIds);
       setCActive(coupon.active !== undefined ? coupon.active : true);
+      setCValidUntil(coupon.validUntil ? new Date(coupon.validUntil).toISOString().split('T')[0] : '');
     } else {
       setEditingCoupon(null);
       setCCode('');
@@ -182,6 +184,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setCApplyToAll(true);
       setCApplicableCourses([]);
       setCActive(true);
+      setCValidUntil('');
     }
     setShowCouponForm(true);
   };
@@ -208,7 +211,8 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
         discountPercentage: Number(cDiscountPercentage),
         applyToAll: cApplyToAll,
         applicableCourses: cApplyToAll ? [] : cApplicableCourses,
-        active: cActive
+        active: cActive,
+        validUntil: cValidUntil ? new Date(cValidUntil).toISOString() : null
       };
 
       if (editingCoupon) {
@@ -565,6 +569,15 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                       style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', color: '#0f172a' }}
                     />
                   </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>Válido Hasta (Opcional)</label>
+                    <input
+                      type="date"
+                      value={cValidUntil}
+                      onChange={(e) => setCValidUntil(e.target.value)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', color: '#0f172a' }}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -679,6 +692,11 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                           ? '✅ Válido para TODOS los cursos y workshops'
                           : `🎯 Válido solo en ${(coupon.applicableCourses || []).length} curso(s) específico(s)`}
                       </div>
+                      {coupon.validUntil && (
+                        <div style={{ fontSize: '13px', color: '#ef4444', fontWeight: '700', marginTop: '2px' }}>
+                          ⏳ Válido hasta: {new Date(coupon.validUntil).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                   </div>
 

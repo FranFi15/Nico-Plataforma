@@ -90,14 +90,14 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const handleCreateVideoFolder = async () => {
     if (!newVideoFolderName.trim()) return;
     try {
-      const res = await api.post('/video-folders', {
+      const res = await api.post('/videoteca-folders', {
         name: newVideoFolderName.trim(),
         coverImage: newVideoFolderCoverImage
       });
       if (res.data && res.data.success) {
         setNewVideoFolderName('');
         setNewVideoFolderCoverImage('');
-        const foldersRes = await api.get('/video-folders');
+        const foldersRes = await api.get('/videoteca-folders');
         if (foldersRes.data?.success) setVideoFolders(foldersRes.data.data);
       }
     } catch (err) {
@@ -108,7 +108,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const handleUpdateVideoFolder = async (id) => {
     if (!editVideoFolderName.trim()) return;
     try {
-      const res = await api.put(`/video-folders/${id}`, {
+      const res = await api.put(`/videoteca-folders/${id}`, {
         name: editVideoFolderName.trim(),
         coverImage: editVideoFolderCoverImage
       });
@@ -116,7 +116,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
         setEditingVideoFolder(null);
         setEditVideoFolderName('');
         setEditVideoFolderCoverImage('');
-        const foldersRes = await api.get('/video-folders');
+        const foldersRes = await api.get('/videoteca-folders');
         if (foldersRes.data?.success) setVideoFolders(foldersRes.data.data);
       }
     } catch (err) {
@@ -127,9 +127,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const handleDeleteVideoFolder = async (id) => {
     if (!await window.confirm('¿Estás seguro de que deseas eliminar esta carpeta?')) return;
     try {
-      const res = await api.delete(`/video-folders/${id}`);
+      const res = await api.delete(`/videoteca-folders/${id}`);
       if (res.data && res.data.success) {
-        const foldersRes = await api.get('/video-folders');
+        const foldersRes = await api.get('/videoteca-folders');
         if (foldersRes.data?.success) setVideoFolders(foldersRes.data.data);
         if (cVideoFolder === id) setCVideoFolder('');
       }

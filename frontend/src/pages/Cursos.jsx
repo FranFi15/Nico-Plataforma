@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import ContentCard from '../components/ContentCard';
-import { IoSearch, IoArrowBack } from 'react-icons/io5';
+import { IoSearch, IoArrowBack, IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
 const Cursos = () => {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ const Cursos = () => {
   const [accessFilter, setAccessFilter] = useState('all');
   const [subtypeFilter, setSubtypeFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     if (authLoading) return;
@@ -29,8 +31,8 @@ const Cursos = () => {
       setLoading(true);
       try {
         const [coursesRes, workshopsRes, catsRes] = await Promise.all([
-          api.get('/content?type=course'),
-          api.get('/content?type=workshop'),
+          api.get('/content?type=course&minimal=true'),
+          api.get('/content?type=workshop&minimal=true'),
           api.get('/categories?type=course')
         ]);
         const courses = coursesRes.data?.success ? coursesRes.data.data : [];
@@ -80,6 +82,18 @@ const Cursos = () => {
     }
     return true;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredContents.length / itemsPerPage);
+  const paginatedContents = filteredContents.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchText, accessFilter, subtypeFilter]);
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px 60px 20px' }}>
@@ -194,23 +208,60 @@ const Cursos = () => {
           Cargando contenido...
         </div>
       ) : filteredContents.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px 20px',
-          color: 'var(--gray-500)',
-          border: '1px solid var(--border)',
-          borderRadius: '12px',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.02)'
-        }}>
-          No se encontraron cursos ni workshops que coincidan con los filtros seleccionados.
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--gray-500)', border: '1px solid var(--border)', borderRadius: '12px', backgroundColor: '#ffffff', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+          No hay contenidos publicados que coincidan con tu búsqueda en este momento.
         </div>
       ) : (
-        <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '30px' }}>
-          {filteredContents.map((content) => (
-            <ContentCard key={content._id} content={content} />
-          ))}
-        </div>
+        <>
+          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '30px' }}>
+            {paginatedContents.map((content) => (
+              <ContentCard key={content._id} content={content} />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '60px', marginBottom: '20px' }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '12px 24px', borderRadius: '12px',
+                  backgroundColor: currentPage === 1 ? '#f1f5f9' : '#1f75f5ff',
+                  color: currentPage === 1 ? '#94a3b8' : '#ffffff',
+                  fontWeight: '800', border: 'none',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  boxShadow: currentPage === 1 ? 'none' : '0 4px 14px rgba(31, 117, 245, 0.25)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <IoChevronBack size={18} /> Anterior
+              </button>
+
+              <div style={{ padding: '10px 20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: '800', color: '#0f172a' }}>
+                Página <span style={{ color: '#1f75f5ff' }}>{currentPage}</span> de {totalPages}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '12px 24px', borderRadius: '12px',
+                  backgroundColor: currentPage === totalPages ? '#f1f5f9' : '#1f75f5ff',
+                  color: currentPage === totalPages ? '#94a3b8' : '#ffffff',
+                  fontWeight: '800', border: 'none',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  boxShadow: currentPage === totalPages ? 'none' : '0 4px 14px rgba(31, 117, 245, 0.25)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Siguiente <IoChevronForward size={18} />
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

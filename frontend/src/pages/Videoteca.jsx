@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import ContentCard from '../components/ContentCard';
-import { IoFolderOpen, IoArrowBack, IoPlayCircleOutline } from 'react-icons/io5';
+import { IoFolderOpen, IoArrowBack, IoPlayCircleOutline, IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
 const Videoteca = () => {
   const navigate = useNavigate();
@@ -10,6 +10,8 @@ const Videoteca = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFolderId, setSelectedFolderId] = useState(null); // null, 'general', or folder ID
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,7 +19,7 @@ const Videoteca = () => {
       try {
         const [foldersRes, videosRes] = await Promise.all([
           api.get('/videoteca-folders'),
-          api.get('/content?type=videoteca')
+          api.get('/content?type=videoteca&minimal=true')
         ]);
 
         if (foldersRes.data && foldersRes.data.success) {
@@ -60,6 +62,19 @@ const Videoteca = () => {
     return getVideosByFolder(selectedFolderId);
   };
 
+  // Pagination for videos inside a folder
+  const currentFolderVideos = getSelectedFolderVideos();
+  const totalPages = Math.ceil(currentFolderVideos.length / itemsPerPage);
+  const paginatedFolderVideos = currentFolderVideos.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page when folder changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFolderId]);
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px 60px 20px', fontFamily: 'var(--font-sans)' }}>
       <style>{`
@@ -87,8 +102,8 @@ const Videoteca = () => {
         }
         .folder-card:hover {
           transform: translateY(-6px);
-          box-shadow: 0 16px 32px rgba(31, 117, 245, 0.25);
-          border-color: rgba(31, 117, 245, 0.4);
+          box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+          border-color: rgba(255, 255, 255, 0.3);
         }
         .folder-card-img {
           position: absolute;
@@ -201,7 +216,7 @@ const Videoteca = () => {
         /* Folder detail view (videos within selected folder) */
         <div className="animate-fade-in">
 
-          {getSelectedFolderVideos().length === 0 ? (
+          {currentFolderVideos.length === 0 ? (
             <div style={{
               textAlign: 'center',
               padding: '60px 20px',
@@ -213,11 +228,56 @@ const Videoteca = () => {
               No hay videos disponibles en esta carpeta en este momento.
             </div>
           ) : (
-            <div className="videoteca-grid animate-fade-in">
-              {getSelectedFolderVideos().map((video) => (
-                <ContentCard key={video._id} content={video} />
-              ))}
-            </div>
+            <>
+              <div className="videoteca-grid animate-fade-in">
+                {paginatedFolderVideos.map((video) => (
+                  <ContentCard key={video._id} content={video} />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', marginTop: '60px', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '8px',
+                      padding: '12px 24px', borderRadius: '12px',
+                      backgroundColor: currentPage === 1 ? '#f1f5f9' : '#1f75f5ff',
+                      color: currentPage === 1 ? '#94a3b8' : '#ffffff',
+                      fontWeight: '800', border: 'none',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      boxShadow: currentPage === 1 ? 'none' : '0 4px 14px rgba(31, 117, 245, 0.25)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <IoChevronBack size={18} /> Anterior
+                  </button>
+
+                  <div style={{ padding: '10px 20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: '800', color: '#0f172a' }}>
+                    Página <span style={{ color: '#1f75f5ff' }}>{currentPage}</span> de {totalPages}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '8px',
+                      padding: '12px 24px', borderRadius: '12px',
+                      backgroundColor: currentPage === totalPages ? '#f1f5f9' : '#1f75f5ff',
+                      color: currentPage === totalPages ? '#94a3b8' : '#ffffff',
+                      fontWeight: '800', border: 'none',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      boxShadow: currentPage === totalPages ? 'none' : '0 4px 14px rgba(31, 117, 245, 0.25)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Siguiente <IoChevronForward size={18} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (

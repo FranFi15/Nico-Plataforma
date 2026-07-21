@@ -139,7 +139,7 @@ const Evaluaciones = () => {
                 display: 'inline-block'
               }}
             >
-              EVALUACIÓN COLECTIVA
+              EVALUACIÓN PARA EQUIPOS
             </Link>
           </div>
         </div>
