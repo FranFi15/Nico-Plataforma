@@ -9,7 +9,7 @@ const categorySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['blog', 'course', 'general'],
+      enum: ['blog', 'course', 'general', 'videoteca'],
       default: 'general',
     },
   },

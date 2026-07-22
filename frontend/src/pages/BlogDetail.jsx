@@ -41,15 +41,36 @@ const BlogDetail = () => {
                 return dateB - dateA;
               });
 
+            const currentCatIds = currentContent.categories?.length > 0 
+              ? currentContent.categories.map(c => c._id || c) 
+              : (currentContent.category ? [currentContent.category._id || currentContent.category] : []);
+            
             const currentIndex = allBlogs.findIndex(b => b._id === currentContent._id);
-            let nextThree = [];
-            if (currentIndex !== -1) {
-              nextThree = allBlogs.slice(currentIndex + 1, currentIndex + 4);
-            }
-            if (nextThree.length < 3) {
-              const others = allBlogs.filter(b => b._id !== currentContent._id && !nextThree.some(n => n._id === b._id));
-              nextThree = [...nextThree, ...others].slice(0, 3);
-            }
+            
+            // "creados más tarde" = newer blogs. In the descending list, these are before currentIndex.
+            // Reverse to get the immediately newer one first.
+            const newerBlogs = currentIndex !== -1 ? allBlogs.slice(0, currentIndex).reverse() : [];
+            const olderBlogs = currentIndex !== -1 ? allBlogs.slice(currentIndex + 1) : allBlogs.filter(b => b._id !== currentContent._id);
+            
+            const candidateOrder = [...newerBlogs, ...olderBlogs];
+
+            const matchingBlogs = [];
+            const otherBlogs = [];
+
+            candidateOrder.forEach(b => {
+              const bCatIds = b.categories?.length > 0 
+                ? b.categories.map(c => c._id || c) 
+                : (b.category ? [b.category._id || b.category] : []);
+              
+              const hasMatch = bCatIds.some(id => currentCatIds.includes(id));
+              if (hasMatch) {
+                matchingBlogs.push(b);
+              } else {
+                otherBlogs.push(b);
+              }
+            });
+
+            const nextThree = [...matchingBlogs, ...otherBlogs].slice(0, 3);
             setRelatedBlogs(nextThree);
           }
         } else {

@@ -1,4 +1,5 @@
 import User from '../models/userModel.js';
+import { sendMembershipSubscribedEmail, sendMembershipCancelledEmail } from '../utils/emailService.js';
 
 // @desc    Get all users (students, professors, admins)
 // @route   GET /api/users
@@ -81,13 +82,31 @@ export const updateUserMembership = async (req, res, next) => {
       throw new Error('Usuario no encontrado');
     }
 
-    if (membership !== undefined) user.membership = membership;
+    let membershipChangedToPremium = false;
+    let membershipChangedToFree = false;
+
+    if (membership !== undefined) {
+      if (membership === 'premium' && user.membership !== 'premium') {
+        user.premiumSince = new Date();
+        membershipChangedToPremium = true;
+      } else if (membership === 'free' && user.membership === 'premium') {
+        membershipChangedToFree = true;
+      }
+      user.membership = membership;
+    }
     if (isSubscribed !== undefined) user.isSubscribed = isSubscribed;
     if (membershipExpiresAt !== undefined) {
       user.membershipExpiresAt = membershipExpiresAt ? new Date(membershipExpiresAt) : null;
     }
 
     const updatedUser = await user.save();
+
+    // Send async emails
+    if (membershipChangedToPremium) {
+      sendMembershipSubscribedEmail(updatedUser).catch(console.error);
+    } else if (membershipChangedToFree) {
+      sendMembershipCancelledEmail(updatedUser).catch(console.error);
+    }
 
     res.status(200).json({
       success: true,

@@ -1,5 +1,6 @@
 import Content from '../models/contentModel.js';
 import User from '../models/userModel.js';
+import { sendNewContentEmail } from '../utils/emailService.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 import fs from 'fs';
 import path from 'path';
@@ -37,7 +38,7 @@ export const getContents = async (req, res, next) => {
       ];
     }
 
-    let query = Content.find(filter).populate('category').populate('videoFolder');
+    let query = Content.find(filter).populate('category').populate('categories').populate('videoFolder');
 
     if (req.query.minimal === 'true') {
       query = query.select('-body -modules -attachments');
@@ -60,7 +61,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -82,6 +83,7 @@ export const createContent = async (req, res, next) => {
       cardImagePosition: cardImagePosition || '50%',
       publishDate: publishDate || undefined,
       category: category || undefined,
+      categories: categories || [],
       body: body || '',
       isPublished: isPublished !== undefined ? isPublished : (status !== 'draft'),
       status: status || (isPublished === false ? 'draft' : 'published'),
@@ -98,6 +100,30 @@ export const createContent = async (req, res, next) => {
       message: 'Contenido creado con éxito',
       data: content,
     });
+
+    // Handle email notifications
+    const { notifyUsers } = req.body;
+    if (notifyUsers && notifyUsers !== 'none') {
+      let targetUsers = [];
+      if (notifyUsers === 'all') {
+        targetUsers = await User.find({ role: 'student' }).select('email');
+      } else if (notifyUsers === 'premium') {
+        targetUsers = await User.find({ role: 'student', membership: 'premium' }).select('email');
+      } else if (notifyUsers === 'enrolled') {
+        targetUsers = await User.find({ role: 'student', purchasedItems: content._id }).select('email');
+      }
+
+      if (targetUsers.length > 0) {
+        const urlMap = {
+          course: '/curso/',
+          workshop: '/workshop/',
+          videoteca: '/videoteca/',
+          blog: '/blog/'
+        };
+        const url = `${process.env.FRONTEND_URL || 'http://localhost:5173'}${urlMap[content.contentType] || '/content/'}${content._id}`;
+        sendNewContentEmail(targetUsers, content, url).catch(console.error);
+      }
+    }
   } catch (error) {
     next(error);
   }
@@ -108,7 +134,10 @@ export const createContent = async (req, res, next) => {
 // @access  Private (Secured with protect & checkAccess)
 export const getContentById = async (req, res, next) => {
   try {
-    const content = await Content.findById(req.params.id).populate('category').populate('videoFolder');
+    const content = await Content.findById(req.params.id)
+      .populate('category')
+      .populate('categories')
+      .populate('videoFolder');
 
     if (!content) {
       res.status(404);
@@ -193,7 +222,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -216,6 +245,9 @@ export const updateContent = async (req, res, next) => {
     content.cardImagePosition = cardImagePosition !== undefined ? cardImagePosition : content.cardImagePosition;
     content.publishDate = publishDate !== undefined ? publishDate : content.publishDate;
     content.category = category !== undefined ? (category === '' ? undefined : category) : content.category;
+    if (categories !== undefined) {
+      content.categories = categories;
+    }
     content.body = body !== undefined ? body : content.body;
     content.isPublished = isPublished !== undefined ? isPublished : (status !== undefined ? status !== 'draft' : content.isPublished);
     content.status = status !== undefined ? status : (isPublished !== undefined ? (isPublished ? 'published' : 'draft') : content.status);
@@ -241,6 +273,30 @@ export const updateContent = async (req, res, next) => {
       message: 'Contenido actualizado con éxito',
       data: updatedContent,
     });
+
+    // Handle email notifications
+    const { notifyUsers } = req.body;
+    if (notifyUsers && notifyUsers !== 'none') {
+      let targetUsers = [];
+      if (notifyUsers === 'all') {
+        targetUsers = await User.find({ role: 'student' }).select('email');
+      } else if (notifyUsers === 'premium') {
+        targetUsers = await User.find({ role: 'student', membership: 'premium' }).select('email');
+      } else if (notifyUsers === 'enrolled') {
+        targetUsers = await User.find({ role: 'student', purchasedItems: updatedContent._id }).select('email');
+      }
+
+      if (targetUsers.length > 0) {
+        const urlMap = {
+          course: '/curso/',
+          workshop: '/workshop/',
+          videoteca: '/videoteca/',
+          blog: '/blog/'
+        };
+        const url = `${process.env.FRONTEND_URL || 'http://localhost:5173'}${urlMap[updatedContent.contentType] || '/content/'}${updatedContent._id}`;
+        sendNewContentEmail(targetUsers, updatedContent, url).catch(console.error);
+      }
+    }
   } catch (error) {
     next(error);
   }

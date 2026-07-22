@@ -51,7 +51,9 @@ const Noticias = () => {
     return true;
   };
 
-  const newsEvents = events.filter(ev => ev.type === 'news');
+  const newsEvents = events
+    .filter(ev => ev.type === 'news')
+    .sort((a, b) => new Date(b.eventDate || b.createdAt) - new Date(a.eventDate || a.createdAt));
 
   if (loading) {
     return (

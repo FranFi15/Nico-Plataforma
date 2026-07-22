@@ -5,6 +5,7 @@ import { IoFolderOutline, IoFolderOpen, IoClose, IoTrashOutline, IoPencil, IoPla
 const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const [contents, setContents] = useState([]);
   const [videoFolders, setVideoFolders] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -19,7 +20,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
   const [cVideoFolder, setCVideoFolder] = useState('');
+  const [cCategories, setCCategories] = useState([]);
   const [cVideoLink, setCVideoLink] = useState('');
+  const [cNotifyUsers, setCNotifyUsers] = useState('none');
   const [submitLoading, setSubmitLoading] = useState(false);
 
   // Folder Management states
@@ -40,15 +43,19 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [videosRes, foldersRes] = await Promise.all([
+      const [videosRes, foldersRes, catsRes] = await Promise.all([
         api.get('/content?type=videoteca'),
-        api.get('/videoteca-folders')
+        api.get('/videoteca-folders'),
+        api.get('/categories?type=videoteca')
       ]);
       if (videosRes.data && videosRes.data.success) {
         setContents(videosRes.data.data);
       }
       if (foldersRes.data && foldersRes.data.success) {
         setVideoFolders(foldersRes.data.data);
+      }
+      if (catsRes.data && catsRes.data.success) {
+        setCategories(catsRes.data.data);
       }
     } catch (err) {
       console.error('Error loading videoteca data:', err);
@@ -70,7 +77,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCPriceUsd(0);
     setCPriceArs(0);
     setCVideoFolder('');
+    setCCategories([]);
     setCVideoLink('');
+    setCNotifyUsers('none');
     setShowContentForm(false);
   };
 
@@ -82,7 +91,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
     setCVideoFolder(item.videoFolder?._id || item.videoFolder || '');
+    setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
     setCVideoLink(item.videoLink || '');
+    setCNotifyUsers('none');
     setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
   };
@@ -188,8 +199,11 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
         priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
         price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
         videoFolder: cVideoFolder || undefined,
+        categories: cCategories,
         videoLink: cVideoLink,
-        body: cDescription
+        body: cDescription,
+        status: 'published',
+        notifyUsers: cNotifyUsers
       };
 
       if (editingItem) {
@@ -536,6 +550,45 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">Categorías</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px 0' }}>
+                    {categories.length === 0 ? (
+                      <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No hay categorías de videoteca.</span>
+                    ) : (
+                      categories.map((cat) => {
+                        const isSelected = cCategories.includes(cat._id);
+                        return (
+                          <div
+                            key={cat._id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setCCategories(prev => prev.filter(id => id !== cat._id));
+                              } else {
+                                setCCategories(prev => [...prev, cat._id]);
+                              }
+                            }}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              border: isSelected ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                              backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                              color: isSelected ? '#1d4ed8' : '#475569',
+                              transition: 'all 0.2s ease',
+                              userSelect: 'none'
+                            }}
+                          >
+                            {cat.name}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Tipo de Acceso *</label>
                   <select
                     className="premium-input"
@@ -604,6 +657,24 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                     placeholder="Escribe un resumen o puntos clave explicados en esta sesión..."
                     required
                   />
+                </div>
+
+                <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
+                  <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ✉️ Enviar Notificación por Email
+                  </label>
+                  <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este video?</p>
+                  <select
+                    className="premium-input"
+                    value={cNotifyUsers}
+                    onChange={(e) => setCNotifyUsers(e.target.value)}
+                    style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
+                  >
+                    <option value="none">No enviar</option>
+                    <option value="all">A todos</option>
+                    <option value="premium">A miembros </option>
+                    {editingItem && <option value="enrolled">A usuarios vinculados a este video</option>}
+                  </select>
                 </div>
               </div>
             </div>

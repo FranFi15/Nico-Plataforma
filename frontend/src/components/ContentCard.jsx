@@ -261,25 +261,33 @@ const ContentCard = ({ content }) => {
                   </span>
                 )}
 
-                {content.category && (
-                  <span style={{
-                    position: 'absolute',
-                    bottom: '12px',
-                    left: '12px',
-                    backgroundColor: 'rgba(43, 45, 47, 0.85)',
-                    backdropFilter: 'blur(4px)',
-                    color: '#ffffff',
-                    padding: '4px 10px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '6px'
-                  }}>
-                    {typeof content.category === 'object' && content.category !== null ? content.category.name || 'Categoría' : content.category}
-                  </span>
-                )}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '12px',
+                  left: '12px',
+                  display: 'flex',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  maxWidth: 'calc(100% - 24px)',
+                  zIndex: 2
+                }}>
+                  {(content.categories?.length > 0 ? content.categories : (content.category ? [content.category] : [])).map((cat, idx) => (
+                    <span key={idx} style={{
+                      backgroundColor: 'rgba(43, 45, 47, 0.85)',
+                      backdropFilter: 'blur(4px)',
+                      color: '#ffffff',
+                      padding: '4px 10px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '6px'
+                    }}>
+                      {typeof cat === 'object' && cat !== null ? cat.name || 'Categoría' : cat}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 

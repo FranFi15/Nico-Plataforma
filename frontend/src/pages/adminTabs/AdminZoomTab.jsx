@@ -834,7 +834,10 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
                       No hay noticias publicadas en el muro por el momento.
                     </div>
                   ) : (
-                    events.filter(ev => ev.type === 'news').map(renderEventCard)
+                    events
+                      .filter(ev => ev.type === 'news')
+                      .sort((a, b) => new Date(b.eventDate || b.createdAt) - new Date(a.eventDate || a.createdAt))
+                      .map(renderEventCard)
                   )}
                 </div>
               </div>

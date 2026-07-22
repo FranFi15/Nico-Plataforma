@@ -12,13 +12,14 @@ import AdminEvaluationsTab from './adminTabs/AdminEvaluationsTab';
 import AdminZoomTab from './adminTabs/AdminZoomTab';
 import AdminDiscountsTab from './adminTabs/AdminDiscountsTab';
 import AdminSubscriptionsTab from './adminTabs/AdminSubscriptionsTab';
+import AdminStatsTab from './adminTabs/AdminStatsTab';
 
 const AdminTraining = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Active Tab: 'trainings', 'blogs', 'workshops', 'videoteca', 'evaluations'
-  const [activeTab, setActiveTab] = useState('trainings');
+  // Active Tab: 'stats', 'trainings', 'blogs', 'workshops', 'videoteca', 'evaluations'
+  const [activeTab, setActiveTab] = useState('stats');
   const [formMessage, setFormMessage] = useState('');
 
   useEffect(() => {
@@ -90,6 +91,22 @@ const AdminTraining = () => {
       </div>
 
       <style>{`
+        .admin-tabs-container {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 12px;
+          margin-bottom: 40px;
+        }
+        @media (max-width: 1024px) {
+          .admin-tabs-container {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .admin-tabs-container {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
         .admin-tab-btn {
           padding: 12px 24px !important;
           font-size: 13px !important;
@@ -202,24 +219,18 @@ const AdminTraining = () => {
       `}</style>
 
       {/* Tabs Navigation */}
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        marginBottom: '40px',
-        borderBottom: '2px solid #2B2D2F',
-        paddingBottom: '16px',
-        flexWrap: 'wrap'
-      }}>
+      <div className="admin-tabs-container">
         {[
-          { id: 'home', label: 'Home' },
           { id: 'trainings', label: 'Entrenamiento a Distancia' },
           { id: 'blogs', label: 'Blogs & Artículos' },
           { id: 'workshops', label: 'Workshops & Capacitaciones' },
           { id: 'videoteca', label: 'Videoteca' },
-          { id: 'evaluations', label: 'Evaluaciones' },
           { id: 'zoomevents', label: 'Noticias & Zoom' },
+          { id: 'home', label: 'Home' },
+          { id: 'evaluations', label: 'Evaluaciones' },
           { id: 'discounts', label: 'Descuentos & Beneficios' },
-          { id: 'subscriptions', label: 'Precios & Membresía' }
+          { id: 'subscriptions', label: 'Precios Membresía' },
+          { id: 'stats', label: 'Estadísticas' },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -275,9 +286,8 @@ const AdminTraining = () => {
         {activeTab === 'zoomevents' && (
           <AdminZoomTab formMessage={formMessage} setFormMessage={setFormMessage} />
         )}
-        {activeTab === 'discounts' && (
-          <AdminDiscountsTab formMessage={formMessage} setFormMessage={setFormMessage} />
-        )}
+        {activeTab === 'stats' && <AdminStatsTab />}
+        {activeTab === 'discounts' && <AdminDiscountsTab formMessage={formMessage} setFormMessage={setFormMessage} />}
         {activeTab === 'subscriptions' && (
           <AdminSubscriptionsTab formMessage={formMessage} setFormMessage={setFormMessage} />
         )}

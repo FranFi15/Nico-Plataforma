@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    premiumSince: {
+      type: Date,
+      default: null,
+    },
     subscriptionId: {
       type: String,
       default: null,

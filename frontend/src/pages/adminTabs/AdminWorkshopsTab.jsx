@@ -41,6 +41,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [newAttUrl, setNewAttUrl] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [cIsPublished, setCIsPublished] = useState(true);
+  const [cNotifyUsers, setCNotifyUsers] = useState('none');
 
   // Notify students state
   const [showNotifyModal, setShowNotifyModal] = useState(false);
@@ -105,6 +106,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCVideoLink('');
     setCCCategory('');
     setCIsPublished(true);
+    setCNotifyUsers('none');
     setShowContentForm(false);
   };
 
@@ -124,8 +126,9 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCCardImage(item.cardImage || '');
     setCCardImagePosition(item.cardImagePosition || '50%');
     setCVideoLink(item.videoLink || '');
-    setCCCategory(item.category?._id || item.category || '');
-    setCIsPublished(item.isPublished !== false && item.status !== 'draft');
+    setCCCategory(item.category?._id || item.category || (item.categories?.length > 0 ? item.categories[0]?._id : ''));
+    setCIsPublished(item.isPublished !== undefined ? item.isPublished : (item.status !== 'draft'));
+    setCNotifyUsers('none');
     setShowContentForm(true);
     setOpenSections({ card1: false, card2: false, card3: false, card4: true, card5: false });
     window.scrollTo({ top: 200, behavior: 'smooth' });
@@ -522,8 +525,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         modules: cModules,
         certificate: cCertificate,
         duration: cDuration,
-        isPublished: cIsPublished,
-        status: cIsPublished ? 'published' : 'draft'
+        status: cIsPublished ? 'published' : 'draft',
+        notifyUsers: cNotifyUsers
       };
 
       if (editingItem) {
@@ -896,6 +899,24 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                         ))}
                       </select>
                     </div>
+                  </div>
+
+                  <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
+                    <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Enviar Notificación por Email
+                    </label>
+                    <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este curso/workshop?</p>
+                    <select
+                      className="premium-input"
+                      value={cNotifyUsers}
+                      onChange={(e) => setCNotifyUsers(e.target.value)}
+                      style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
+                    >
+                      <option value="none">No enviar</option>
+                      <option value="all">A todos</option>
+                      <option value="premium">A miembros </option>
+                      {editingItem && <option value="enrolled">A usuarios inscriptos en este curso/workshop</option>}
+                    </select>
                   </div>
 
                   <div className="form-group" style={{ margin: '20px 0 0 0' }}>

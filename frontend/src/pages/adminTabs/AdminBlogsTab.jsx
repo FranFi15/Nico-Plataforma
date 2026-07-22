@@ -23,13 +23,14 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
   const [cCardImage, setCCardImage] = useState('');
   const [cCardImagePosition, setCCardImagePosition] = useState('50%');
   const [cPublishDate, setCPublishDate] = useState(new Date().toISOString().split('T')[0]);
-  const [cCategory, setCCCategory] = useState('');
+  const [cCategories, setCCategories] = useState([]);
   const [cBody, setCBody] = useState('');
   const [cIsPublished, setCIsPublished] = useState(true);
   const [cAttachments, setCAttachments] = useState([]);
   const [cardImageUploading, setCardImageUploading] = useState(false);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
   const [showHtmlCode, setShowHtmlCode] = useState(false);
+  const [cNotifyUsers, setCNotifyUsers] = useState('none');
   const editorRef = useRef(null);
 
   // Category Management states
@@ -83,10 +84,11 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCCardImage('');
     setCCardImagePosition('50%');
     setCPublishDate(new Date().toISOString().split('T')[0]);
-    setCCCategory('');
+    setCCategories([]);
     setCBody('');
     setCIsPublished(true);
     setCAttachments([]);
+    setCNotifyUsers('none');
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
     }
@@ -106,12 +108,13 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCBody(item.body || '');
     setCIsPublished(item.isPublished !== undefined ? item.isPublished : (item.status !== 'draft'));
     setCAttachments(item.attachments || []);
+    setCPublishDate(item.publishDate ? new Date(item.publishDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
+    setCNotifyUsers('none'); // Reset to none when editing to avoid accidental re-sends
+    setShowContentForm(true);
     if (editorRef.current) {
       editorRef.current.innerHTML = item.body || '';
     }
-    setCPublishDate(item.publishDate ? new Date(item.publishDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-    setCCCategory(item.category?._id || item.category || '');
-    setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
   };
 
@@ -286,7 +289,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
       if (response.data && response.data.success) {
         const catsRes = await api.get('/categories?type=blog');
         if (catsRes.data?.success) setCategories(catsRes.data.data);
-        if (cCategory === id) setCCCategory('');
+        if (cCategories.includes(id)) setCCategories((prev) => prev.filter(c => c !== id));
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Error al eliminar categoría');
@@ -317,11 +320,12 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
         cardImage: cCardImage,
         cardImagePosition: cCardImagePosition,
         body: cBody,
-        category: cCategory || undefined,
+        categories: cCategories,
         publishDate: cPublishDate,
         isPublished: cIsPublished,
         status: cIsPublished ? 'published' : 'draft',
-        attachments: cAttachments
+        attachments: cAttachments,
+        notifyUsers: cNotifyUsers
       };
 
       if (editingItem) {
@@ -621,19 +625,41 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                     </div>
                   )}
 
-                  <select
-                    className="premium-input"
-                    value={cCategory}
-                    onChange={(e) => setCCCategory(e.target.value)}
-                    style={{ backgroundColor: '#ffffff', color: '#051020', cursor: 'pointer' }}
-                  >
-                    <option value="">Selecciona una Categoría</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '8px 0' }}>
+                    {categories.length === 0 ? (
+                      <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No hay categorías. Crea una arriba.</span>
+                    ) : (
+                      categories.map((cat) => {
+                        const isSelected = cCategories.includes(cat._id);
+                        return (
+                          <div
+                            key={cat._id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setCCategories(prev => prev.filter(id => id !== cat._id));
+                              } else {
+                                setCCategories(prev => [...prev, cat._id]);
+                              }
+                            }}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              border: isSelected ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                              backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                              color: isSelected ? '#1d4ed8' : '#475569',
+                              transition: 'all 0.2s ease',
+                              userSelect: 'none'
+                            }}
+                          >
+                            {cat.name}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -716,6 +742,24 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
+                  <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Enviar Notificación por Email
+                  </label>
+                  <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este blog?</p>
+                  <select
+                    className="premium-input"
+                    value={cNotifyUsers}
+                    onChange={(e) => setCNotifyUsers(e.target.value)}
+                    style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
+                  >
+                    <option value="none">No enviar</option>
+                    <option value="all">A todos</option>
+                    <option value="premium">A miembros exclusivamente</option>
+                    {editingItem && <option value="enrolled">A usuarios vinculados a este blog</option>}
+                  </select>
                 </div>
               </div>
             </div>

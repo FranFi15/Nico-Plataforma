@@ -2,19 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { IoClose, IoDocumentTextOutline, IoTimeOutline, IoRibbonOutline, IoSchoolOutline, IoCheckmarkCircle, IoPlay, IoPlayCircleOutline, IoVideocamOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import nico from '../assets/nico.webp';
 import fedeImg from '../assets/fede.webp';
+import api from '../services/api';
 
 const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, user }) => {
   const [activeTab, setActiveTab] = useState('DESCRIPCIÓN');
   const [expandedModule, setExpandedModule] = useState(0);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [fullContent, setFullContent] = useState(null);
+  const [loadingContent, setLoadingContent] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       setShowTrailer(false);
+      setFullContent(null);
+    } else if (content?._id) {
+      const fetchFullContent = async () => {
+        setLoadingContent(true);
+        try {
+          const res = await api.get(`/content/${content._id}`);
+          if (res.data && res.data.data) {
+            setFullContent(res.data.data);
+          } else {
+            setFullContent(res.data);
+          }
+        } catch (error) {
+          console.error("Error fetching full content details:", error);
+        } finally {
+          setLoadingContent(false);
+        }
+      };
+      fetchFullContent();
     }
   }, [isOpen, content?._id]);
 
   if (!isOpen || !content) return null;
+
+  const displayContent = fullContent || content;
 
   const getEmbedUrl = (url) => {
     if (!url) return '';
@@ -101,17 +124,17 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
     return Math.round(totalMinutes);
   };
 
-  // Calculate statistics from content.modules
-  const modulesCount = content.modules ? content.modules.length : (content.modulesCount || 3);
-  const lessonsCount = content.modules
-    ? content.modules.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0)
-    : (content.lessonsCount || 12);
-  const hasCertificate = content.certificate !== false ? 'Sí' : 'No';
+  // Calculate statistics from displayContent.modules
+  const modulesCount = displayContent.modules ? displayContent.modules.length : (displayContent.modulesCount || 3);
+  const lessonsCount = displayContent.modules
+    ? displayContent.modules.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0)
+    : (displayContent.lessonsCount || 12);
+  const hasCertificate = displayContent.certificate !== false ? 'Sí' : 'No';
 
   // Duration is the sum of all times across modules and lessons
   let totalMinutes = 0;
-  if (Array.isArray(content.modules) && content.modules.length > 0) {
-    content.modules.forEach(mod => {
+  if (Array.isArray(displayContent.modules) && displayContent.modules.length > 0) {
+    displayContent.modules.forEach(mod => {
       let modMinutes = 0;
       if (Array.isArray(mod.lessons) && mod.lessons.length > 0) {
         mod.lessons.forEach(lesson => {
@@ -125,7 +148,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
     });
   }
 
-  let durationText = content.duration || '45 minutos';
+  let durationText = displayContent.duration || '45 minutos';
   if (totalMinutes > 0) {
     if (totalMinutes >= 60) {
       const hours = Math.floor(totalMinutes / 60);
@@ -138,26 +161,26 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
 
   // Calculate student progress from localStorage checking both skool and nico keys
   let progressPercent = 0;
-  if (effectiveAccess && content.modules && content.modules.length > 0) {
+  if (effectiveAccess && displayContent.modules && displayContent.modules.length > 0) {
     let completedItems = [];
     try {
-      const skool = JSON.parse(localStorage.getItem(`skool_completed_${content._id}`) || '[]');
-      const nico = JSON.parse(localStorage.getItem(`nico_completed_${content._id}`) || '[]');
+      const skool = JSON.parse(localStorage.getItem(`skool_completed_${displayContent._id}`) || '[]');
+      const nico = JSON.parse(localStorage.getItem(`nico_completed_${displayContent._id}`) || '[]');
       completedItems = Array.from(new Set([...skool, ...nico]));
     } catch (e) {
       completedItems = [];
     }
-    const totalItems = content.modules.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 1;
-    const completedCount = content.modules.reduce(
+    const totalItems = displayContent.modules.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 1;
+    const completedCount = displayContent.modules.reduce(
       (acc, mod) => acc + (mod.lessons || []).filter((l) => completedItems.includes(l.id)).length,
       0
     );
     progressPercent = Math.round((completedCount / totalItems) * 100) || 0;
   }
 
-  const coverImageUrl = content.cardImage || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop';
-  const instructorName = content.instructorName || 'Nico Sesma';
-  const instructorPhoto = content.instructorPhoto || (instructorName.toLowerCase().includes('fede') ? fedeImg : nico);
+  const coverImageUrl = displayContent.cardImage || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop';
+  const instructorName = displayContent.instructorName || 'Nico Sesma';
+  const instructorPhoto = displayContent.instructorPhoto || (instructorName.toLowerCase().includes('fede') ? fedeImg : nico);
 
   // Categories pills derived strictly from the course category/categories
   const rawCategories = Array.isArray(content.categories) && content.categories.length > 0
@@ -641,8 +664,10 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                         Qué vas a aprender en este curso
                       </h3>
                       <div style={{ fontSize: '14px', color: '#334155', lineHeight: '1.7', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {content.description ? (
-                          content.description.split('\n').map((paragraph, idx) => (
+                        {loadingContent ? (
+                          <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>Cargando detalles...</div>
+                        ) : displayContent.description ? (
+                          displayContent.description.split('\n').map((paragraph, idx) => (
                             paragraph.trim() ? <p key={idx} style={{ margin: 0 }}>{paragraph.trim()}</p> : null
                           ))
                         ) : (
@@ -681,8 +706,10 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
 
                       {/* Modules Accordion List */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {Array.isArray(content.modules) && content.modules.length > 0 ? (
-                          content.modules.map((mod, modIdx) => {
+                        {loadingContent ? (
+                          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>Cargando plan de estudios...</div>
+                        ) : Array.isArray(displayContent.modules) && displayContent.modules.length > 0 ? (
+                          displayContent.modules.map((mod, modIdx) => {
                             const isModExpanded = expandedModule === modIdx;
                             const modLessons = mod.lessons || [];
                             let modMinutes = 0;
@@ -714,66 +741,33 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                                 </div>
 
                                 {isModExpanded && (
-                                  <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', flex: 1 }}>
-                                      {mod.description && mod.description.trim() ? (
-                                        mod.description
-                                      ) : (
-                                        <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Este módulo abarca los conceptos teóricos y metodológicos correspondientes a esta sección.</span>
-                                      )}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#eff6ff', color: '#1f75f5ff', padding: '8px 14px', borderRadius: '12px', border: '1px solid #bfdbfe', fontWeight: '800', fontSize: '13px', flexShrink: 0 }}>
-                                      <IoTimeOutline size={18} />
-                                      <span>{modMinutes > 0 ? `${modMinutes} min` : (mod.duration || '15 min')}</span>
-                                    </div>
+                                  <div style={{ padding: '0px 20px 16px 20px', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+                                    {/* Lessons List */}
+                                    {modLessons.length > 0 ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {modLessons.map((lesson, idx) => (
+                                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                              <IoPlayCircleOutline size={16} color="#1f75f5ff" />
+                                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>{lesson.title || `Lección ${idx + 1}`}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div style={{ padding: '10px 0', fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
+                                        No hay lecciones cargadas en este módulo.
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
                             );
                           })
                         ) : (
-                          /* Fallback syllabus preview when no modules array is loaded in content */
-                          [
-                            { title: 'Fundamentos Teóricos y Contextualización', description: 'En este módulo inicial aprenderemos los conceptos clave, la evolución histórica y las bases biológicas detrás de la microdosis en el deporte.', lessons: ['Concepto de Microdosis y Evolución', 'Fisiología de la adaptación a estímulos cortos', 'Criterios de programación en temporada'] },
-                            { title: 'Aplicación en Fuerza y Potencia', description: 'Exploraremos cómo distribuir cargas de fuerza y potencia durante el microciclo sin generar interferencia ni fatiga neuromuscular.', lessons: ['Microdosis de fuerza máxima en competencia', 'Desarrollo de potencia sin fatiga neural', 'Ejemplos de distribución semanal'] },
-                            { title: 'Integración y Toma de Decisiones', description: 'Estudios de caso y resolución de problemas reales en temporadas con alta densidad competitiva y viajes.', lessons: ['Ajustes en semanas de doble competencia', 'Monitoreo de carga y respuesta individual', 'Estudios de caso y conclusiones'] }
-                          ].map((sampleMod, sIdx) => {
-                            const isModExpanded = expandedModule === sIdx;
-                            return (
-                              <div key={sIdx} style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '18px', overflow: 'hidden' }}>
-                                <div
-                                  onClick={() => setExpandedModule(isModExpanded ? -1 : sIdx)}
-                                  style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: isModExpanded ? '#f8fafc' : '#ffffff', borderBottom: isModExpanded ? '1px solid #e2e8f0' : 'none' }}
-                                >
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '34px', height: '34px', borderRadius: '10px', backgroundColor: '#eff6ff', color: '#1f75f5ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '14px', flexShrink: 0 }}>
-                                      {sIdx + 1}
-                                    </div>
-                                    <div>
-                                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
-                                        {sampleMod.title}
-                                      </h4>
-                                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
-                                        {sampleMod.lessons.length} lecciones · 15 min
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '900' }}>{isModExpanded ? '▲' : '▼'}</span>
-                                </div>
-                                {isModExpanded && (
-                                  <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', flex: 1 }}>
-                                      {sampleMod.description}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#eff6ff', color: '#1f75f5ff', padding: '8px 14px', borderRadius: '12px', border: '1px solid #bfdbfe', fontWeight: '800', fontSize: '13px', flexShrink: 0 }}>
-                                      <IoTimeOutline size={18} />
-                                      <span>15 min</span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
+                          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
+                            Aún no hay módulos cargados en el plan de estudios.
+                          </div>
                         )}
                       </div>
                     </div>
@@ -785,42 +779,50 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                       <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '14px', border: '1px solid #bfdbfe', backgroundColor: '#dbeafe', color: '#1e40af', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                         VALORACIONES DE ALUMNOS
                       </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', backgroundColor: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '16px 20px' }}>
-                        <span style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a' }}>
-                          {content.rating ? content.rating.toFixed(1) : '4.9'}
-                        </span>
-                        <div>
-                          <div style={{ color: '#f59e0b', fontSize: '16px', letterSpacing: '2px' }}>★★★★★</div>
-                          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '700' }}>
-                            Basado en {(content.numReviews || 0) + 3} valoraciones verificadas de alumnos
-                          </span>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {[
-                          ...(content.reviews || []).map((r) => ({
-                            name: r.name,
-                            role: r.profession || 'Alumno verificado',
-                            comment: r.comment,
-                            rating: r.rating || 5
-                          })),
-                          { name: 'Martín Rodríguez', role: 'Preparador Físico de Fútbol', comment: 'La claridad con la que se explican las microdosis y cómo aplicarlas en semanas con dos partidos es excepcional. Lo recomiendo 100%.', rating: 5 },
-                          { name: 'Carolina Gómez', role: 'Kinesióloga & Deportóloga', comment: 'Contenido riguroso, respaldado por ciencia y con ejemplos de campo súper reales. Me ayudó muchísimo a estructurar mis sesiones.', rating: 5 },
-                          { name: 'Esteban Méndez', role: 'Entrenador de Alto Rendimiento', comment: 'El formato es práctico y fácil de seguir. Los apuntes descargables son una joya para el día a día.', rating: 5 }
-                        ].map((rev, rIdx) => (
-                          <div key={rIdx} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                              <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{rev.name}</span>
-                              <span style={{ color: '#f59e0b', fontSize: '13px' }}>
-                                {'★'.repeat(Math.max(1, Math.min(5, Math.round(rev.rating || 5))))}
+                      
+                      {displayContent.reviews && displayContent.reviews.length > 0 ? (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', backgroundColor: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '16px 20px' }}>
+                            <span style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a' }}>
+                              {displayContent.rating ? displayContent.rating.toFixed(1) : '5.0'}
+                            </span>
+                            <div>
+                              <div style={{ color: '#f59e0b', fontSize: '16px', letterSpacing: '2px' }}>★★★★★</div>
+                              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '700' }}>
+                                Basado en {displayContent.numReviews || displayContent.reviews.length} valoraciones verificadas de alumnos
                               </span>
                             </div>
-                            <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#1f75f5ff', marginBottom: '8px' }}>{rev.role}</span>
-                            <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: '1.5' }}>"{rev.comment}"</p>
                           </div>
-                        ))}
-                      </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {displayContent.reviews.map((r, rIdx) => (
+                              <div key={rIdx} style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: '#ffffff', fontSize: '16px' }}>
+                                      {r.name?.charAt(0) || 'A'}
+                                    </div>
+                                    <div>
+                                      <h5 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{r.name}</h5>
+                                      <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{r.profession || 'Alumno verificado'}</span>
+                                    </div>
+                                  </div>
+                                  <div style={{ color: '#f59e0b', fontSize: '14px', letterSpacing: '1px' }}>
+                                    {'★'.repeat(r.rating || 5)}{'☆'.repeat(5 - (r.rating || 5))}
+                                  </div>
+                                </div>
+                                <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: '1.6', fontStyle: 'italic' }}>
+                                  "{r.comment}"
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontStyle: 'italic', fontSize: '14px' }}>
+                          Sin reseñas todavía
+                        </div>
+                      )}
                     </div>
                   )}
 

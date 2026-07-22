@@ -39,6 +39,9 @@ export const registerUser = async (req, res, next) => {
     });
 
     if (user) {
+      // Send Welcome Email asynchronously
+      sendWelcomeEmail(user).catch(console.error);
+
       res.status(201).json({
         success: true,
         data: {

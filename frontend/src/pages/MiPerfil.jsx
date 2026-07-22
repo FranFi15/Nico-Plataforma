@@ -495,8 +495,11 @@ const MiPerfil = () => {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '40px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
-                  Próximamente
+                <h4 style={{ fontSize: '35px', fontWeight: '400', color: 'var(--dark)', margin: 0 }}>
+                  Próximamente App
+                </h4>
+                <h4 style={{ fontSize: '35px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
+                  NS Process Dashboard
                 </h4>
               </div>
 
