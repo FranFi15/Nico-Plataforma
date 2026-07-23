@@ -119,16 +119,11 @@ const CursoDetail = () => {
     });
   };
 
-  // Reset quiz state when switching lessons
-  useEffect(() => {
-    setQuizAnswers({});
-    setQuizSubmitted(false);
-    setQuizScore(null);
-    setLessonTab('notes');
-  }, [activeModuleIdx, activeLessonIdx]);
-
-  // Calculate overall progress safely at top level for hook rules
+  // Calculate overall progress and current item safely at top level for hook rules
   const hasModules = content?.modules && content.modules.length > 0;
+  const currentModule = hasModules ? content.modules[activeModuleIdx] : null;
+  const currentItem = currentModule && currentModule.lessons ? currentModule.lessons[activeLessonIdx] : null;
+
   const totalItemsCount = hasModules
     ? content.modules.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0)
     : 1;
@@ -139,6 +134,18 @@ const CursoDetail = () => {
     )
     : 0;
   const progressPercent = Math.round((completedCount / totalItemsCount) * 100) || 0;
+
+  // Reset quiz state and set default tab when switching lessons
+  useEffect(() => {
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    setQuizScore(null);
+    if (currentItem && currentItem.type !== 'quiz' && currentItem.videoLink) {
+      setLessonTab('video');
+    } else {
+      setLessonTab('notes');
+    }
+  }, [activeModuleIdx, activeLessonIdx, currentItem?.id]);
 
   // Auto trigger Review Modal upon 100% course completion if not reviewed yet
   useEffect(() => {
@@ -284,18 +291,6 @@ const CursoDetail = () => {
   const typeLabel = isCourse ? 'Curso de Especialización' : 'Taller Práctico (Workshop)';
   const coverImage = content.cardImage || 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop';
 
-  const currentModule = hasModules ? content.modules[activeModuleIdx] : null;
-  const currentItem = currentModule && currentModule.lessons ? currentModule.lessons[activeLessonIdx] : null;
-
-  useEffect(() => {
-    if (currentItem && currentItem.type !== 'quiz') {
-      if (currentItem.videoLink && lessonTab !== 'video') {
-         setLessonTab('video');
-      } else if (!currentItem.videoLink && lessonTab === 'video') {
-         setLessonTab('notes');
-      }
-    }
-  }, [currentItem?.id]);
 
   const handleReviewSubmit = async (reviewData) => {
     try {
