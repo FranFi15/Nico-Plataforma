@@ -108,14 +108,14 @@ const ContentCard = ({ content }) => {
   };
 
   if (isPrivileged || isFree) {
-    actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop && hasStarted ? 'Continuar curso' : 'Ver ahora');
+    actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop ? 'Ver plan de estudio' : 'Ver ahora');
     handleAction = navigateToDetail;
   } else if (content.accessType === 'subscription') {
     if (isSubscribed) {
-      actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop && hasStarted ? 'Continuar curso' : 'Ver ahora');
+      actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop ? 'Ver plan de estudio' : 'Ver ahora');
       handleAction = navigateToDetail;
     } else {
-      actionText = 'Activar membresía';
+      actionText = isCourseOrWorkshop ? 'Ver plan de estudio' : 'Activar membresía';
       handleAction = () => {
         if (!user) {
           alert('Por favor, inicia sesión para suscribirte');
@@ -128,14 +128,14 @@ const ContentCard = ({ content }) => {
     }
   } else if (content.accessType === 'one-time-purchase') {
     if (isOwned) {
-      actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop && hasStarted ? 'Continuar curso' : 'Ver ahora');
+      actionText = content.contentType === 'blog' ? 'Leer artículo' : (isCourseOrWorkshop ? 'Ver plan de estudio' : 'Ver ahora');
       handleAction = navigateToDetail;
     } else {
       const memberPctCalc = content.memberDiscountPercentage !== undefined && content.memberDiscountPercentage !== null && content.memberDiscountPercentage !== '' ? Number(content.memberDiscountPercentage) : 0;
       if (isSubscribed && memberPctCalc > 0) {
-        actionText = `Comprar con Descuento (-${memberPctCalc}%)`;
+        actionText = isCourseOrWorkshop ? 'Ver plan de estudio' : `Comprar con Descuento (-${memberPctCalc}%)`;
       } else {
-        actionText = 'Comprar ahora';
+        actionText = isCourseOrWorkshop ? 'Ver plan de estudio' : 'Comprar ahora';
       }
       handleAction = () => {
         if (!user) {
@@ -395,7 +395,7 @@ const ContentCard = ({ content }) => {
               <div style={{ marginBottom: '20px' }}>
                 {isSubscribed ? (
                   <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <IoCheckmarkCircle size={14} /> Desbloqueado con Premium
+                    <IoCheckmarkCircle size={14} /> Desbloqueado con Membresía
                   </span>
                 ) : (
                   <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gray-400)' }}>
@@ -591,7 +591,7 @@ const ContentCard = ({ content }) => {
                 <div style={{ marginBottom: '16px' }}>
                   {isSubscribed ? (
                     <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <IoCheckmarkCircle size={14} /> Desbloqueado con Premium
+                      <IoCheckmarkCircle size={14} /> Desbloqueado con Membresia
                     </span>
                   ) : (
                     <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--gray-400)' }}>

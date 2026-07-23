@@ -586,12 +586,12 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                     {effectiveAccess
                       ? 'Continuar curso'
                       : content.accessType === 'free'
-                        ? 'Acceso Libre - Comenzar Ahora'
+                        ? 'Comenzar Ahora'
                         : content.accessType === 'subscription'
-                          ? 'Activar Membresía para Acceder'
+                          ? 'Membresía requerida'
                           : showDiscount
                             ? `Comprar con Descuento (-${memberPct}%)`
-                            : 'Comprar Formación Ahora'}
+                            : 'Comprar Ahora'}
                   </button>
 
                 </div>
@@ -779,7 +779,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                       <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '14px', border: '1px solid #bfdbfe', backgroundColor: '#dbeafe', color: '#1e40af', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
                         VALORACIONES DE ALUMNOS
                       </span>
-                      
+
                       {displayContent.reviews && displayContent.reviews.length > 0 ? (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', backgroundColor: '#ffffff', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '16px 20px' }}>
