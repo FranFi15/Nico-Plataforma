@@ -155,6 +155,17 @@ const contentSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    certificateTemplate: {
+      type: String,
+      default: '',
+    },
+    certificateSettings: {
+      x: { type: Number, default: 50 },
+      y: { type: Number, default: 50 },
+      fontSize: { type: Number, default: 40 },
+      color: { type: String, default: '#000000' },
+      fontFamily: { type: String, default: 'Arial' }
+    },
     duration: {
       type: String,
       default: '',

@@ -212,6 +212,47 @@ const CursoDetail = () => {
 
   // Access calculation already defined at top level for hook rules
 
+  const downloadDiploma = () => {
+    if (!content.certificateTemplate || !user) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      const settings = content.certificateSettings || { x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' };
+      
+      const scaleFactor = canvas.width / 800; // Scaling font assuming preview was roughly 800px wide
+      const scaledFontSize = settings.fontSize * scaleFactor;
+      
+      ctx.fillStyle = settings.color;
+      ctx.font = `bold ${scaledFontSize}px ${settings.fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      const x = (settings.x / 100) * canvas.width;
+      const y = (settings.y / 100) * canvas.height;
+      
+      const studentName = user.name || 'Estudiante';
+      
+      ctx.fillText(studentName, x, y);
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `Diploma_${content.title.replace(/[^a-zA-Z0-9]/g, '_')}_${studentName.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+      link.href = dataUrl;
+      link.click();
+    };
+    img.onerror = () => {
+      alert('Hubo un error al generar el diploma. Asegúrate de que la plantilla cargada sea válida.');
+    };
+    img.src = content.certificateTemplate;
+  };
   const handleEnrollManual = async () => {
     if (!user) {
       alert('Por favor, inicia sesión para anotarte en este curso.');
@@ -558,6 +599,18 @@ const CursoDetail = () => {
               <div style={{ width: '100%', height: '8px', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '4px', overflow: 'hidden' }}>
                 <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#1f75f5ff', borderRadius: '4px', transition: 'width 0.4s ease' }} />
               </div>
+              
+              {progressPercent === 100 && content.certificate && content.certificateTemplate && (
+                <button
+                  onClick={downloadDiploma}
+                  style={{ marginTop: '16px', width: '100%', padding: '10px 12px', backgroundColor: '#10b981', color: '#fff', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background-color 0.2s', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+                >
+                  <IoDownloadOutline size={20} />
+                  Descargar Mi Certificado
+                </button>
+              )}
             </div>
           )}
         </div>

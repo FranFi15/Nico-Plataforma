@@ -61,7 +61,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateTemplate, certificateSettings, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -92,6 +92,8 @@ export const createContent = async (req, res, next) => {
       attachments: attachments || [],
       modules: modules || [],
       certificate: certificate !== undefined ? certificate : true,
+      certificateTemplate: certificateTemplate || '',
+      certificateSettings: certificateSettings || { x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' },
       duration: duration || '',
     });
 
@@ -222,7 +224,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateTemplate, certificateSettings, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -261,6 +263,12 @@ export const updateContent = async (req, res, next) => {
     }
     if (certificate !== undefined) {
       content.certificate = certificate;
+    }
+    if (certificateTemplate !== undefined) {
+      content.certificateTemplate = certificateTemplate;
+    }
+    if (certificateSettings !== undefined) {
+      content.certificateSettings = certificateSettings;
     }
     if (duration !== undefined) {
       content.duration = duration;
