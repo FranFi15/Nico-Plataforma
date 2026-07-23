@@ -584,7 +584,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                   >
                     <IoPlay size={18} />
                     {effectiveAccess
-                      ? 'Continuar curso'
+                      ? (progressPercent > 0 ? 'Continuar curso' : 'Acceder')
                       : content.accessType === 'free'
                         ? 'Comenzar Ahora'
                         : content.accessType === 'subscription'

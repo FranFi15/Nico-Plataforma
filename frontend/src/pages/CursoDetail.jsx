@@ -5,7 +5,37 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import AddToFolderModal from '../components/AddToFolderModal';
 import ReviewModal from '../components/ReviewModal';
-import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoDocumentText, IoSchool, IoTime, IoChevronDown, IoChevronUp, IoCheckmarkDone, IoDownloadOutline, IoHelpCircleOutline, IoStar, IoSchoolOutline, IoMegaphoneOutline, IoDocumentTextOutline, IoInformationCircleOutline, IoTrophyOutline, IoCloseCircleOutline, IoRefreshOutline, IoChatbubbleOutline } from 'react-icons/io5';
+import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoDocumentText, IoSchool, IoTime, IoChevronDown, IoChevronUp, IoCheckmarkDone, IoDownloadOutline, IoHelpCircleOutline, IoStar, IoSchoolOutline, IoMegaphoneOutline, IoDocumentTextOutline, IoInformationCircleOutline, IoTrophyOutline, IoCloseCircleOutline, IoRefreshOutline, IoChatbubbleOutline, IoVideocamOutline } from 'react-icons/io5';
+
+const getEmbedUrl = (url) => {
+  if (!url) return '';
+  try {
+    if (url.includes('youtu.be/')) {
+      const id = url.split('youtu.be/')[1]?.split('?')[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes('youtube.com/shorts/')) {
+      const id = url.split('youtube.com/shorts/')[1]?.split('?')[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes('youtube.com/watch?v=')) {
+      const id = url.split('v=')[1]?.split('&')[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes('youtube.com/embed/')) {
+      return url;
+    }
+    if (url.includes('vimeo.com/')) {
+      const id = url.split('vimeo.com/').pop()?.split('?')[0];
+      if (id && /^\d+$/.test(id)) {
+        return `https://player.vimeo.com/video/${id}`;
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing video URL:', e);
+  }
+  return url;
+};
 
 const CursoDetail = () => {
   const { id } = useParams();
@@ -257,6 +287,16 @@ const CursoDetail = () => {
   const currentModule = hasModules ? content.modules[activeModuleIdx] : null;
   const currentItem = currentModule && currentModule.lessons ? currentModule.lessons[activeLessonIdx] : null;
 
+  useEffect(() => {
+    if (currentItem && currentItem.type !== 'quiz') {
+      if (currentItem.videoLink && lessonTab !== 'video') {
+         setLessonTab('video');
+      } else if (!currentItem.videoLink && lessonTab === 'video') {
+         setLessonTab('notes');
+      }
+    }
+  }, [currentItem?.id]);
+
   const handleReviewSubmit = async (reviewData) => {
     try {
       const response = await api.post(`/content/${id}/reviews`, reviewData);
@@ -501,7 +541,7 @@ const CursoDetail = () => {
               gap: '6px'
             }}>
               {hasAccess ? <IoCheckmarkCircle size={14} /> : <IoLockClosed size={14} />}
-              {isFree ? 'Acceso Libre' : content.accessType === 'subscription' ? 'Membresía Premium' : `USD $${content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)} / ARS $${(content.priceArs || 0).toLocaleString()}`}
+              {isFree ? 'Acceso Libre' : content.accessType === 'subscription' ? 'Membresía' : `USD $${content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)} / ARS $${(content.priceArs || 0).toLocaleString()}`}
             </span>
           </div>
 
@@ -541,7 +581,7 @@ const CursoDetail = () => {
             </h3>
             <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '28px', maxWidth: '580px', lineHeight: '1.6' }}>
               {content.accessType === 'subscription'
-                ? 'Este contenido está reservado para miembros de la Membresía Premium de Nico Sesma. Actívala para desbloquear todos los módulos, lecciones, material de descarga y videoteca ilimitada.'
+                ? 'Este contenido está reservado para miembros de la Membresía de NS. Actívala para desbloquear todos los módulos, lecciones, material de descarga y videoteca ilimitada.'
                 : `Adquiere acceso permanente a esta formación técnica por un pago único de USD $${content.priceUsd !== undefined ? content.priceUsd : (content.price || 0)} / ARS $${(content.priceArs || 0).toLocaleString()}.`}
             </p>
             <button
@@ -549,7 +589,7 @@ const CursoDetail = () => {
               className="btn-primary"
               style={{ padding: '16px 36px', fontSize: '16px', fontWeight: '900', boxShadow: '0 8px 25px rgba(31, 117, 245, 0.4)' }}
             >
-              {content.accessType === 'subscription' ? 'Activar Membresía Premium Ahora' : 'Comprar Formación Ahora'}
+              {content.accessType === 'subscription' ? 'Activar Membresía Ahora' : 'Comprar Formación Ahora'}
             </button>
           </div>
         </div>
@@ -756,10 +796,29 @@ const CursoDetail = () => {
                       ======================================================= */}
                   {currentItem.type !== 'quiz' ? (
                     <>
-
-
                       {/* Skool Lesson Tabs: Notes vs Resources */}
                       <div style={{ borderBottom: '2px solid #f1f5f9', marginBottom: '24px', display: 'flex', gap: '24px' }}>
+                        {currentItem.videoLink && (
+                          <button
+                            onClick={() => setLessonTab('video')}
+                            style={{
+                              padding: '12px 4px',
+                              border: 'none',
+                              background: 'none',
+                              borderBottom: `3px solid ${lessonTab === 'video' ? '#051020' : 'transparent'}`,
+                              fontWeight: lessonTab === 'video' ? '900' : '700',
+                              color: lessonTab === 'video' ? '#051020' : '#64748b',
+                              fontSize: '15px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <IoVideocamOutline size={18} /> Video Análisis
+                          </button>
+                        )}
                         <button
                           onClick={() => setLessonTab('notes')}
                           style={{
@@ -773,10 +832,11 @@ const CursoDetail = () => {
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px'
+                            gap: '6px',
+                            transition: 'all 0.2s ease'
                           }}
                         >
-                          <IoDocumentTextOutline size={18} /> Notas y Temario
+                          <IoDocumentTextOutline size={18} /> Notas - Artículos
                         </button>
                         <button
                           onClick={() => setLessonTab('attachments')}
@@ -799,8 +859,20 @@ const CursoDetail = () => {
                       </div>
 
                       {/* Tab Content */}
-                      {lessonTab === 'notes' ? (
-                        <div className="blog-content" style={{ lineHeight: '1.8', fontSize: '16px', color: '#334155' }}>
+                      {lessonTab === 'video' && currentItem.videoLink ? (
+                        <div style={{ marginBottom: '32px', animation: 'fadeIn 0.4s ease' }}>
+                          <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                            <iframe
+                              src={getEmbedUrl(currentItem.videoLink)}
+                              title="Video Análisis"
+                              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                        </div>
+                      ) : lessonTab === 'notes' ? (
+                        <div className="blog-content" style={{ lineHeight: '1.8', fontSize: '16px', color: '#334155', animation: 'fadeIn 0.4s ease' }}>
                           {currentItem.body ? (
                             <div dangerouslySetInnerHTML={{ __html: currentItem.body }} />
                           ) : (
