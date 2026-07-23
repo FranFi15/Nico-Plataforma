@@ -29,6 +29,9 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cSubtype, setCSubtype] = useState('course'); // 'course' or 'workshop'
   const [cModules, setCModules] = useState([]);
   const [cCertificate, setCCertificate] = useState(true);
+  const [cCertificateTemplate, setCCertificateTemplate] = useState('');
+  const [cCertificateSettings, setCCertificateSettings] = useState({ x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
+  const [certTemplateUploading, setCertTemplateUploading] = useState(false);
   const [cDuration, setCDuration] = useState('');
   const [activeEditingLessonId, setActiveEditingLessonId] = useState(null);
   const [cCardImage, setCCardImage] = useState('');
@@ -99,6 +102,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCSubtype('course');
     setCModules([]);
     setCCertificate(true);
+    setCCertificateTemplate('');
+    setCCertificateSettings({ x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
     setCDuration('');
     setActiveEditingLessonId(null);
     setCCardImage('');
@@ -121,6 +126,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCSubtype(item.contentType === 'workshop' ? 'workshop' : 'course');
     setCModules(item.modules || []);
     setCCertificate(item.certificate !== undefined ? item.certificate : true);
+    setCCertificateTemplate(item.certificateTemplate || '');
+    setCCertificateSettings(item.certificateSettings || { x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
     setCDuration(item.duration || '');
     setActiveEditingLessonId(null);
     setCCardImage(item.cardImage || '');
@@ -198,6 +205,29 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Error al eliminar categoría');
+    }
+  };
+
+  const handleCertTemplateUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCertTemplateUploading(true);
+    try {
+      const base64String = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+      const res = await api.post('/trainings/upload', { image: base64String });
+      if (res.data && res.data.url) {
+        setCCertificateTemplate(res.data.url);
+      }
+    } catch (err) {
+      console.error('Error uploading certificate template:', err);
+      alert('Error al subir la plantilla del certificado.');
+    } finally {
+      setCertTemplateUploading(false);
     }
   };
 
@@ -524,6 +554,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         category: cCategory || undefined,
         modules: cModules,
         certificate: cCertificate,
+        certificateTemplate: cCertificateTemplate,
+        certificateSettings: cCertificateSettings,
         duration: cDuration,
         status: cIsPublished ? 'published' : 'draft',
         notifyUsers: cNotifyUsers
@@ -1097,6 +1129,114 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                       </div>
                     </label>
                   </div>
+
+                  {/* Diploma Editor (visible si cCertificate es true) */}
+                  {cCertificate && (
+                    <div style={{ marginTop: '16px', padding: '20px', border: '1px solid #e2e8f0', borderRadius: '12px', backgroundColor: '#f8fafc' }}>
+                      <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Diseño del Diploma</h4>
+                      <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#64748b' }}>Sube la imagen del diploma en blanco y configura dónde debe imprimirse el nombre del alumno. Haz clic en la imagen para establecer la posición.</p>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <label className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}>
+                            <IoCloudUploadOutline size={18} />
+                            {certTemplateUploading ? 'Subiendo...' : 'Subir Plantilla del Diploma'}
+                            <input type="file" accept="image/*" onChange={handleCertTemplateUpload} style={{ display: 'none' }} disabled={certTemplateUploading} />
+                          </label>
+                          {cCertificateTemplate && <span style={{ fontSize: '13px', color: '#10b981', fontWeight: 'bold' }}>✓ Plantilla subida</span>}
+                        </div>
+
+                        {cCertificateTemplate && (
+                          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                            <div style={{ flex: '1 1 500px' }}>
+                              <div
+                                onClick={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                  setCCertificateSettings(prev => ({ ...prev, x, y }));
+                                }}
+                                style={{
+                                  position: 'relative',
+                                  width: '100%',
+                                  paddingBottom: '70.7%', // Approx A4 Landscape aspect ratio (1 / 1.414)
+                                  backgroundColor: '#e2e8f0',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                  cursor: 'crosshair',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                }}
+                              >
+                                <img src={cCertificateTemplate} alt="Diploma Preview" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+                                {/* Text Overlay Preview */}
+                                <div style={{
+                                  position: 'absolute',
+                                  left: `${cCertificateSettings.x}%`,
+                                  top: `${cCertificateSettings.y}%`,
+                                  transform: 'translate(-50%, -50%)',
+                                  color: cCertificateSettings.color,
+                                  fontSize: `${cCertificateSettings.fontSize}px`,
+                                  fontFamily: cCertificateSettings.fontFamily,
+                                  fontWeight: 'bold',
+                                  whiteSpace: 'nowrap',
+                                  pointerEvents: 'none',
+                                  textShadow: '0 1px 2px rgba(255,255,255,0.5)'
+                                }}>
+                                  Nombre del Alumno
+                                </div>
+                              </div>
+                              <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '8px', textAlign: 'center' }}>Haz clic en el diploma para posicionar el texto.</p>
+                            </div>
+                            
+                            <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>Tamaño de Fuente (px)</label>
+                                <input
+                                  type="number"
+                                  value={cCertificateSettings.fontSize}
+                                  onChange={(e) => setCCertificateSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))}
+                                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>Color del Texto</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <input
+                                    type="color"
+                                    value={cCertificateSettings.color}
+                                    onChange={(e) => setCCertificateSettings(prev => ({ ...prev, color: e.target.value }))}
+                                    style={{ width: '40px', height: '40px', padding: '2px', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={cCertificateSettings.color}
+                                    onChange={(e) => setCCertificateSettings(prev => ({ ...prev, color: e.target.value }))}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px' }}>Fuente</label>
+                                <select
+                                  value={cCertificateSettings.fontFamily}
+                                  onChange={(e) => setCCertificateSettings(prev => ({ ...prev, fontFamily: e.target.value }))}
+                                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px', backgroundColor: '#fff' }}
+                                >
+                                  <option value="Arial, sans-serif">Arial</option>
+                                  <option value="'Times New Roman', serif">Times New Roman</option>
+                                  <option value="'Georgia', serif">Georgia</option>
+                                  <option value="'Courier New', monospace">Courier New</option>
+                                  <option value="'Great Vibes', cursive">Elegante Cursiva (Great Vibes)</option>
+                                  <option value="'Dancing Script', cursive">Moderna Cursiva (Dancing Script)</option>
+                                  <option value="'Montserrat', sans-serif">Montserrat</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
