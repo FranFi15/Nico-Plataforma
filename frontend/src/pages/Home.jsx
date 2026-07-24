@@ -190,7 +190,7 @@ const useScrollFadeIn = () => {
         }
       },
       {
-        threshold: 0.30 // triggers when 15% of the element is visible
+        threshold: 0.10 // lowered threshold for mobile support of tall elements
       }
     );
 

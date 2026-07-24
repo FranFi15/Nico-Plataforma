@@ -317,11 +317,11 @@ const EntrenamientoADistancia = () => {
 
       {/* Hero Header centered like Blogs */}
       <header style={{ textAlign: 'center', padding: '40px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 className="premium-title animated-hero-title">
+        <h1 className="premium-title animated-hero-title text-32-mobile">
           Entrenamiento a Distancia
         </h1>
         <div className="accent-divider animated-hero-title"></div>
-        <p className="animated-hero-text" style={{ color: 'var(--gray-500)', fontSize: '16px', maxWidth: '680px', lineHeight: '1.6', textAlign: 'center', margin: '0 0 20px 0' }}>
+        <p className="animated-hero-text px-16-mobile" style={{ color: 'var(--gray-500)', fontSize: '16px', maxWidth: '680px', lineHeight: '1.6', textAlign: 'center', margin: '0 0 20px 0' }}>
           Conocé nuestra metodología, los resultados reales de nuestros atletas y postulate para ser parte del equipo NS.
         </p>
       </header>
@@ -396,7 +396,7 @@ const EntrenamientoADistancia = () => {
               return (
                 <div
                   key={training._id}
-                  className="animated-training-card"
+                  className="animated-training-card p-20-mobile"
                   style={{
                     backgroundColor: '#ffffff',
                     border: '1px solid var(--border)',
@@ -411,7 +411,7 @@ const EntrenamientoADistancia = () => {
                 >
                   {/* Info Column (Centered & Larger) */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '100%', margin: '0 auto' }}>
-                    <h3 style={{
+                    <h3 className="text-32-mobile" style={{
                       fontSize: '90px',
                       fontWeight: '900',
                       color: 'var(--dark)',
@@ -421,7 +421,7 @@ const EntrenamientoADistancia = () => {
                     }}>
                       {training.title}
                     </h3>
-                    <p style={{
+                    <p className="text-18-mobile" style={{
                       fontSize: '25px',
                       lineHeight: '1.7',
                       color: '#334155',
@@ -447,7 +447,7 @@ const EntrenamientoADistancia = () => {
                     )}
 
                     {/* Action Buttons: Video Modal Toggle next to Apply Button */}
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: '10px' }}>
+                    <div className="flex-col-mobile w-100-mobile" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: '10px' }}>
                       {embedUrl && (
                         <button
                           onClick={() => setActiveVideoUrl(embedUrl)}
@@ -473,8 +473,8 @@ const EntrenamientoADistancia = () => {
                         href={training.googleFormLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary animated-apply-btn"
-                        style={{ padding: '16px 36px', fontSize: '15px', fontWeight: '800', display: 'inline-flex', alignItems: 'center' }}
+                        className="btn-primary animated-apply-btn w-100-mobile"
+                        style={{ padding: '16px 36px', fontSize: '15px', fontWeight: '800', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                       >
                         Aplicar a este Plan
                       </a>
