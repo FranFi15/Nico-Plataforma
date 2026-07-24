@@ -197,13 +197,13 @@ const CheckoutPage = () => {
 
   // RENDER FLOWS
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+    <div className="px-16-mobile" style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
       <div className="premium-card" style={{ width: '100%', maxWidth: '680px', border: '1px solid #e5e5e5' }}>
 
         {contentId && content ? (
           /* FLOW A: SINGLE CONTENT PURCHASE CHECKOUT */
           <div>
-            <h2 className="" style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+            <h2 className="text-24-mobile" style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               Confirmar Compra
             </h2>
             <p style={{ color: '#6b7280', fontSize: '15px', marginBottom: '30px', textAlign: 'center' }}>
@@ -417,7 +417,7 @@ const CheckoutPage = () => {
         ) : (
           /* FLOW B: SUBSCRIPTION PLAN UPGRADE */
           <div>
-            <h2 className="" style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+            <h2 className="text-24-mobile" style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               {subscriptionPlan?.title || 'Suscripción Mensual'}
             </h2>
             <p style={{ color: '#6b7280', fontSize: '15px', marginBottom: '30px', textAlign: 'center' }}>
@@ -425,7 +425,7 @@ const CheckoutPage = () => {
             </p>
 
             {/* Plan Details Card */}
-            <div style={{
+            <div className="p-20-mobile" style={{
               background: '#ffffff',
               border: '2px solid rgba(249, 115, 22, 0.25)',
               borderRadius: '20px',

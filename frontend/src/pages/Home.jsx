@@ -321,7 +321,7 @@ const Home = () => {
         }} />
 
         {/* Hero Content Over Video */}
-        <div style={{
+        <div className="home-hero-content" style={{
           position: 'relative',
           zIndex: 2,
           color: '#ffffff',
@@ -330,7 +330,7 @@ const Home = () => {
           padding: '0 20px',
           marginLeft: '7%',
         }}>
-          <h1 style={{
+          <h1 className="home-hero-title" style={{
             fontSize: '38px',
             lineHeight: '1.25',
             fontWeight: '900',
@@ -342,7 +342,7 @@ const Home = () => {
             Detrás de cada resultado hay un sistema, un equipo y un compromiso genuino con tu proceso sin importar dónde estés.
           </h1>
 
-          <p style={{
+          <p className="home-hero-desc" style={{
             fontSize: '19px',
             lineHeight: '1.6',
             fontWeight: '600',
@@ -408,6 +408,7 @@ const Home = () => {
 
           <div
             ref={servicesGridRef}
+            className="home-services-grid"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -613,7 +614,7 @@ const Home = () => {
           </div>
 
           {/* Team Section */}
-          <div style={{ width: '100%', maxWidth: '100%', margin: '60px', padding: '0' }}>
+          <div style={{ width: '100%', maxWidth: '100%', margin: '40px 0', padding: '0' }}>
             <h3
               ref={teamTitleRef}
               style={{
@@ -631,6 +632,7 @@ const Home = () => {
             </h3>
             <div
               ref={teamGridRef}
+              className="flex-col-mobile"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',

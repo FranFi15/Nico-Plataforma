@@ -76,6 +76,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
       }}
     >
       <div
+        className="p-20-mobile"
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: '#ffffff',
@@ -132,7 +133,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: progressPercent === 100 ? 'row' : 'column', gap: '40px' }}>
+          <div className="flex-col-mobile" style={{ display: 'flex', flexDirection: progressPercent === 100 ? 'row' : 'column', gap: '40px' }}>
             {/* Columna Izquierda: Felicitaciones y Certificado (solo si completó el curso) */}
             {progressPercent === 100 && (
               <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '30px', backgroundColor: '#0f172a', borderRadius: '20px', border: '1px solid #1e293b' }}>

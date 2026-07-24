@@ -111,7 +111,7 @@ const CharlasZoom = () => {
       color: '#0f172a'
     }}>
       {/* HERO BANNER */}
-      <div style={{
+      <div className="p-20-mobile" style={{
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         border: '1px solid var(--border)',
         borderRadius: '24px',
@@ -187,7 +187,7 @@ const CharlasZoom = () => {
 
         {/* CALENDAR SECTION */}
         {viewMode === 'calendar' && (
-          <div style={{
+          <div className="p-16-mobile" style={{
             backgroundColor: '#ffffff',
             border: '1px solid #e2e8f0',
             borderRadius: '24px',
@@ -255,8 +255,10 @@ const CharlasZoom = () => {
               </div>
             </div>
 
-            {/* Calendar Grid Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '16px' }}>
+            <div className="overflow-x-auto-mobile" style={{ width: '100%' }}>
+              <div style={{ minWidth: '700px' }}>
+                {/* Calendar Grid Header */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '12px', marginBottom: '16px' }}>
               {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
                 <div key={d} style={{ textAlign: 'center', fontWeight: '800', color: '#64748b', fontSize: '13px', paddingBy: '8px' }}>
                   {d}
@@ -348,7 +350,9 @@ const CharlasZoom = () => {
               })}
             </div>
           </div>
-        )}
+        </div>
+      </div>
+    )}
 
         {/* LIST VIEW SECTION */}
         {viewMode === 'list' && (

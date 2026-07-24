@@ -115,14 +115,8 @@ const CapacitacionesHub = () => {
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-        <h1 style={{
-          fontSize: '80px',
-          fontWeight: '900',
-          lineHeight: '1.1',
+        <h1 className="premium-title" style={{
           maxWidth: '1400px',
-          textTransform: 'uppercase',
-          letterSpacing: '-1px',
-          marginBottom: '16px',
           color: 'var(--dark)',
         }}>
           Elige tu camino
@@ -131,7 +125,7 @@ const CapacitacionesHub = () => {
       </header>
 
       {/* Category Cards Grid */}
-      <section className="hub-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>
+      <section className="hub-grid grid-1-mobile" style={{ gap: '30px' }}>
         {categories.map((cat) => (
           <Link
             key={cat.path}

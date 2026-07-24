@@ -63,7 +63,7 @@ const Catalog = () => {
         <div className="lift-badge" style={{ marginBottom: '24px' }}>
           TU MEJOR INVERSIÓN EN EDUCACIÓN DEPORTIVA
         </div>
-        <h1 style={{ 
+        <h1 className="catalog-hero-title" style={{ 
           fontSize: '52px', 
           fontWeight: '900', 
           lineHeight: '1.1', 
@@ -142,7 +142,7 @@ const Catalog = () => {
       {/* 3. Membership CTA */}
       {!user?.isSubscribed && (
         <section style={{ marginBottom: '80px' }}>
-          <div className="premium-card" style={{ 
+          <div className="premium-card p-20-mobile" style={{ 
             display: 'flex', 
             flexDirection: 'row', 
             flexWrap: 'wrap', 
@@ -255,7 +255,7 @@ const Catalog = () => {
             No se encontraron recursos que coincidan con los filtros seleccionados.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+          <div className="catalog-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
             {contents.map((content) => (
               <ContentCard key={content._id} content={content} />
             ))}

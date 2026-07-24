@@ -1201,3 +1201,82 @@ body::before {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* ===== Responsive Utility Classes ===== */
+@media (max-width: 900px) {
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+  .flex-col-reverse-mobile {
+    flex-direction: column-reverse !important;
+  }
+  .flex-wrap-mobile {
+    flex-wrap: wrap !important;
+  }
+  .w-100-mobile {
+    width: 100% !important;
+  }
+  .gap-sm-mobile {
+    gap: 12px !important;
+  }
+  .p-20-mobile {
+    padding: 20px !important;
+  }
+  .p-16-mobile {
+    padding: 16px !important;
+  }
+  .px-16-mobile {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .m-0-mobile {
+    margin: 0 !important;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+  .text-center-mobile {
+    text-align: center !important;
+  }
+  .text-sm-mobile {
+    font-size: 14px !important;
+  }
+  .text-32-mobile { font-size: 32px !important; }
+  .text-24-mobile { font-size: 24px !important; }
+  .text-18-mobile { font-size: 18px !important; }
+  
+  .grid-1-mobile {
+    grid-template-columns: 1fr !important;
+  }
+  .overflow-x-auto-mobile {
+    overflow-x: auto !important;
+  }
+  .mb-20-mobile {
+    margin-bottom: 20px !important;
+  }
+  
+  /* Component specific */
+  .home-hero-content {
+    margin-left: 0 !important;
+    text-align: center !important;
+  }
+  .home-hero-title {
+    font-size: 26px !important;
+  }
+  .home-hero-desc {
+    font-size: 16px !important;
+  }
+  .home-services-grid {
+    height: auto !important;
+    min-height: 1200px !important;
+  }
+  .catalog-hero-title {
+    font-size: 32px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .profile-hero-title {
+    font-size: 40px !important;
+  }
+}

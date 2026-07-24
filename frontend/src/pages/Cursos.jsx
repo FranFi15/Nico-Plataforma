@@ -213,7 +213,7 @@ const Cursos = () => {
         </div>
       ) : (
         <>
-          <div className="animate-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '30px' }}>
+          <div className="animate-fade-in catalog-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
             {paginatedContents.map((content) => (
               <ContentCard key={content._id} content={content} />
             ))}

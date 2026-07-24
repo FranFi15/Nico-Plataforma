@@ -402,7 +402,7 @@ const CursoDetail = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
+    <div className="animate-fade-in px-16-mobile" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
       <style>{`
         @keyframes headerFadeSlideIn {
           0% { opacity: 0; transform: translateY(-30px) scale(0.98); }
@@ -545,7 +545,7 @@ const CursoDetail = () => {
       </div>
 
       {/* Course Header Banner */}
-      <div className="animated-course-header" style={{
+      <div className="animated-course-header p-20-mobile" style={{
         backgroundColor: '#051020',
         borderRadius: '24px',
         padding: '32px 40px',

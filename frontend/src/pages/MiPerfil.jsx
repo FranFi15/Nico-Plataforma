@@ -107,7 +107,7 @@ const MiPerfil = () => {
     : 'No disponible';
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 20px 80px 20px', fontFamily: 'var(--font-sans)' }}>
+    <div className="animate-fade-in px-16-mobile" style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 20px 80px 20px', fontFamily: 'var(--font-sans)' }}>
       <style>{`
         @keyframes profileHeroEntry {
           0% { opacity: 0; transform: translateY(-25px) scale(0.96); }
@@ -170,12 +170,12 @@ const MiPerfil = () => {
         }
       `}</style>
       <header style={{ textAlign: 'center', padding: '10px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 className="animated-profile-title" style={{ fontSize: '80px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--dark)' }}>
+        <h1 className="animated-profile-title profile-hero-title" style={{ fontSize: '80px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '12px', color: 'var(--dark)' }}>
           Mi Perfil
         </h1>
       </header>
 
-      <div style={{
+      <div className="grid-1-mobile" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
         gap: '32px',
@@ -183,7 +183,7 @@ const MiPerfil = () => {
       }}>
         {/* COLUMNA IZQUIERDA: Tarjeta de Usuario y Tarjeta Próximamente */}
         <div className="animated-col-left" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <div className="premium-card" style={{
+          <div className="premium-card p-20-mobile" style={{
             padding: '40px',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
             border: '1px solid var(--border)',
@@ -199,7 +199,7 @@ const MiPerfil = () => {
               marginBottom: '24px'
             }}>
               <div>
-                <h2 style={{ fontSize: '40px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
+                <h2 className="text-32-mobile" style={{ fontSize: '40px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
                   {user.name}
                 </h2>
                 <span style={{
@@ -470,7 +470,7 @@ const MiPerfil = () => {
           </div>
 
           {/* Tarjeta Próximamente - tarjeta independiente debajo de los datos del usuario */}
-          <div className="premium-card" style={{
+          <div className="premium-card p-20-mobile flex-col-mobile" style={{
             padding: '32px',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
             border: '1px solid var(--border)',
@@ -495,10 +495,10 @@ const MiPerfil = () => {
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '35px', fontWeight: '400', color: 'var(--dark)', margin: 0 }}>
+                <h4 className="text-24-mobile" style={{ fontSize: '35px', fontWeight: '400', color: 'var(--dark)', margin: 0 }}>
                   Próximamente App
                 </h4>
-                <h4 style={{ fontSize: '35px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
+                <h4 className="text-24-mobile" style={{ fontSize: '35px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
                   NS Process Dashboard
                 </h4>
               </div>
@@ -507,7 +507,7 @@ const MiPerfil = () => {
           </div>
 
           {/* 4 Botones Rápidos debajo de Próximamente */}
-          <div style={{
+          <div className="grid-1-mobile" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '16px'
@@ -723,7 +723,7 @@ const MiPerfil = () => {
         </div>
 
         {/* COLUMNA DERECHA: Listado de Descuentos Exclusivos */}
-        <div className="animated-col-right premium-card" style={{
+        <div className="animated-col-right premium-card p-20-mobile" style={{
           padding: '40px',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
           border: '1px solid var(--border)',
@@ -732,7 +732,7 @@ const MiPerfil = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '24px', marginBottom: '24px' }}>
 
             <div>
-              <h3 style={{ fontSize: '40px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
+              <h3 className="text-32-mobile" style={{ fontSize: '40px', fontWeight: '900', color: 'var(--dark)', margin: 0 }}>
                 Descuentos Exclusivos
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--gray-500)', margin: '4px 0 0 0' }}>
