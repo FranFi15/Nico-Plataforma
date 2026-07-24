@@ -138,7 +138,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
               <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '30px', backgroundColor: '#0f172a', borderRadius: '20px', border: '1px solid #1e293b' }}>
                 {(!certificateType || certificateType === 'none') && (
                   <>
-                    <img src={logoB} alt="Logo" style={{ width: '80px', marginBottom: '20px' }} />
+                    <img src={logoB} alt="Logo" style={{ width: '120px', marginBottom: '20px' }} />
                     <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#ffffff', marginBottom: '12px' }}>¡Felicitaciones!</h2>
                     <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6' }}>
                       Has completado exitosamente esta formación. ¡Excelente trabajo!
@@ -148,7 +148,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
 
                 {certificateType === 'standard' && (
                   <>
-                    <img src={logoB} alt="Logo" style={{ width: '80px', marginBottom: '20px' }} />
+                    <img src={logoB} alt="Logo" style={{ width: '120px', marginBottom: '20px' }} />
                     <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#ffffff', marginBottom: '12px' }}>¡Felicitaciones!</h2>
                     <p style={{ color: '#94a3b8', fontSize: '15px', lineHeight: '1.6', marginBottom: '24px' }}>
                       Has completado exitosamente esta formación. Ya podés descargar tu certificado oficial.
@@ -168,8 +168,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
                 {certificateType === 'kinvent' && (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                      <img src={logoB} alt="Logo" style={{ width: '80px' }} />
-                      <IoClose size={24} color="#64748b" />
+                      <img src={logoB} alt="Logo" style={{ width: '120px' }} />
                       <img src={kinventLogo} alt="Kinvent Logo" style={{ width: '120px' }} />
                     </div>
                     <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#ffffff', marginBottom: '12px' }}>¡Felicitaciones!</h2>
