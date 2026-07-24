@@ -29,6 +29,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cSubtype, setCSubtype] = useState('course'); // 'course' or 'workshop'
   const [cModules, setCModules] = useState([]);
   const [cCertificate, setCCertificate] = useState(true);
+  const [cCertificateType, setCCertificateType] = useState('standard');
   const [cCertificateTemplate, setCCertificateTemplate] = useState('');
   const [cCertificateSettings, setCCertificateSettings] = useState({ x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
   const [certTemplateUploading, setCertTemplateUploading] = useState(false);
@@ -102,6 +103,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCSubtype('course');
     setCModules([]);
     setCCertificate(true);
+    setCCertificateType('standard');
     setCCertificateTemplate('');
     setCCertificateSettings({ x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
     setCDuration('');
@@ -126,6 +128,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCSubtype(item.contentType === 'workshop' ? 'workshop' : 'course');
     setCModules(item.modules || []);
     setCCertificate(item.certificate !== undefined ? item.certificate : true);
+    setCCertificateType(item.certificateType || (item.certificate ? 'standard' : 'none'));
     setCCertificateTemplate(item.certificateTemplate || '');
     setCCertificateSettings(item.certificateSettings || { x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' });
     setCDuration(item.duration || '');
@@ -553,7 +556,8 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         videoLink: cVideoLink,
         category: cCategory || undefined,
         modules: cModules,
-        certificate: cCertificate,
+        certificate: cCertificateType !== 'none',
+        certificateType: cCertificateType,
         certificateTemplate: cCertificateTemplate,
         certificateSettings: cCertificateSettings,
         duration: cDuration,
@@ -1085,7 +1089,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                     </div>
                   )}
 
-                  {/* Switch de Certificación */}
+                  {/* Select de Certificación */}
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1093,45 +1097,36 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                     padding: '16px',
                     backgroundColor: '#ffffff',
                     borderRadius: '12px',
-                    border: '1px solid #e2e8f0'
+                    border: '1px solid #e2e8f0',
+                    flexWrap: 'wrap',
+                    gap: '16px'
                   }}>
-                    <div>
+                    <div style={{ flex: '1 1 300px' }}>
                       <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>¿Incluye Certificación Oficial?</h4>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Si se activa, el alumno podrá descargar un certificado digital al completar las lecciones/exámenes.</p>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Elige el tipo de certificado que se otorga al finalizar el 100% del contenido.</p>
                     </div>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 'bold', color: cCertificate ? '#1f75f5ff' : '#64748b' }}>
-                        {cCertificate ? 'Sí, incluye' : 'No incluye'}
-                      </span>
-                      <div
-                        onClick={() => setCCertificate(!cCertificate)}
-                        style={{
-                          width: '48px',
-                          height: '26px',
-                          backgroundColor: cCertificate ? '#1f75f5ff' : '#cbd5e1',
-                          borderRadius: '13px',
-                          position: 'relative',
-                          transition: 'background-color 0.2s ease',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <div style={{
-                          width: '20px',
-                          height: '20px',
-                          backgroundColor: '#ffffff',
-                          borderRadius: '50%',
-                          position: 'absolute',
-                          top: '3px',
-                          left: cCertificate ? '25px' : '3px',
-                          transition: 'left 0.2s ease',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                        }} />
-                      </div>
-                    </label>
+                    <select
+                      value={cCertificateType}
+                      onChange={(e) => setCCertificateType(e.target.value)}
+                      style={{
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        backgroundColor: '#f8fafc',
+                        fontWeight: '600',
+                        color: cCertificateType !== 'none' ? '#1f75f5ff' : '#64748b',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="none">Sin Certificado</option>
+                      <option value="standard">Certificado Estándar (Descargable)</option>
+                      <option value="kinvent">Certificado Kinvent (Lista Oficial)</option>
+                    </select>
                   </div>
 
-                  {/* Diploma Editor (visible si cCertificate es true) */}
-                  {cCertificate && (
+                  {/* Diploma Editor (visible si cCertificateType es standard) */}
+                  {cCertificateType === 'standard' && (
                     <div style={{ marginTop: '16px', padding: '20px', border: '1px solid #e2e8f0', borderRadius: '12px', backgroundColor: '#f8fafc' }}>
                       <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Diseño del Diploma</h4>
                       <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#64748b' }}>Sube la imagen del diploma en blanco y configura dónde debe imprimirse el nombre del alumno. Haz clic en la imagen para establecer la posición.</p>

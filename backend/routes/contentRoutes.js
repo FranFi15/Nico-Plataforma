@@ -10,6 +10,9 @@ import {
   uploadContentFile,
   notifyStudents,
   enrollInContent,
+  certifyKinvent,
+  getKinventCertifications,
+  toggleKinventCertificationStatus
 } from '../controllers/contentController.js';
 import { protect, admin, checkAccess, optionalProtect } from '../middlewares/authMiddleware.js';
 
@@ -24,6 +27,15 @@ router.route('/')
 
 // Route to notify students of a new module/lesson
 router.post('/:id/notify-students', protect, admin, notifyStudents);
+
+// Kinvent Certification Routes
+router.route('/kinvent-certifications')
+  .get(protect, admin, getKinventCertifications);
+
+router.route('/kinvent-certifications/:id')
+  .put(protect, admin, toggleKinventCertificationStatus);
+
+router.post('/:id/kinvent-certify', protect, certifyKinvent);
 
 // Route to create a review on content
 router.route('/:id/reviews')

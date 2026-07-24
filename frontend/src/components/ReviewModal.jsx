@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { IoClose, IoStar, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoClose, IoStar, IoCheckmarkCircle, IoDownloadOutline, IoTrophyOutline } from 'react-icons/io5';
 
-const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle }) => {
+const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, certificateType, onDownloadDiploma, progressPercent }) => {
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -79,7 +79,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle }) =>
           backgroundColor: '#ffffff',
           borderRadius: '28px',
           width: '100%',
-          maxWidth: '540px',
+          maxWidth: progressPercent === 100 ? '900px' : '540px',
           padding: '36px',
           position: 'relative',
           boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
@@ -130,139 +130,182 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle }) =>
             </p>
           </div>
         ) : (
-          <>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: '20px', backgroundColor: '#eff6ff', color: '#1f75f5ff', fontWeight: '800', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-                ★ Tu Opinión nos Importa
+          <div style={{ display: 'flex', flexDirection: progressPercent === 100 ? 'row' : 'column', gap: '40px' }}>
+            {/* Columna Izquierda: Felicitaciones y Certificado (solo si completó el curso) */}
+            {progressPercent === 100 && (
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '20px', border: '1px dashed #cbd5e1' }}>
+                <IoTrophyOutline size={64} color="#f59e0b" style={{ marginBottom: '16px' }} />
+
+                {(!certificateType || certificateType === 'none') && (
+                  <>
+                    <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', marginBottom: '12px' }}>¡Felicitaciones!</h2>
+                    <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6' }}>
+                      Has completado exitosamente esta formación. ¡Excelente trabajo!
+                    </p>
+                  </>
+                )}
+
+                {certificateType === 'standard' && (
+                  <>
+                    <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', marginBottom: '12px' }}>¡Felicitaciones!</h2>
+                    <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '24px' }}>
+                      Has completado exitosamente esta formación. Ya podés descargar tu certificado oficial.
+                    </p>
+                    <button
+                      onClick={onDownloadDiploma}
+                      style={{ padding: '12px 20px', backgroundColor: '#10b981', color: '#fff', borderRadius: '12px', fontWeight: '800', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)', transition: 'background-color 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+                    >
+                      <IoDownloadOutline size={22} />
+                      Descargar Certificado
+                    </button>
+                  </>
+                )}
+
+                {certificateType === 'kinvent' && (
+                  <>
+                    <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', marginBottom: '12px' }}>¡Felicitaciones!</h2>
+                    <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6' }}>
+                      Has completado exitosamente esta formación. En los próximos días se te mandará el certificado oficial por mail.
+                    </p>
+                  </>
+                )}
               </div>
-              <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
-                ¿Qué te pareció esta formación?
-              </h3>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-                {contentTitle ? `Comparte tu experiencia tras completar "${contentTitle}"` : 'Ayuda a otros alumnos compartiendo tu experiencia.'}
-              </p>
+            )}
+
+            {/* Columna Derecha: Formulario de Reseña */}
+            <div style={{ flex: '1.2', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ textAlign: 'center' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
+                  ¿Qué te pareció esta formación?
+                </h3>
+                <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+                  {contentTitle ? `Comparte tu experiencia tras completar "${contentTitle}"` : 'Ayuda a otros alumnos compartiendo tu experiencia.'}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {/* Star rating selector */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#334155', textTransform: 'uppercase' }}>
+                    Selecciona tu calificación
+                  </span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const active = star <= (hoverRating || rating);
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            fontSize: '32px',
+                            color: active ? '#f59e0b' : '#cbd5e1',
+                            transition: 'transform 0.15s ease, color 0.15s ease',
+                            transform: active ? 'scale(1.15)' : 'scale(1)'
+                          }}
+                        >
+                          <IoStar />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Profession field */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>
+                    Tu profesión o especialidad (aparecerá en la reseña):
+                  </label>
+                  <input
+                    type="text"
+                    value={profession}
+                    onChange={(e) => setProfession(e.target.value)}
+                    placeholder="Ej. Preparador Físico, Kinesiólogo, Estudiante EF..."
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '14px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s ease',
+                      color: '#0f172a'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#1f75f5ff'}
+                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                  />
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    Esto también actualizará tu perfil para que no tengas que escribirlo cada vez.
+                  </span>
+                </div>
+
+                {/* Comment field */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>
+                    Tu reseña / comentarios:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="¿Qué fue lo que más te sirvió? ¿Cómo aplicaste los conocimientos?"
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '14px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '14px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      fontFamily: 'inherit',
+                      lineHeight: '1.5',
+                      color: '#0f172a'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#1f75f5ff'}
+                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                  />
+                </div>
+
+                {error && (
+                  <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', color: '#dc2626', fontSize: '13px', fontWeight: '600' }}>
+                    {error}
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '16px',
+                    backgroundColor: '#1f75f5ff',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 8px 20px rgba(31, 117, 245, 0.3)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+                  onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#1f75f5ff'; }}
+                >
+                  {submitting ? 'Enviando valoración...' : 'Publicar mi Reseña'}
+                </button>
+              </form>
             </div>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {/* Star rating selector */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                <span style={{ fontSize: '13px', fontWeight: '800', color: '#334155', textTransform: 'uppercase' }}>
-                  Selecciona tu calificación
-                </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const active = star <= (hoverRating || rating);
-                    return (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '4px',
-                          fontSize: '32px',
-                          color: active ? '#f59e0b' : '#cbd5e1',
-                          transition: 'transform 0.15s ease, color 0.15s ease',
-                          transform: active ? 'scale(1.15)' : 'scale(1)'
-                        }}
-                      >
-                        <IoStar />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Profession field */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>
-                  Tu profesión o especialidad (aparecerá en la reseña):
-                </label>
-                <input
-                  type="text"
-                  value={profession}
-                  onChange={(e) => setProfession(e.target.value)}
-                  placeholder="Ej. Preparador Físico, Kinesiólogo, Estudiante EF..."
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '14px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.2s ease',
-                    color: '#0f172a'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#1f75f5ff'}
-                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
-                />
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                  Esto también actualizará tu perfil para que no tengas que escribirlo cada vez.
-                </span>
-              </div>
-
-              {/* Comment field */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '800', color: '#334155' }}>
-                  Tu reseña / comentarios:
-                </label>
-                <textarea
-                  rows={4}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="¿Qué fue lo que más te sirvió? ¿Cómo aplicaste los conocimientos?"
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '14px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    resize: 'vertical',
-                    fontFamily: 'inherit',
-                    lineHeight: '1.5',
-                    color: '#0f172a'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#1f75f5ff'}
-                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
-                />
-              </div>
-
-              {error && (
-                <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '12px', color: '#dc2626', fontSize: '13px', fontWeight: '600' }}>
-                  {error}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  padding: '14px 24px',
-                  borderRadius: '16px',
-                  backgroundColor: '#1f75f5ff',
-                  color: '#ffffff',
-                  border: 'none',
-                  fontWeight: '800',
-                  fontSize: '15px',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 8px 20px rgba(31, 117, 245, 0.3)',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-                onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = '#1f75f5ff'; }}
-              >
-                {submitting ? 'Enviando valoración...' : 'Publicar mi Reseña'}
-              </button>
-            </form>
-          </>
+          </div>
         )}
       </div>
     </div>,

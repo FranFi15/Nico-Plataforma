@@ -27,6 +27,10 @@ const AdminStatsTab = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showEnrollmentsModal, setShowEnrollmentsModal] = useState(false);
+  const [kinventCertifications, setKinventCertifications] = useState([]);
+  const [kinventLoading, setKinventLoading] = useState(false);
+  const [kinventSearch, setKinventSearch] = useState('');
+  const [kinventTab, setKinventTab] = useState('pending'); // 'pending' or 'history'
 
   const fetchStats = async () => {
     setLoading(true);
@@ -46,7 +50,36 @@ const AdminStatsTab = () => {
 
   useEffect(() => {
     fetchStats();
+    fetchKinventCertifications();
   }, []);
+
+  const fetchKinventCertifications = async () => {
+    setKinventLoading(true);
+    try {
+      const response = await api.get('/content/kinvent-certifications');
+      if (response.data && response.data.success) {
+        setKinventCertifications(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching kinvent certifications:', err);
+    } finally {
+      setKinventLoading(false);
+    }
+  };
+
+  const toggleKinventSentStatus = async (id) => {
+    try {
+      const response = await api.put(`/content/kinvent-certifications/${id}`);
+      if (response.data && response.data.success) {
+        setKinventCertifications((prev) =>
+          prev.map((cert) => (cert._id === id ? response.data.data : cert))
+        );
+      }
+    } catch (err) {
+      console.error('Error toggling kinvent certification status:', err);
+      alert('Error al actualizar el estado de envío.');
+    }
+  };
 
   if (loading) {
     return (
@@ -338,6 +371,163 @@ const AdminStatsTab = () => {
           </div>
         </div>
       )}
+
+      {/* Kinvent Certifications Table */}
+      <div style={{ marginTop: '32px', backgroundColor: '#ffffff', borderRadius: '24px', padding: '32px', boxShadow: '0 8px 30px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <IoNewspaperOutline size={24} color="#1f75f5ff" />
+          Certificaciones Kinvent Emitidas
+        </h3>
+        <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
+          Listado de alumnos que completaron el 100% de una formación con certificación oficial de Kinvent.
+        </p>
+
+        <div style={{ marginBottom: '24px' }}>
+          <input
+            type="text"
+            placeholder="Buscar por alumno, email o formación..."
+            value={kinventSearch}
+            onChange={(e) => setKinventSearch(e.target.value)}
+            style={{ width: '100%', maxWidth: '400px', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+          />
+        </div>
+
+        {kinventLoading ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Cargando certificaciones...</div>
+        ) : kinventCertifications.length > 0 ? (
+          <>
+            {(() => {
+              const filteredKinvent = kinventCertifications.filter((cert) => {
+                const s = kinventSearch.toLowerCase();
+                return cert.studentName?.toLowerCase().includes(s) || cert.studentEmail?.toLowerCase().includes(s) || cert.contentTitle?.toLowerCase().includes(s);
+              });
+              const pendingKinvent = filteredKinvent.filter(c => !c.isSent);
+              const historyKinvent = filteredKinvent.filter(c => c.isSent);
+
+              const renderTable = (items, title) => (
+                <div style={{ marginBottom: '32px' }}>
+                  {items.length === 0 ? (
+                     <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                       <p style={{ color: '#64748b', fontSize: '15px', margin: 0, fontWeight: '500' }}>No se encontraron alumnos en esta categoría.</p>
+                     </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Fecha</th>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Alumno</th>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Email</th>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Formación</th>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Estado</th>
+                            <th style={{ padding: '16px', color: '#475569', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Acción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((cert) => (
+                            <tr key={cert._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '16px', color: '#64748b', fontSize: '14px' }}>
+                                {new Date(cert.createdAt).toLocaleDateString('es-AR', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </td>
+                              <td style={{ padding: '16px', color: '#0f172a', fontSize: '14px', fontWeight: '600' }}>
+                                {cert.studentName}
+                              </td>
+                              <td style={{ padding: '16px', color: '#64748b', fontSize: '14px' }}>
+                                {cert.studentEmail}
+                              </td>
+                              <td style={{ padding: '16px', color: '#0f172a', fontSize: '14px', fontWeight: '500' }}>
+                                {cert.contentTitle}
+                              </td>
+                              <td style={{ padding: '16px' }}>
+                                <span style={{ 
+                                  padding: '6px 12px', 
+                                  borderRadius: '20px', 
+                                  fontSize: '12px', 
+                                  fontWeight: '800',
+                                  backgroundColor: cert.isSent ? '#dcfce7' : '#fee2e2',
+                                  color: cert.isSent ? '#166534' : '#991b1b'
+                                }}>
+                                  {cert.isSent ? 'Mail Enviado' : 'Pendiente'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px' }}>
+                                <button
+                                  onClick={() => toggleKinventSentStatus(cert._id)}
+                                  style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: cert.isSent ? '#f1f5f9' : '#1f75f5ff',
+                                    color: cert.isSent ? '#64748b' : '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontWeight: '700',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.2s'
+                                  }}
+                                >
+                                  {cert.isSent ? 'Mover a Pendiente' : 'Marcar como Enviado'}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+
+              return (
+                <>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                    <button
+                      onClick={() => setKinventTab('pending')}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        backgroundColor: kinventTab === 'pending' ? '#0f172a' : '#f1f5f9',
+                        color: kinventTab === 'pending' ? '#ffffff' : '#64748b'
+                      }}
+                    >
+                      Pendientes ({pendingKinvent.length})
+                    </button>
+                    <button
+                      onClick={() => setKinventTab('history')}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        backgroundColor: kinventTab === 'history' ? '#0f172a' : '#f1f5f9',
+                        color: kinventTab === 'history' ? '#ffffff' : '#64748b'
+                      }}
+                    >
+                      Historial ({historyKinvent.length})
+                    </button>
+                  </div>
+
+                  {kinventTab === 'pending' 
+                    ? renderTable(pendingKinvent, 'Pendientes')
+                    : renderTable(historyKinvent, 'Historial (Enviados)')
+                  }
+                </>
+              );
+            })()}
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+            <p style={{ color: '#64748b', margin: 0, fontWeight: '500' }}>Aún no hay alumnos con certificación Kinvent completada.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

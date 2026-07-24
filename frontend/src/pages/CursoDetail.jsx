@@ -80,6 +80,15 @@ const CursoDetail = () => {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizScore, setQuizScore] = useState(null);
 
+  // Kinvent State
+  const [kinventRegistered, setKinventRegistered] = useState(() => {
+    try {
+      return localStorage.getItem(`kinvent_registered_${id}`) === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
   useEffect(() => {
     const fetchContent = async () => {
       setLoading(true);
@@ -161,6 +170,20 @@ const CursoDetail = () => {
       }
     }
   }, [progressPercent, content, user, id]);
+
+  // Auto trigger Kinvent Certification upon 100% course completion
+  useEffect(() => {
+    if (progressPercent === 100 && content?.certificateType === 'kinvent' && user && !kinventRegistered) {
+      api.post(`/content/${content._id}/kinvent-certify`)
+        .then(res => {
+          if (res.data?.success) {
+            setKinventRegistered(true);
+            localStorage.setItem(`kinvent_registered_${id}`, 'true');
+          }
+        })
+        .catch(err => console.error('Error registering kinvent certification:', err));
+    }
+  }, [progressPercent, content, user, id, kinventRegistered]);
 
   // Access check logic calculated safely at top level
   const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
@@ -600,7 +623,7 @@ const CursoDetail = () => {
                 <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#1f75f5ff', borderRadius: '4px', transition: 'width 0.4s ease' }} />
               </div>
               
-              {progressPercent === 100 && content.certificate && content.certificateTemplate && (
+              {progressPercent === 100 && content.certificateType === 'standard' && content.certificateTemplate && (
                 <button
                   onClick={downloadDiploma}
                   style={{ marginTop: '16px', width: '100%', padding: '10px 12px', backgroundColor: '#10b981', color: '#fff', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'background-color 0.2s', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)' }}
@@ -610,6 +633,14 @@ const CursoDetail = () => {
                   <IoDownloadOutline size={20} />
                   Descargar Mi Certificado
                 </button>
+              )}
+              
+              {progressPercent === 100 && content.certificateType === 'kinvent' && kinventRegistered && (
+                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', textAlign: 'center' }}>
+                  <p style={{ margin: 0, color: '#34d399', fontSize: '13px', fontWeight: 'bold' }}>
+                    ¡Felicitaciones! Has sido agregado a la lista oficial de Kinvent.
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -1281,6 +1312,9 @@ const CursoDetail = () => {
         onSubmitReview={handleReviewSubmit}
         user={user}
         contentTitle={content?.title}
+        certificateType={content?.certificateType}
+        onDownloadDiploma={downloadDiploma}
+        progressPercent={progressPercent}
       />
 
       {/* Floating Back to Top Button positioned exactly on the far right edge of viewport via Portal */}

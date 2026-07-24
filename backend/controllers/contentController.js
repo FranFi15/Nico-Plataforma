@@ -61,7 +61,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateTemplate, certificateSettings, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -92,6 +92,7 @@ export const createContent = async (req, res, next) => {
       attachments: attachments || [],
       modules: modules || [],
       certificate: certificate !== undefined ? certificate : true,
+      certificateType: certificateType || 'none',
       certificateTemplate: certificateTemplate || '',
       certificateSettings: certificateSettings || { x: 50, y: 50, fontSize: 40, color: '#000000', fontFamily: 'Arial' },
       duration: duration || '',
@@ -224,7 +225,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateTemplate, certificateSettings, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -263,6 +264,9 @@ export const updateContent = async (req, res, next) => {
     }
     if (certificate !== undefined) {
       content.certificate = certificate;
+    }
+    if (certificateType !== undefined) {
+      content.certificateType = certificateType;
     }
     if (certificateTemplate !== undefined) {
       content.certificateTemplate = certificateTemplate;
@@ -313,6 +317,9 @@ export const updateContent = async (req, res, next) => {
 // @desc    Delete content
 // @route   DELETE /api/content/:id
 // @access  Private/Admin
+// @desc    Delete content
+// @route   DELETE /api/content/:id
+// @access  Private/Admin
 export const deleteContent = async (req, res, next) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -332,6 +339,117 @@ export const deleteContent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const uploadCourseFile = async (req, res, next) => {
+  try {
+    const fileBase64 = req.body.file; // data:application/pdf;base64,...
+    const fileType = req.body.fileType; // application/pdf
+    const fileName = req.body.filename; // my-notes.pdf
+
+    if (!fileBase64) {
+      res.status(400);
+      throw new Error('No se proporcionó ningún archivo');
+    }
+
+    const result = await cloudinary.uploader.upload(fileBase64, {
+      folder: 'course_materials',
+      resource_type: 'raw',
+      format: fileType === 'application/pdf' ? 'pdf' : undefined,
+      public_id: `${Date.now()}-${fileName.replace(/\s+/g, '-')}`,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Archivo subido con éxito',
+      url: result.secure_url,
+    });
+  } catch (error) {
+    console.error('Error uploading file to cloudinary:', error);
+    next(error);
+  }
+};
+
+// @desc    Register a Kinvent Certification for a user
+// @route   POST /api/content/:id/kinvent-certify
+// @access  Private (Secured with protect)
+export const certifyKinvent = async (req, res, next) => {
+  try {
+    const { default: KinventCertification } = await import('../models/kinventCertificationModel.js');
+    const content = await Content.findById(req.params.id);
+    if (!content) {
+      res.status(404);
+      throw new Error('Contenido no encontrado');
+    }
+    if (content.certificateType !== 'kinvent') {
+      res.status(400);
+      throw new Error('Este contenido no emite certificación Kinvent');
+    }
+
+    const user = req.user;
+    
+    // Check if already certified
+    const existing = await KinventCertification.findOne({ user: user._id, content: content._id });
+    if (existing) {
+      return res.status(200).json({ success: true, message: 'Ya estabas certificado' });
+    }
+
+    const certification = await KinventCertification.create({
+      user: user._id,
+      content: content._id,
+      studentName: user.name || user.email,
+      studentEmail: user.email,
+      contentTitle: content.title
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Certificación Kinvent registrada exitosamente',
+      data: certification
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all Kinvent Certifications
+// @route   GET /api/content/kinvent-certifications
+// @access  Private/Admin
+export const getKinventCertifications = async (req, res, next) => {
+  try {
+    const { default: KinventCertification } = await import('../models/kinventCertificationModel.js');
+    const certifications = await KinventCertification.find({}).sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      count: certifications.length,
+      data: certifications
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Toggle isSent status for a Kinvent Certification
+// @route   PUT /api/content/kinvent-certifications/:id
+// @access  Private/Admin
+export const toggleKinventCertificationStatus = async (req, res, next) => {
+  try {
+    const { default: KinventCertification } = await import('../models/kinventCertificationModel.js');
+    const certification = await KinventCertification.findById(req.params.id);
+    if (!certification) {
+      res.status(404);
+      throw new Error('Certificación no encontrada');
+    }
+    certification.isSent = !certification.isSent;
+    await certification.save();
+    res.status(200).json({
+      success: true,
+      data: certification
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 // @desc    Create new review
 // @route   POST /api/content/:id/reviews

@@ -155,6 +155,11 @@ const contentSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    certificateType: {
+      type: String,
+      enum: ['none', 'standard', 'kinvent'],
+      default: 'none',
+    },
     certificateTemplate: {
       type: String,
       default: '',
