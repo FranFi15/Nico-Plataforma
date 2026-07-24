@@ -316,9 +316,9 @@ const BlogDetail = () => {
           <article
             className="blog-content"
             style={{
-              fontSize: '18px',
+              fontSize: '16px',
               color: 'var(--dark)',
-              lineHeight: '1.8',
+              lineHeight: '1.7',
               fontFamily: 'var(--font-sans)',
               marginBottom: content.attachments && content.attachments.length > 0 ? '40px' : '80px',
               wordBreak: 'break-word',
@@ -405,12 +405,12 @@ const BlogDetail = () => {
 
     {/* Sección Te Puede Interesar Full Width */}
     {relatedBlogs && relatedBlogs.length > 0 && (
-      <div style={{ width: '100%', backgroundColor: '#f8fafc', padding: '80px 40px', borderTop: '1px solid var(--border)', marginTop: '40px' }}>
+      <div className="p-20-mobile" style={{ width: '100%', backgroundColor: '#f8fafc', padding: '80px 40px', borderTop: '1px solid var(--border)', marginTop: '40px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <h3 style={{ fontSize: '26px', fontWeight: '900', color: '#2B2D2F', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '36px', textAlign: 'center' }}>
+          <h3 className="text-24-mobile" style={{ fontSize: '26px', fontWeight: '900', color: '#2B2D2F', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '36px', textAlign: 'center' }}>
             Te puede interesar
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
+          <div className="grid-1-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
             {relatedBlogs.map((b) => (
               <ContentCard key={b._id} content={b} />
             ))}

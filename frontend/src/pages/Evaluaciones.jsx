@@ -72,7 +72,7 @@ const Evaluaciones = () => {
               filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))'
             }}
           />
-          <h1 style={{
+          <h1 className="text-32-mobile" style={{
             fontSize: '44px',
             lineHeight: '1.25',
             fontWeight: '900',
@@ -84,7 +84,7 @@ const Evaluaciones = () => {
             Transformá datos en rendimiento: La diferencia entre entrenar y mejorar
           </h1>
 
-          <p style={{
+          <p className="text-18-mobile" style={{
             fontSize: '21px',
             lineHeight: '1.6',
             color: 'rgba(255, 255, 255, 0.92)',
@@ -107,6 +107,7 @@ const Evaluaciones = () => {
           }}>
             <Link
               to="/evaluaciones/individual"
+              className="w-100-mobile"
               style={{
                 padding: '18px 42px',
                 fontSize: '17px',
@@ -125,6 +126,7 @@ const Evaluaciones = () => {
 
             <Link
               to="/evaluaciones/colectivo"
+              className="w-100-mobile"
               style={{
                 padding: '18px 42px',
                 fontSize: '17px',

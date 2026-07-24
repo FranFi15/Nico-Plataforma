@@ -1049,7 +1049,7 @@ body::before {
   .features-accordion__option.active {
     flex-grow: 0;
     max-width: none;
-    min-height: 220px;
+    min-height: 380px;
     margin: 8px 0;
     border-radius: 14px;
   }
@@ -1060,6 +1060,23 @@ body::before {
 
   .features-accordion__main {
     white-space: normal;
+  }
+
+  .features-accordion__option.active .features-accordion__main {
+    font-size: 1.15rem;
+  }
+
+  .features-accordion__option.active .features-accordion__label {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: calc(100% - 32px);
+  }
+
+  .features-accordion__option.active .features-accordion__sub {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    margin-top: 8px;
   }
 
   .features-accordion__option:not(.active) .features-accordion__icon {

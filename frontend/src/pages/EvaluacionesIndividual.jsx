@@ -160,7 +160,7 @@ const EvaluacionesIndividual = () => {
 
       {/* Hero Header */}
       <header style={{ textAlign: 'center', padding: '40px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 className="premium-title" style={{ maxWidth: '1400px' }}>
+        <h1 className="premium-title text-32-mobile" style={{ maxWidth: '1400px' }}>
           Sistema de evaluación integral diseñado para corredores, ciclistas y triatletas
         </h1>
         <div className="accent-divider"></div>
@@ -168,8 +168,8 @@ const EvaluacionesIndividual = () => {
           href={evalConfig.individualFormLink || 'https://docs.google.com/forms/d/e/1FAIpQLSeAJwoKDSgk7M03ZwGfbyfE1KuM4PEAQlJNlhlFov5MlKXf0Q/viewform'}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary"
-          style={{ padding: '16px 36px', fontSize: '14px' }}
+          className="btn-primary w-100-mobile"
+          style={{ padding: '16px 36px', fontSize: '14px', textAlign: 'center' }}
         >
           Solicitar Evaluación Individual
         </a>
@@ -277,7 +277,7 @@ const EvaluacionesIndividual = () => {
 
       {/* Batería de Evaluaciones Section Header */}
       <header style={{ textAlign: 'center', padding: '20px 0 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h2 className="premium-title" >
+        <h2 className="premium-title text-32-mobile" >
           Batería de Evaluaciones
         </h2>
         <div className="accent-divider"></div>
@@ -323,7 +323,7 @@ const EvaluacionesIndividual = () => {
       </div>
 
       {/* Bottom Call to Action */}
-      <div style={{
+      <div className="px-16-mobile" style={{
         marginTop: '60px',
         textAlign: 'center',
         padding: '50px 30px',
@@ -335,14 +335,14 @@ const EvaluacionesIndividual = () => {
         maxWidth: '1000px',
         margin: '60px auto 0 auto'
       }}>
-        <h3 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>
+        <h3 className="text-24-mobile" style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 14px 0' }}>
           ¿Querés conocer tu perfil físico y optimizar tu rendimiento?
         </h3>
         <p style={{ fontSize: '16px', color: '#334155', maxWidth: '650px', margin: '0 0 32px 0', lineHeight: '1.6' }}>
           Coordiná tu sesión de evaluación individual con tecnología Kinvent. Obtené datos precisos, identifica tus puntos de mejora y elevá tu preparación física al siguiente nivel.
         </p>
 
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="flex-col-mobile w-100-mobile" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <button
             onClick={() => handleDownload(evalConfig.individualPdfUrl || '/Evaluaciones_Kinvent.pdf', 'Evaluaciones_Biomecanicas_Individuales.pdf')}
             disabled={isDownloading}
@@ -378,8 +378,10 @@ const EvaluacionesIndividual = () => {
               boxShadow: '0 8px 25px rgba(15,23,42,0.25)',
               transition: 'transform 0.2s ease',
               display: 'inline-flex',
-              alignItems: 'center'
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
+            className="w-100-mobile"
           >
             Solicitar Turno Individual
           </a>

@@ -340,7 +340,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
 
                 {/* Title */}
                 <div>
-                  <h2 style={{ fontSize: '30px', fontWeight: '900', color: '#0f172a', lineHeight: '1.15', margin: '0 0 16px 0', letterSpacing: '-0.5px' }}>
+                  <h2 className="text-24-mobile" style={{ fontSize: '30px', fontWeight: '900', color: '#0f172a', lineHeight: '1.15', margin: '0 0 16px 0', letterSpacing: '-0.5px' }}>
                     {content.title}
                   </h2>
 
@@ -359,7 +359,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                 </p>
 
                 {/* 4 Stats Cards Grid (2x2) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="grid-1-mobile" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
 
                   <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '18px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#dbeafe', color: '#1f75f5ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
@@ -487,7 +487,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                   {/* Progress Box OR Dynamic Pricing/Discount Card */}
                   {!effectiveAccess && content.accessType === 'one-time-purchase' ? (
                     <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="flex-col-mobile gap-sm-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '13px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase' }}>
                           Inversión de Pago Único
                         </span>
