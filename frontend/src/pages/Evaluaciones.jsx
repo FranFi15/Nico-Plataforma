@@ -7,11 +7,13 @@ const Evaluaciones = () => {
   return (
     <div className="animate-fade-in" style={{ margin: 0, padding: 0, width: '100%', overflow: 'hidden' }}>
       {/* Full Screen Hero Video Presentation (100% Width & Height) */}
-      <section style={{
+      <section className="min-h-screen-mobile" style={{
         position: 'relative',
-        height: '100vh',
+        minHeight: '100vh',
+        height: '100%',
         marginTop: '-106px', // Shift up under the navbar height
-        paddingTop: '106px', // Keep content centered relative to screen
+        paddingTop: '130px', // Keep content centered relative to screen
+        paddingBottom: '40px',
         width: '100%',
         display: 'flex',
         alignItems: 'center',
@@ -65,8 +67,11 @@ const Evaluaciones = () => {
           <img
             src={nsLogo}
             alt="Nicolás Sesma"
+            className="eval-logo-mobile"
             style={{
-              height: '90px',
+              height: 'auto',
+              maxHeight: '90px',
+              maxWidth: '80%',
               objectFit: 'contain',
               marginBottom: '28px',
               filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))'
@@ -99,18 +104,19 @@ const Evaluaciones = () => {
           </p>
 
           {/* Two Navigation Buttons Over Video */}
-          <div style={{
+          <div className="flex-col-mobile" style={{
             display: 'flex',
-            gap: '24px',
+            gap: '16px',
             justifyContent: 'center',
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
+            padding: '0 10px'
           }}>
             <Link
               to="/evaluaciones/individual"
               className="w-100-mobile"
               style={{
-                padding: '18px 42px',
-                fontSize: '17px',
+                padding: '16px 24px',
+                fontSize: '15px',
                 fontWeight: '800',
                 borderRadius: '14px',
                 textDecoration: 'none',
@@ -128,8 +134,8 @@ const Evaluaciones = () => {
               to="/evaluaciones/colectivo"
               className="w-100-mobile"
               style={{
-                padding: '18px 42px',
-                fontSize: '17px',
+                padding: '16px 24px',
+                fontSize: '15px',
                 fontWeight: '800',
                 borderRadius: '14px',
                 textDecoration: 'none',
