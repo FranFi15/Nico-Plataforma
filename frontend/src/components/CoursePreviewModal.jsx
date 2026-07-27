@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { IoClose, IoDocumentTextOutline, IoTimeOutline, IoRibbonOutline, IoSchoolOutline, IoCheckmarkCircle, IoPlay, IoPlayCircleOutline, IoVideocamOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import nico from '../assets/nico.webp';
 import fedeImg from '../assets/fede.webp';
@@ -190,7 +191,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
       : ['General'];
   const categories = rawCategories.map(c => typeof c === 'object' && c !== null ? c.name || 'Categoría' : c);
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
@@ -834,7 +835,8 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

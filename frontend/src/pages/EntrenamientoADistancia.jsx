@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { IoArrowBack, IoPlayCircleOutline } from 'react-icons/io5';
@@ -506,7 +507,7 @@ const EntrenamientoADistancia = () => {
       </div>
 
       {/* Video Modal Overlay */}
-      {activeVideoUrl && (
+      {activeVideoUrl && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -519,7 +520,7 @@ const EntrenamientoADistancia = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 9999,
+            zIndex: 999999,
             padding: '20px'
           }}
           onClick={() => setActiveVideoUrl(null)}
@@ -569,7 +570,8 @@ const EntrenamientoADistancia = () => {
               allowFullScreen
             ></iframe>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
