@@ -44,7 +44,7 @@ const AthleteCarousel = ({ photos }) => {
     let animationFrameId;
     const scroll = () => {
       if (containerRef.current && !isDragging) {
-        containerRef.current.scrollLeft += 0.8;
+        containerRef.current.scrollLeft += 1;
         if (containerRef.current.scrollLeft >= (containerRef.current.scrollWidth - containerRef.current.clientWidth) - 10) {
           containerRef.current.scrollLeft = 0;
         }

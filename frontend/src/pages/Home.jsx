@@ -53,7 +53,7 @@ const HomeAthleteCarousel = ({ photos }) => {
     let animationFrameId;
     const scroll = () => {
       if (containerRef.current && !isDragging) {
-        containerRef.current.scrollLeft += 0.8;
+        containerRef.current.scrollLeft += 1;
         // Seamless loop reset when reaching near the end
         if (containerRef.current.scrollLeft >= (containerRef.current.scrollWidth - containerRef.current.clientWidth) - 10) {
           containerRef.current.scrollLeft = 0;
