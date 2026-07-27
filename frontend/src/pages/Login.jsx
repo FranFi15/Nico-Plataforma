@@ -8,7 +8,10 @@ const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
   
-  const from = location.state?.from || '/';
+  let from = location.state?.from || '/';
+  if (from === '/login' || from === '/register') {
+    from = '/';
+  }
 
   const [formData, setFormData] = useState({
     email: '',

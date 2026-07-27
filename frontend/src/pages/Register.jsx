@@ -8,7 +8,10 @@ const Register = () => {
   const location = useLocation();
   const { register } = useAuth();
   
-  const from = location.state?.from || '/';
+  let from = location.state?.from || '/';
+  if (from === '/login' || from === '/register') {
+    from = '/';
+  }
 
   const [formData, setFormData] = useState({
     name: '',

@@ -474,6 +474,7 @@ const Layout = () => {
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <Link
                 to="/login"
+                state={{ from: location.pathname + location.search }}
                 className="nav-link"
                 style={{ fontSize: '13px' }}
               >
@@ -481,6 +482,7 @@ const Layout = () => {
               </Link>
               <Link
                 to="/register"
+                state={{ from: location.pathname + location.search }}
                 className="btn-primary"
                 style={{ padding: '8px 20px', fontSize: '12px', background: '#ffffff', color: '#051020', borderColor: '#ffffff' }}
               >
@@ -586,10 +588,10 @@ const Layout = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px' }}>
-              <Link to="/login" className="nav-link" style={{ fontSize: '18px' }}>
+              <Link to="/login" state={{ from: location.pathname + location.search }} className="nav-link" style={{ fontSize: '18px' }}>
                 Ingresar
               </Link>
-              <Link to="/register" className="btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px', background: '#ffffff', color: '#051020', borderColor: '#ffffff' }}>
+              <Link to="/register" state={{ from: location.pathname + location.search }} className="btn-primary" style={{ width: '100%', padding: '12px', fontSize: '14px', background: '#ffffff', color: '#051020', borderColor: '#ffffff' }}>
                 Registrarse
               </Link>
             </div>
