@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoWarning } from 'react-icons/io5';
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useAuth();
+  
+  const from = location.state?.from || '/';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +35,7 @@ const Register = () => {
     try {
       const result = await register(formData.name, formData.email, formData.password, formData.role);
       if (result.success) {
-        navigate('/');
+        navigate(from, { replace: true });
       } else {
         setErrorMsg(result.error || 'Ocurrió un error al registrar la cuenta.');
       }

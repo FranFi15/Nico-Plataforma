@@ -141,7 +141,7 @@ const BlogDetail = () => {
   const handleAction = () => {
     if (!user) {
       alert('Por favor, inicia sesión para continuar.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     if (content.accessType === 'subscription') {
@@ -154,7 +154,7 @@ const BlogDetail = () => {
   const handleAddToFolderClick = () => {
     if (!user) {
       alert('Por favor, inicia sesión para guardar en tus carpetas.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     setModalOpen(true);
@@ -306,7 +306,7 @@ const BlogDetail = () => {
             <button onClick={handleAction} className="btn-primary" style={{ padding: '14px 36px' }}>
               {content.accessType === 'subscription' ? 'Suscribirse Ahora' : `Comprar Artículo ($${content.price || 0})`}
             </button>
-            <button onClick={() => navigate('/login')} className="btn-secondary" style={{ padding: '14px 36px' }}>
+            <button onClick={() => navigate('/login', { state: { from: window.location.pathname + window.location.search } })} className="btn-secondary" style={{ padding: '14px 36px' }}>
               Iniciar Sesión
             </button>
           </div>

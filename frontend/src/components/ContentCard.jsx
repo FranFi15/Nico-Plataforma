@@ -119,7 +119,7 @@ const ContentCard = ({ content }) => {
       handleAction = () => {
         if (!user) {
           alert('Por favor, inicia sesión para suscribirte');
-          navigate('/login');
+          navigate('/login', { state: { from: window.location.pathname + window.location.search } });
           return;
         }
         navigate('/checkout');
@@ -140,7 +140,7 @@ const ContentCard = ({ content }) => {
       handleAction = () => {
         if (!user) {
           alert('Por favor, inicia sesión para realizar la compra');
-          navigate('/login');
+          navigate('/login', { state: { from: window.location.pathname + window.location.search } });
           return;
         }
         navigate(`/checkout?contentId=${content._id}`);
@@ -479,7 +479,7 @@ const ContentCard = ({ content }) => {
                       e.stopPropagation();
                       if (!user) {
                         alert('Por favor, inicia sesión para guardar en tus carpetas.');
-                        navigate('/login');
+                        navigate('/login', { state: { from: window.location.pathname + window.location.search } });
                         return;
                       }
                       setModalOpen(true);

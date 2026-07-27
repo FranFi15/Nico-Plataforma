@@ -279,7 +279,7 @@ const CursoDetail = () => {
   const handleEnrollManual = async () => {
     if (!user) {
       alert('Por favor, inicia sesión para anotarte en este curso.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     try {
@@ -297,7 +297,7 @@ const CursoDetail = () => {
   const handleAction = () => {
     if (!user) {
       alert('Por favor, inicia sesión para continuar.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     if (content.accessType === 'subscription') {
@@ -310,7 +310,7 @@ const CursoDetail = () => {
   const handleAddToFolderClick = () => {
     if (!user) {
       alert('Por favor, inicia sesión para guardar en tus carpetas.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     setModalOpen(true);

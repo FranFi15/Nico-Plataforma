@@ -158,7 +158,7 @@ const CheckoutPage = () => {
           <p style={{ color: '#6b7280', fontSize: '15px', marginBottom: '24px', lineHeight: '1.5' }}>
             Por favor, inicia sesión con tu cuenta de estudiante para poder proceder con el pago de forma segura.
           </p>
-          <button onClick={() => navigate('/login')} className="btn-primary" style={{ width: '100%' }}>
+          <button onClick={() => navigate('/login', { state: { from: window.location.pathname + window.location.search } })} className="btn-primary" style={{ width: '100%' }}>
             Iniciar Sesión
           </button>
         </div>

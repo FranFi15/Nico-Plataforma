@@ -23,7 +23,7 @@ const Cursos = () => {
 
     if (!user) {
       alert("Por favor, inicia sesión para acceder a la sección de Cursos y Workshops.");
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
 

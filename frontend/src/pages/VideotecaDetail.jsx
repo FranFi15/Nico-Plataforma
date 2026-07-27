@@ -75,7 +75,7 @@ const VideotecaDetail = () => {
   const handleAction = () => {
     if (!user) {
       alert('Por favor, inicia sesión para continuar.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     if (content.accessType === 'subscription') {
@@ -88,7 +88,7 @@ const VideotecaDetail = () => {
   const handleAddToFolderClick = () => {
     if (!user) {
       alert('Por favor, inicia sesión para guardar en tus carpetas.');
-      navigate('/login');
+      navigate('/login', { state: { from: window.location.pathname + window.location.search } });
       return;
     }
     setModalOpen(true);
@@ -252,7 +252,7 @@ const VideotecaDetail = () => {
               <button onClick={handleAction} className="btn-primary" style={{ padding: '14px 36px' }}>
                 {content.accessType === 'subscription' ? 'Suscribirse Ahora' : `Comprar Video ($${content.price || 0})`}
               </button>
-              <button onClick={() => navigate('/login')} className="btn-secondary" style={{ padding: '14px 36px', borderColor: 'rgba(255, 255, 255, 0.3)', color: '#ffffff' }}>
+              <button onClick={() => navigate('/login', { state: { from: window.location.pathname + window.location.search } })} className="btn-secondary" style={{ padding: '14px 36px', borderColor: 'rgba(255, 255, 255, 0.3)', color: '#ffffff' }}>
                 Iniciar Sesión
               </button>
             </div>

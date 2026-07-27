@@ -84,7 +84,7 @@ const MiPerfil = () => {
           <p style={{ color: 'var(--gray-500)', marginBottom: '24px' }}>
             Inicia sesión para ver tu perfil de usuario.
           </p>
-          <button onClick={() => navigate('/login')} className="btn-primary">
+          <button onClick={() => navigate('/login', { state: { from: window.location.pathname + window.location.search } })} className="btn-primary">
             Iniciar Sesión
           </button>
         </div>

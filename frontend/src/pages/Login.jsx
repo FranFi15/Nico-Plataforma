@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoWarning } from 'react-icons/io5';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  
+  const from = location.state?.from || '/';
 
   const [formData, setFormData] = useState({
     email: '',
@@ -31,7 +34,7 @@ const Login = () => {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        navigate('/');
+        navigate(from, { replace: true });
       } else {
         setErrorMsg(result.error || 'Correo electrónico o contraseña incorrectos.');
       }

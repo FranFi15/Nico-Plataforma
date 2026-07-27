@@ -117,7 +117,7 @@ const MisCarpetas = () => {
           <p style={{ color: 'var(--gray-500)', marginBottom: '24px' }}>
             Inicia sesión para ver y organizar tus carpetas guardadas.
           </p>
-          <button onClick={() => navigate('/login')} className="btn-primary">
+          <button onClick={() => navigate('/login', { state: { from: window.location.pathname + window.location.search } })} className="btn-primary">
             Iniciar Sesión
           </button>
         </div>
