@@ -218,6 +218,40 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
           gap: 32px;
           align-items: start;
         }
+        .preview-modal-container {
+          background-color: ${showTrailer && trailerEmbedUrl ? '#051020' : '#ffffff'};
+          border-radius: 32px;
+          width: 98%;
+          max-width: 1540px;
+          max-height: 92vh;
+          height: ${showTrailer && trailerEmbedUrl ? '85vh' : 'auto'};
+          overflow: ${showTrailer && trailerEmbedUrl ? 'hidden' : 'auto'};
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+          position: relative;
+          padding: ${showTrailer && trailerEmbedUrl ? '0' : '52px 36px 36px 36px'};
+          font-family: var(--font-sans);
+          border: ${showTrailer && trailerEmbedUrl ? '2px solid #1f75f5ff' : '1px solid #e2e8f0'};
+          display: flex;
+          flex-direction: column;
+        }
+        .trailer-header {
+          padding: 16px 28px;
+          background-color: rgba(5, 16, 32, 0.95);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 10;
+          flex-shrink: 0;
+        }
+        .trailer-header-text {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .trailer-close-text {
+          display: inline;
+        }
         @media (max-width: 1200px) {
           .preview-modal-grid-3col {
             grid-template-columns: 1.1fr 1fr;
@@ -231,32 +265,38 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
           .preview-modal-grid-3col {
             grid-template-columns: 1fr;
           }
+          .preview-modal-container {
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: ${showTrailer && trailerEmbedUrl ? '0' : '36px 16px 16px 16px'};
+            max-height: 95vh;
+            margin-top: auto;
+          }
+          .trailer-header {
+            padding: 12px 16px;
+            flex-direction: column;
+            gap: 14px;
+            align-items: stretch;
+          }
+          .trailer-header-text {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+          }
+          .trailer-close-text {
+            display: none;
+          }
         }
       `}</style>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: showTrailer && trailerEmbedUrl ? '#051020' : '#ffffff',
-          borderRadius: '32px',
-          width: '96%',
-          maxWidth: '1380px',
-          maxHeight: '90vh',
-          height: showTrailer && trailerEmbedUrl ? '85vh' : 'auto',
-          overflow: showTrailer && trailerEmbedUrl ? 'hidden' : 'auto',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
-          position: 'relative',
-          padding: showTrailer && trailerEmbedUrl ? '0' : '52px 36px 36px 36px',
-          fontFamily: 'var(--font-sans)',
-          border: showTrailer && trailerEmbedUrl ? '2px solid #1f75f5ff' : '1px solid #e2e8f0',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
+        className="preview-modal-container"
       >
         {showTrailer && trailerEmbedUrl ? (
           <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             {/* Header bar inside full modal trailer */}
-            <div style={{ padding: '16px 28px', backgroundColor: 'rgba(5, 16, 32, 0.95)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="trailer-header">
+              <div className="trailer-header-text">
                 <span style={{ fontSize: '18px', fontWeight: '900', color: '#ffffff' }}> Tráiler / Introducción:</span>
                 <span style={{ fontSize: '16px', fontWeight: '700', color: '#38bdf8' }}>{content.title}</span>
               </div>
@@ -273,6 +313,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
                   transition: 'all 0.2s ease'
@@ -280,7 +321,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; e.currentTarget.style.transform = 'scale(1)'; }}
               >
-                <IoClose size={18} /> Volver a Detalles del Curso
+                <IoClose size={20} /> <span className="trailer-close-text">Volver a Detalles del Curso</span>
               </button>
             </div>
 
