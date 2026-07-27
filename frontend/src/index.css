@@ -34,12 +34,13 @@
   background: var(--dark);
 }
 
-body {
+html, body {
   font-family: var(--font-sans);
   background-color: var(--white);
   color: var(--dark);
   min-height: 100vh;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* No background gradients — clean white canvas */
