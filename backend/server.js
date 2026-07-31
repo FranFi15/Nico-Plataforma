@@ -61,7 +61,7 @@ app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/zoomevents', zoomEventRoutes);
 app.use('/api/benefits', benefitRoutes);
 app.use('/api/coupons', couponRoutes);
-app.use('/api/subscription-plans', subscriptionPlanRoutes);
+app.use('/api/subscription-plan', subscriptionPlanRoutes);
 app.use('/api/stats', statsRoutes);
 
 // Custom Error Handling Middlewares
