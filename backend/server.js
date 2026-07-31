@@ -1,5 +1,5 @@
+import 'dotenv/config';
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -22,8 +22,7 @@ import subscriptionPlanRoutes from './routes/subscriptionPlanRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
-// Load environment variables (from .env file)
-dotenv.config();
+// Load environment variables via import 'dotenv/config' at the top
 
 // Connect to Database
 connectDB();

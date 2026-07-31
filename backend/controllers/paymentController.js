@@ -25,7 +25,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
     const result = await preApproval.create({
       body: {
         back_url: 'https://yourdomain.com/payments/status', // Redirect back URL after completion
-        reason: 'Suscripción Premium Mensual - Plataforma Nico',
+        reason: 'Suscripción  Mensual',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
