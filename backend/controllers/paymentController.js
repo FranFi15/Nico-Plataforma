@@ -24,7 +24,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
     // Create PreApproval subscription
     const result = await preApproval.create({
       body: {
-        back_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/status`, // Redirect back URL after completion
+        back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`, // Redirect back URL after completion
         reason: 'Suscripción  Mensual',
         auto_recurring: {
           frequency: 1,
@@ -106,9 +106,9 @@ export const checkoutMercadoPago = async (req, res, next) => {
           },
         ],
         back_urls: {
-          success: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/success`,
-          failure: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/failure`,
-          pending: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/pending`,
+          success: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/success`,
+          failure: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/failure`,
+          pending: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/pending`,
         },
         auto_return: 'approved',
         notification_url: `${process.env.BACKEND_URL || 'https://tu-backend-url.onrender.com'}/api/payments/mercadopago/webhook`, // Public webhook endpoint
