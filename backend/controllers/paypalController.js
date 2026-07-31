@@ -60,8 +60,8 @@ export const subscribePayPal = async (req, res, next) => {
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'SUBSCRIBE_NOW',
-        return_url: 'https://yourdomain.com/payments/success',
-        cancel_url: 'https://yourdomain.com/payments/cancel',
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/success`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/cancel`,
       },
       custom_id: JSON.stringify({
         userId: req.user._id.toString(),
@@ -159,8 +159,8 @@ export const checkoutPayPal = async (req, res, next) => {
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW',
-        return_url: 'https://yourdomain.com/payments/success',
-        cancel_url: 'https://yourdomain.com/payments/cancel',
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/success`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payments/cancel`,
       },
     };
 
