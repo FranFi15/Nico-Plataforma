@@ -48,7 +48,10 @@ export const subscribeMercadoPago = async (req, res, next) => {
       sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    next(error);
+    const errorDetails = error.cause || error.response?.data || error.message;
+    console.error('Error en subscribeMercadoPago:', errorDetails);
+    res.status(500);
+    next(new Error(`Error en Mercado Pago: ${JSON.stringify(errorDetails)}`));
   }
 };
 
@@ -129,7 +132,10 @@ export const checkoutMercadoPago = async (req, res, next) => {
       sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    next(error);
+    const errorDetails = error.cause || error.response?.data || error.message;
+    console.error('Error en checkoutMercadoPago:', errorDetails);
+    res.status(500);
+    next(new Error(`Error en Mercado Pago: ${JSON.stringify(errorDetails)}`));
   }
 };
 
