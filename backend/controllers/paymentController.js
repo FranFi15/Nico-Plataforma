@@ -5,10 +5,15 @@ import Coupon from '../models/couponModel.js';
 import SubscriptionPlan from '../models/subscriptionPlanModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 
-// Initialize Mercado Pago config using ACCESS_TOKEN from env
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '',
-});
+// Get Mercado Pago config using ACCESS_TOKEN from env dynamically
+const getMPClient = () => {
+  if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+    throw new Error('MERCADO_PAGO_ACCESS_TOKEN no está configurado en las variables de entorno.');
+  }
+  return new MercadoPagoConfig({
+    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
+  });
+};
 
 
 // @desc    Create Mercado Pago Subscription Link (PreApproval)
@@ -17,8 +22,9 @@ const client = new MercadoPagoConfig({
 export const subscribeMercadoPago = async (req, res, next) => {
   try {
     const planConfig = (await SubscriptionPlan.findOne({})) || {};
-    const amount = planConfig.mpAmount || 1990;
+    const amount = Number(planConfig.mpAmount) || 1990;
 
+    const client = getMPClient();
     const preApproval = new PreApproval(client);
 
     // Create PreApproval subscription
@@ -92,8 +98,9 @@ export const checkoutMercadoPago = async (req, res, next) => {
     }
 
     // Calculate final price with helper (applies member discount and/or coupon discount)
-    const finalPrice = calculatePrice(req.user, content, 'ARS', couponDiscount);
+    const finalPrice = Number(calculatePrice(req.user, content, 'ARS', couponDiscount));
 
+    const client = getMPClient();
     const preference = new Preference(client);
 
     // Generate Mercado Pago checkout preference
@@ -160,6 +167,7 @@ export const webhookMercadoPago = async (req, res, next) => {
 
     if (type === 'payment') {
       // One-time payment notification
+      const client = getMPClient();
       const payment = new Payment(client);
       const paymentData = await payment.get({ id: resourceId });
 
@@ -181,6 +189,7 @@ export const webhookMercadoPago = async (req, res, next) => {
       }
     } else if (type === 'subscription' || type === 'preapproval') {
       // Recurring subscription notification
+      const client = getMPClient();
       const preApproval = new PreApproval(client);
       const preApprovalData = await preApproval.get({ id: resourceId });
 
