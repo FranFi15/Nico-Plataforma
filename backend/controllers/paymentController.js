@@ -35,7 +35,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
     const result = await preApproval.create({
       body: {
         back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`, // Redirect back URL after completion
-        reason: 'Suscripción Mensual',
+        reason: 'Suscripcion Mensual',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
