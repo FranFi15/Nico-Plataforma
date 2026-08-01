@@ -11,7 +11,7 @@ const getMPClient = () => {
     throw new Error('MERCADO_PAGO_ACCESS_TOKEN no está configurado en las variables de entorno.');
   }
   return new MercadoPagoConfig({
-    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
+    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN.trim(),
   });
 };
 
@@ -27,11 +27,15 @@ export const subscribeMercadoPago = async (req, res, next) => {
     const client = getMPClient();
     const preApproval = new PreApproval(client);
 
+    if (process.env.MERCADO_PAGO_ACCESS_TOKEN?.startsWith('TEST-')) {
+      throw new Error('Mercado Pago no permite crear suscripciones (PreApproval) con credenciales de prueba (TEST-). Por favor, utiliza un Access Token de Producción (APP_USR-).');
+    }
+
     // Create PreApproval subscription
     const result = await preApproval.create({
       body: {
         back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`, // Redirect back URL after completion
-        reason: 'Suscripción  Mensual',
+        reason: 'Suscripción Mensual',
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
