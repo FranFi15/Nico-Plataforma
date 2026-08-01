@@ -53,7 +53,7 @@ const Layout = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { state: { from: window.location.pathname + window.location.search } });
+    window.location.href = `/login?from=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   };
 
   const isHome = location.pathname === '/' || location.pathname === '/evaluaciones';

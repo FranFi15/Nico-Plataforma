@@ -8,7 +8,10 @@ const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
   
-  let from = location.state?.from || '/';
+  const searchParams = new URLSearchParams(location.search);
+  const queryFrom = searchParams.get('from');
+  
+  let from = location.state?.from || queryFrom || '/';
   if (from === '/login' || from === '/register') {
     from = '/';
   }
@@ -37,7 +40,7 @@ const Login = () => {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        navigate(from, { replace: true });
+        window.location.href = from;
       } else {
         setErrorMsg(result.error || 'Correo electrónico o contraseña incorrectos.');
       }

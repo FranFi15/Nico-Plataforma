@@ -8,7 +8,10 @@ const Register = () => {
   const location = useLocation();
   const { register } = useAuth();
   
-  let from = location.state?.from || '/';
+  const searchParams = new URLSearchParams(location.search);
+  const queryFrom = searchParams.get('from');
+
+  let from = location.state?.from || queryFrom || '/';
   if (from === '/login' || from === '/register') {
     from = '/';
   }
@@ -38,7 +41,7 @@ const Register = () => {
     try {
       const result = await register(formData.name, formData.email, formData.password, formData.role);
       if (result.success) {
-        navigate(from, { replace: true });
+        window.location.href = from;
       } else {
         setErrorMsg(result.error || 'Ocurrió un error al registrar la cuenta.');
       }
