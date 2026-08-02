@@ -235,14 +235,26 @@ export const webhookPayPal = async (req, res) => {
       if (userId) {
         const user = await User.findById(userId);
         if (user) {
-          user.isSubscribed = true;
-          user.subscriptionId = subscriptionId;
-          user.membership = 'premium';
-          user.membershipExpiresAt = null;
-          await user.save();
-          console.log(
-            `[Webhook PayPal] Suscripción Premium activa para usuario: ${user.email} | ID: ${subscriptionId}`
-          );
+          // Securizar webhook: ir a buscar la verdad a PayPal en lugar de confiar ciegamente en el body
+          try {
+            const accessToken = await getPayPalAccessToken();
+            const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
+            const subRes = await axios.get(`${baseUrl}/v1/billing/subscriptions/${subscriptionId}`, {
+              headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            if (subRes.data && (subRes.data.status === 'ACTIVE' || subRes.data.status === 'APPROVED')) {
+              user.isSubscribed = true;
+              user.subscriptionId = subscriptionId;
+              user.membership = 'premium';
+              user.membershipExpiresAt = null;
+              await user.save();
+              console.log(`[Webhook PayPal] Suscripción Premium activa (verificada) para usuario: ${user.email} | ID: ${subscriptionId}`);
+            } else {
+              console.log(`[Webhook PayPal] Intento de activación ignorado: Estado real en PayPal no es activo.`);
+            }
+          } catch (err) {
+            console.error(`[Webhook PayPal] Error verificando suscripción ${subscriptionId} en API:`, err.message);
+          }
         }
       }
     } else if (
@@ -289,12 +301,22 @@ export const webhookPayPal = async (req, res) => {
         if (metadata && metadata.paymentType === 'one-time-purchase') {
           const user = await User.findById(metadata.userId);
           if (user) {
-            if (!user.purchasedItems.includes(metadata.contentId)) {
-              user.purchasedItems.push(metadata.contentId);
-              await user.save();
-              console.log(
-                `[Webhook PayPal] Compra registrada con éxito para usuario: ${user.email} | Contenido: ${metadata.contentId}`
-              );
+            // Securizar: Verificar en API
+            try {
+              const accessToken = await getPayPalAccessToken();
+              const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
+              const orderRes = await axios.get(`${baseUrl}/v2/checkout/orders/${resource.id}`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+              });
+              if (orderRes.data && orderRes.data.status === 'COMPLETED') {
+                if (!user.purchasedItems.includes(metadata.contentId)) {
+                  user.purchasedItems.push(metadata.contentId);
+                  await user.save();
+                  console.log(`[Webhook PayPal] Compra (verificada) con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
+                }
+              }
+            } catch (err) {
+              console.error(`[Webhook PayPal] Error verificando orden ${resource.id} en API:`, err.message);
             }
           }
         }
