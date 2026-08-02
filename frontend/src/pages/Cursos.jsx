@@ -51,6 +51,11 @@ const Cursos = () => {
     fetchContentAndCategories();
   }, [user, authLoading, navigate]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchText, accessFilter, subtypeFilter]);
+
   if (authLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '100px 0', fontSize: '18px', color: 'var(--gray-500)', fontFamily: 'var(--font-sans)' }}>
@@ -90,10 +95,7 @@ const Cursos = () => {
     currentPage * itemsPerPage
   );
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeCategory, searchText, accessFilter, subtypeFilter]);
+
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 20px 60px 20px' }}>
