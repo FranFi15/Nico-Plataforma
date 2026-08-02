@@ -41,14 +41,12 @@ export const subscribeMercadoPago = async (req, res, next) => {
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: amount,
+          transaction_amount: parseFloat(amount),
           currency_id: 'ARS',
         },
         payer_email: req.user.email,
-        external_reference: JSON.stringify({
-          userId: req.user._id.toString(),
-          paymentType: 'subscription',
-        }),
+        status: 'pending',
+        external_reference: req.user._id.toString(),
       },
       {
         headers: {
@@ -213,10 +211,18 @@ export const webhookMercadoPago = async (req, res, next) => {
       const preApprovalData = await preApproval.get({ id: resourceId });
 
       if (preApprovalData.status === 'authorized' || preApprovalData.status === 'active') {
-        const metadata = preApprovalData.external_reference
-          ? JSON.parse(preApprovalData.external_reference)
-          : null;
-        const userId = metadata?.userId || (await User.findOne({ subscriptionId: resourceId }))?._id;
+        let userId = null;
+        if (preApprovalData.external_reference) {
+          try {
+            const metadata = JSON.parse(preApprovalData.external_reference);
+            userId = metadata?.userId;
+          } catch (e) {
+            userId = preApprovalData.external_reference; // It was a plain string ID
+          }
+        }
+        if (!userId) {
+          userId = (await User.findOne({ subscriptionId: resourceId }))?._id;
+        }
 
         if (userId) {
           const user = await User.findById(userId);
@@ -237,10 +243,18 @@ export const webhookMercadoPago = async (req, res, next) => {
         preApprovalData.status === 'paused' ||
         preApprovalData.status === 'expired'
       ) {
-        const metadata = preApprovalData.external_reference
-          ? JSON.parse(preApprovalData.external_reference)
-          : null;
-        const userId = metadata?.userId || (await User.findOne({ subscriptionId: resourceId }))?._id;
+        let userId = null;
+        if (preApprovalData.external_reference) {
+          try {
+            const metadata = JSON.parse(preApprovalData.external_reference);
+            userId = metadata?.userId;
+          } catch (e) {
+            userId = preApprovalData.external_reference; // It was a plain string ID
+          }
+        }
+        if (!userId) {
+          userId = (await User.findOne({ subscriptionId: resourceId }))?._id;
+        }
 
         if (userId) {
           const user = await User.findById(userId);
