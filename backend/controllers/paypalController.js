@@ -45,9 +45,25 @@ export const subscribePayPal = async (req, res, next) => {
     const accessToken = await getPayPalAccessToken();
     const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
 
-    // Create Subscription payload
+    const planConfig = (await SubscriptionPlan.findOne({})) || {};
+    const amount = Number(planConfig.paypalAmount) || 15;
+
+    // Create Subscription payload with dynamic price override
     const payload = {
       plan_id: planId,
+      plan: {
+        billing_cycles: [
+          {
+            sequence: 1,
+            pricing_scheme: {
+              fixed_price: {
+                value: amount.toString(),
+                currency_code: 'USD',
+              },
+            },
+          },
+        ],
+      },
       subscriber: {
         email_address: req.user.email,
         name: {
