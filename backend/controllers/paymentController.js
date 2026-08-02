@@ -52,16 +52,20 @@ export const subscribeMercadoPago = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Enlace de suscripción creado con éxito',
+      message: 'Suscripción de Mercado Pago creada con éxito',
       subscriptionId: result.id,
       initPoint: result.init_point,
-      sandboxInitPoint: result.sandbox_init_point,
     });
   } catch (error) {
-    const errorDetails = error.cause || error.response?.data || error.message;
-    console.error('Error en subscribeMercadoPago:', errorDetails);
-    res.status(500);
-    next(new Error(`Error en Mercado Pago: ${JSON.stringify(errorDetails)}`));
+    const errMsg = error.response?.data?.message || error.message;
+    console.error("====== MP SUBSCRIPTION ERROR ======");
+    console.error(JSON.stringify(error.response?.data || error.message, null, 2));
+    console.error("===================================");
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: `Error en subscribeMercadoPago: ${errMsg}`,
+      mpData: error.response?.data || null
+    });
   }
 };
 
