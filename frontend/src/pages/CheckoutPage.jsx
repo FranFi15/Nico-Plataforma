@@ -130,7 +130,7 @@ const CheckoutPage = () => {
       if (response.data && response.data.success) {
         // Redirect to gateway init URL
         const redirectUrl = gateway === 'mp'
-          ? (response.data.sandboxInitPoint || response.data.initPoint)
+          ? response.data.initPoint
           : response.data.approvalUrl;
 
         if (redirectUrl) {
