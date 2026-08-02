@@ -877,27 +877,25 @@ const CursoDetail = () => {
                     <>
                       {/* Skool Lesson Tabs: Notes vs Resources */}
                       <div style={{ borderBottom: '2px solid #f1f5f9', marginBottom: '24px', display: 'flex', gap: '24px' }}>
-                        {currentItem.videoLink && (
-                          <button
-                            onClick={() => setLessonTab('video')}
-                            style={{
-                              padding: '12px 4px',
-                              border: 'none',
-                              background: 'none',
-                              borderBottom: `3px solid ${lessonTab === 'video' ? '#051020' : 'transparent'}`,
-                              fontWeight: lessonTab === 'video' ? '900' : '700',
-                              color: lessonTab === 'video' ? '#051020' : '#64748b',
-                              fontSize: '15px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            <IoVideocamOutline size={18} /> Video Análisis
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setLessonTab('video')}
+                          style={{
+                            padding: '12px 4px',
+                            border: 'none',
+                            background: 'none',
+                            borderBottom: `3px solid ${lessonTab === 'video' ? '#051020' : 'transparent'}`,
+                            fontWeight: lessonTab === 'video' ? '900' : '700',
+                            color: lessonTab === 'video' ? '#051020' : '#64748b',
+                            fontSize: '15px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <IoVideocamOutline size={18} /> Video Análisis ({currentItem.videoLink ? 1 : 0})
+                        </button>
                         <button
                           onClick={() => setLessonTab('notes')}
                           style={{
@@ -915,7 +913,7 @@ const CursoDetail = () => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <IoDocumentTextOutline size={18} /> Notas - Artículos
+                          <IoDocumentTextOutline size={18} /> Notas - Artículos ({(currentItem.body && currentItem.body.trim() !== '<p></p>' && currentItem.body.trim() !== '') ? 1 : 0})
                         </button>
                         <button
                           onClick={() => setLessonTab('attachments')}
