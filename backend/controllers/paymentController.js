@@ -44,7 +44,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
           transaction_amount: parseFloat(amount),
           currency_id: 'ARS',
         },
-        payer_email: req.user.email,
+        payer_email: req.user.email.trim().toLowerCase(),
         status: 'pending',
         external_reference: req.user._id.toString(),
       },

@@ -18,9 +18,8 @@ async function test() {
           transaction_amount: 1990,
           currency_id: 'ARS',
         },
-        payer_email: 'test_user_789456@gmail.com',
         status: 'pending',
-        external_reference: '60d5ecb8b392134'
+        external_reference: '123456789'
       })
     });
     
