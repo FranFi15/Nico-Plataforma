@@ -31,10 +31,12 @@ export const subscribeMercadoPago = async (req, res, next) => {
       throw new Error('Mercado Pago no permite crear suscripciones (PreApproval) con credenciales de prueba (TEST-). Por favor, utiliza un Access Token de Producción (APP_USR-).');
     }
 
-    // Create PreApproval subscription
-    const result = await preApproval.create({
-      body: {
-        back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`, // Redirect back URL after completion
+    // Usar axios directamente en lugar del SDK para capturar mejor el error
+    const { default: axios } = await import('axios');
+    const response = await axios.post(
+      'https://api.mercadopago.com/preapproval',
+      {
+        back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`,
         reason: 'Suscripcion Mensual',
         auto_recurring: {
           frequency: 1,
@@ -48,23 +50,32 @@ export const subscribeMercadoPago = async (req, res, next) => {
           paymentType: 'subscription',
         }),
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN.trim()}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
 
     res.status(200).json({
       success: true,
       message: 'Suscripción de Mercado Pago creada con éxito',
-      subscriptionId: result.id,
-      initPoint: result.init_point,
+      subscriptionId: response.data.id,
+      initPoint: response.data.init_point,
     });
   } catch (error) {
-    const errMsg = error.response?.data?.message || error.message;
-    console.error("====== MP SUBSCRIPTION ERROR ======");
-    console.error(JSON.stringify(error.response?.data || error.message, null, 2));
-    console.error("===================================");
+    const errorData = error.response?.data || {};
+    const errMsg = errorData.message || error.message;
+    console.error("====== MP AXIOS SUBSCRIPTION ERROR ======");
+    console.error(JSON.stringify(errorData, null, 2));
+    console.error(error.stack);
+    console.error("=========================================");
     res.status(error.response?.status || 500).json({
       success: false,
-      message: `Error en subscribeMercadoPago: ${errMsg}`,
-      mpData: error.response?.data || null
+      message: `Error crudo MP: ${errMsg}`,
+      mpData: errorData,
+      rawMessage: error.message
     });
   }
 };
