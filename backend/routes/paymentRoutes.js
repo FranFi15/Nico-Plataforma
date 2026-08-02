@@ -3,14 +3,10 @@ import {
   subscribeMercadoPago,
   checkoutMercadoPago,
   webhookMercadoPago,
-  testMpToken,
 } from '../controllers/paymentController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
-
-// Debug route
-router.get('/test-token', testMpToken);
 
 // Route to create subscription link
 router.post('/subscribe', protect, subscribeMercadoPago);
