@@ -16,6 +16,50 @@ const getMPClient = () => {
 };
 
 
+export const testMpToken = async (req, res) => {
+  try {
+    const token = process.env.MERCADO_PAGO_ACCESS_TOKEN || '';
+    const maskedToken = token.substring(0, 20) + '...';
+
+    const { default: axios } = await import('axios');
+    const response = await axios.post(
+      'https://api.mercadopago.com/preapproval',
+      {
+        back_url: `https://yourdomain.com/payments/status`,
+        reason: 'Test Token Mensual',
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: 1990,
+          currency_id: 'ARS',
+        },
+        payer_email: 'test_user_super_random_123@gmail.com',
+        status: 'pending',
+        external_reference: '123456789',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token.trim()}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Token de MP funciona perfecto!',
+      maskedToken,
+      mpResponse: response.data.id
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      maskedToken: (process.env.MERCADO_PAGO_ACCESS_TOKEN || '').substring(0, 20) + '...',
+      error: error.response?.data || error.message
+    });
+  }
+};
+
 // @desc    Create Mercado Pago Subscription Link (PreApproval)
 // @route   POST /api/payments/mercadopago/subscribe
 // @access  Private
