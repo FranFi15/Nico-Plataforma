@@ -111,6 +111,20 @@ const MisAlumnos = () => {
     setExpandedStudentId(expandedStudentId === id ? null : id);
   };
 
+  const handleDeleteStudent = async (studentId, studentName) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente al alumno ${studentName}? Esta acción no se puede deshacer y perderá el acceso a todos sus cursos.`)) {
+      try {
+        const response = await api.delete(`/users/${studentId}`);
+        if (response.data?.success) {
+          setStudents(students.filter(s => s._id !== studentId));
+          alert('Alumno eliminado con éxito');
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || 'Error al eliminar el alumno');
+      }
+    }
+  };
+
   const getStudentAccessDetails = (student) => {
     const isPrivileged = student && ['admin', 'professor', 'profe', 'instructor'].includes(student.role);
     const isPremium = (student.membership === 'premium' || student.isSubscribed === true) &&
@@ -574,6 +588,36 @@ const MisAlumnos = () => {
                           </ul>
                         )}
                       </div>
+                    </div>
+
+                    {/* Delete button */}
+                    <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => handleDeleteStudent(student._id, student.name)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: 'transparent',
+                          color: '#ef4444',
+                          border: '1px solid #ef4444',
+                          borderRadius: '8px',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.background = '#fef2f2';
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.background = 'transparent';
+                        }}
+                      >
+                        <IoCloseCircle size={16} />
+                        Eliminar Alumno
+                      </button>
                     </div>
                   </div>
                 )}

@@ -145,3 +145,30 @@ export const markNotificationsRead = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Delete a user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+export const deleteUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404);
+      throw new Error('Usuario no encontrado');
+    }
+
+    if (user.role === 'admin') {
+      res.status(400);
+      throw new Error('No se puede eliminar a un administrador');
+    }
+
+    await user.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Usuario eliminado con éxito'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
