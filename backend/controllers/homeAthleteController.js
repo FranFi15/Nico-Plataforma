@@ -28,10 +28,18 @@ export const createHomeAthlete = async (req, res, next) => {
       throw new Error('Por favor, proporcione el nombre y la foto (url) del atleta');
     }
 
+    let nextOrder = 0;
+    if (order !== undefined) {
+      nextOrder = order;
+    } else {
+      const maxAthlete = await HomeAthlete.findOne().sort({ order: -1 });
+      nextOrder = maxAthlete ? maxAthlete.order + 1 : 0;
+    }
+
     const athlete = await HomeAthlete.create({
       fullname,
       url,
-      order: order !== undefined ? order : 0,
+      order: nextOrder,
     });
 
     res.status(201).json({
