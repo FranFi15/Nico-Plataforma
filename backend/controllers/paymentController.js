@@ -168,12 +168,13 @@ export const checkoutMercadoPago = async (req, res, next) => {
 // @access  Public
 export const webhookMercadoPago = async (req, res, next) => {
   try {
-    const { type, data } = req.body;
+    const { type, topic, data } = req.body;
+    const notificationType = type || topic;
 
     // Log the notification for visibility
-    console.log(`[Mercado Pago Webhook] Recibida notificación. Tipo: ${type}, ID: ${data?.id}`);
+    console.log(`[Mercado Pago Webhook] Recibida notificación. Tipo: ${notificationType}, ID: ${data?.id}`);
 
-    if (!type || !data || !data.id) {
+    if (!notificationType || !data || !data.id) {
       return res.status(200).json({
         success: true,
         message: 'Notificación recibida sin datos procesables (ignorado)',
@@ -182,7 +183,7 @@ export const webhookMercadoPago = async (req, res, next) => {
 
     const resourceId = data.id;
 
-    if (type === 'payment') {
+    if (notificationType === 'payment') {
       // One-time payment notification
       const client = getMPClient();
       const payment = new Payment(client);
@@ -204,7 +205,12 @@ export const webhookMercadoPago = async (req, res, next) => {
           }
         }
       }
-    } else if (type === 'subscription' || type === 'preapproval') {
+    } else if (
+      notificationType === 'subscription' ||
+      notificationType === 'preapproval' ||
+      notificationType === 'subscription_preapproval' ||
+      notificationType === 'subscription_authorized_payment'
+    ) {
       // Recurring subscription notification
       const client = getMPClient();
       const preApproval = new PreApproval(client);
