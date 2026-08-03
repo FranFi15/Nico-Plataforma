@@ -190,7 +190,16 @@ export const webhookMercadoPago = async (req, res, next) => {
       const paymentData = await payment.get({ id: resourceId });
 
       if (paymentData.status === 'approved') {
-        const metadata = JSON.parse(paymentData.external_reference);
+        let metadata = null;
+        try {
+          if (paymentData.external_reference) {
+            metadata = JSON.parse(paymentData.external_reference);
+          }
+        } catch (e) {
+          // If it's a plain string, it's likely a subscription payment inheriting the user ID.
+          // We can ignore it here because subscription logic handles its own updates.
+          console.log(`[Webhook MP] Ignorando payment con external_reference no JSON: ${paymentData.external_reference}`);
+        }
 
         if (metadata && metadata.paymentType === 'one-time-purchase') {
           const user = await User.findById(metadata.userId);
