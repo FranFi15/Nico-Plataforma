@@ -41,6 +41,7 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
   const [targetAudience, setTargetAudience] = useState('all');
   const [targetCourseId, setTargetCourseId] = useState('');
   const [sendNotification, setSendNotification] = useState(true);
+  const [sendEmailNotification, setSendEmailNotification] = useState(false);
 
   // Fetch Zoom Events and Courses
   const fetchData = async () => {
@@ -94,6 +95,7 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
     setTargetAudience('all');
     setTargetCourseId('');
     setSendNotification(true);
+    setSendEmailNotification(false);
     setShowModal(true);
   };
 
@@ -108,6 +110,7 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
     setTargetAudience(ev.targetAudience || 'all');
     setTargetCourseId(ev.targetCourseId?._id || ev.targetCourseId || '');
     setSendNotification(false); // Default false when editing unless checked
+    setSendEmailNotification(false);
     setShowModal(true);
   };
 
@@ -141,7 +144,8 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
         eventDate: eventDateInput ? new Date(eventDateInput).toISOString() : new Date().toISOString(),
         targetAudience,
         targetCourseId: targetAudience === 'specific_course' ? targetCourseId : null,
-        sendNotification
+        sendNotification,
+        sendEmailNotification
       };
 
       if (editingEvent) {
@@ -1119,6 +1123,25 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
                     : `No se enviará notificación (el evento solo se agregará en el calendario).`}
                 </label>
               </div>
+
+              {/* EMAIL NOTIFICATION CHECKBOX (ONLY FOR NEWS) */}
+              {type === 'news' && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', backgroundColor: '#f0fdf4', padding: '14px', borderRadius: '14px', border: '1px solid #bbf7d0', marginTop: '12px' }}>
+                  <input
+                    type="checkbox"
+                    id="sendEmailNotif"
+                    checked={sendEmailNotification}
+                    onChange={(e) => setSendEmailNotification(e.target.checked)}
+                    style={{ marginTop: '3px', width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="sendEmailNotif" style={{ fontSize: '13px', color: '#166534', fontWeight: '700', cursor: 'pointer', lineHeight: '1.4' }}>
+                    <strong>📧 Enviar notificación por correo electrónico:</strong><br />
+                    {sendEmailNotification
+                      ? `Se enviará un correo a todos los destinatarios seleccionados con el contenido de la noticia.`
+                      : `No se enviará ningún correo electrónico.`}
+                  </label>
+                </div>
+              )}
 
               {/* ACTIONS */}
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>

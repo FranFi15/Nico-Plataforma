@@ -937,23 +937,6 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                     </div>
                   </div>
 
-                  <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
-                    <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      Enviar Notificación por Email
-                    </label>
-                    <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este curso/workshop?</p>
-                    <select
-                      className="premium-input"
-                      value={cNotifyUsers}
-                      onChange={(e) => setCNotifyUsers(e.target.value)}
-                      style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
-                    >
-                      <option value="none">No enviar</option>
-                      <option value="all">A todos</option>
-                      <option value="premium">A miembros </option>
-                      {editingItem && <option value="enrolled">A usuarios inscriptos en este curso/workshop</option>}
-                    </select>
-                  </div>
 
                   <div className="form-group" style={{ margin: '20px 0 0 0' }}>
                     <label className="form-label">Descripción / Resumen de la Capacitación *</label>
@@ -2091,91 +2074,6 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
               )}
             </div>
 
-            {/* ========================================================
-                CARD 5: NOTIFICACIONES PROGRESIVAS A ALUMNOS
-                ======================================================== */}
-            {editingItem && (
-              <div style={{
-                backgroundColor: openSections.card5 ? '#fefeef' : '#ffffff',
-                border: `1px solid ${openSections.card5 ? '#ca8a04' : '#fde047'}`,
-                borderRadius: '16px',
-                padding: openSections.card5 ? '24px' : '16px 24px',
-                marginBottom: '24px',
-                transition: 'all 0.2s ease',
-                boxShadow: openSections.card5 ? '0 8px 24px rgba(202, 138, 4, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)'
-              }}>
-                <div
-                  onClick={() => toggleSection('card5')}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    marginBottom: openSections.card5 ? '20px' : '0',
-                    paddingBottom: openSections.card5 ? '16px' : '0',
-                    borderBottom: openSections.card5 ? '1px solid #fef08a' : 'none'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ backgroundColor: openSections.card5 ? '#ca8a04' : '#a16207', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800' }}>5</span>
-                    <div>
-                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#854d0e', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <IoNotificationsOutline size={20} color="#ca8a04" />
-                        Notificar a Alumnos sobre Nuevas Lecciones / Contenido
-                      </h3>
-                      {!openSections.card5 && (
-                        <span style={{ fontSize: '12px', color: '#a16207', fontWeight: '600', marginTop: '2px', display: 'block' }}>
-                          Click para desplegar y enviar una alerta por correo / plataforma a los alumnos del curso
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: openSections.card5 ? '#ca8a04' : '#a16207', fontWeight: '800', fontSize: '13px' }}>
-                    <span>{openSections.card5 ? 'Contraer' : 'Desplegar'}</span>
-                    {openSections.card5 ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
-                  </div>
-                </div>
-
-                {openSections.card5 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                    <div style={{ flex: '1 1 300px' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#854d0e', margin: '0 0 6px 0' }}>
-                        ¿Subiste un nuevo módulo o lección a este curso?
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#a16207', lineHeight: '1.4' }}>
-                        Envía una notificación instantánea y alerta en la plataforma a todos los alumnos que tienen acceso a este curso para avisarles de las nuevas clases disponibles.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNotifyTitle(`¡Nuevo contenido en: ${editingItem.title}!`);
-                        setNotifyMessage('Hemos agregado nuevas lecciones y material al curso. ¡Entra ahora para continuar tu aprendizaje!');
-                        setShowNotifyModal(true);
-                      }}
-                      style={{
-                        backgroundColor: '#ca8a04',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '12px 20px',
-                        borderRadius: '12px',
-                        fontWeight: '800',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: '0 4px 12px rgba(202, 138, 4, 0.3)',
-                        transition: 'transform 0.2s ease'
-                      }}
-                    >
-                      <IoSend size={16} /> Notificar a Alumnos
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button
@@ -2304,30 +2202,6 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => {
-                      setEditingItem(c);
-                      setNotifyTitle(`¡Nuevo contenido en: ${c.title}!`);
-                      setNotifyMessage('Hemos subido nuevas lecciones y material para que continúes tu formación.');
-                      setShowNotifyModal(true);
-                    }}
-                    style={{
-                      backgroundColor: '#ca8a04',
-                      color: '#ffffff',
-                      border: 'none',
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      fontWeight: '800',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                    title="Notificar a los alumnos que tienen este curso"
-                  >
-                    <IoNotificationsOutline size={15} /> Notificar Alumnos
-                  </button>
-                  <button
                     onClick={() => startEditContent(c)}
                     className="btn-primary"
                     style={{ padding: '8px 16px', fontSize: '12px', display: 'flex', alignItems: 'center' }}
@@ -2348,102 +2222,6 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         )}
       </div>
 
-      {/* Modal para Enviar Notificación Progresiva a Alumnos */}
-      {showNotifyModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.65)',
-          backdropFilter: 'blur(6px)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 10000,
-          padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '24px',
-            padding: '30px',
-            width: '100%',
-            maxWidth: '520px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <IoNotificationsOutline size={22} color="#ca8a04" /> Notificar a los Alumnos
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowNotifyModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '20px' }}
-              >
-                <IoClose />
-              </button>
-            </div>
-            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5' }}>
-              Esta alerta se enviará directamente a la plataforma para todos los alumnos que tienen acceso al curso <strong>{editingItem?.title}</strong>. Puedes usarlo cuando subes un nuevo módulo, lección o material de estudio progresivo.
-            </p>
-            <form onSubmit={handleNotifySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label className="form-label" style={{ marginBottom: '6px' }}>Título de la Notificación *</label>
-                <input
-                  type="text"
-                  className="premium-input"
-                  value={notifyTitle}
-                  onChange={(e) => setNotifyTitle(e.target.value)}
-                  placeholder="Ej: ¡Nuevo Módulo Disponible!"
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label" style={{ marginBottom: '6px' }}>Mensaje para el Alumno *</label>
-                <textarea
-                  className="premium-input"
-                  rows={4}
-                  value={notifyMessage}
-                  onChange={(e) => setNotifyMessage(e.target.value)}
-                  placeholder="Ej: Hemos publicado la Lección 3 sobre Evaluación Práctica. ¡Accede ahora para continuar con el curso!"
-                  style={{ resize: 'vertical' }}
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                <button
-                  type="submit"
-                  disabled={notifyingLoading}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#1f75f5ff',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    fontWeight: '800',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  {notifyingLoading ? 'Enviando alerta...' : <><IoSend /> Enviar Notificación Ahora</>}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowNotifyModal(false)}
-                  className="btn-secondary"
-                  style={{ padding: '12px 20px', fontSize: '14px' }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
