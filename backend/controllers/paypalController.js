@@ -72,7 +72,7 @@ export const subscribePayPal = async (req, res, next) => {
         },
       },
       application_context: {
-        brand_name: 'Plataforma Nico',
+        brand_name: 'NS Entrenamiento',
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'SUBSCRIBE_NOW',
@@ -171,7 +171,7 @@ export const checkoutPayPal = async (req, res, next) => {
         },
       ],
       application_context: {
-        brand_name: 'Plataforma Nico',
+        brand_name: 'NS Entrenamiento',
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW',
