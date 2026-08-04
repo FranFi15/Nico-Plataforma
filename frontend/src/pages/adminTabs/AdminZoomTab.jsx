@@ -42,6 +42,8 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
   const [targetCourseId, setTargetCourseId] = useState('');
   const [sendNotification, setSendNotification] = useState(true);
   const [sendEmailNotification, setSendEmailNotification] = useState(false);
+  const [courseSearchTerm, setCourseSearchTerm] = useState('');
+  const [showCourseDropdown, setShowCourseDropdown] = useState(false);
 
   // Fetch Zoom Events and Courses
   const fetchData = async () => {
@@ -94,6 +96,8 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
     }
     setTargetAudience('all');
     setTargetCourseId('');
+    setCourseSearchTerm('');
+    setShowCourseDropdown(false);
     setSendNotification(true);
     setSendEmailNotification(false);
     setShowModal(true);
@@ -109,6 +113,8 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
     setEventDateInput(ev.eventDate ? formatForInput(ev.eventDate) : '');
     setTargetAudience(ev.targetAudience || 'all');
     setTargetCourseId(ev.targetCourseId?._id || ev.targetCourseId || '');
+    setCourseSearchTerm(ev.targetCourseId?.title || '');
+    setShowCourseDropdown(false);
     setSendNotification(false); // Default false when editing unless checked
     setSendEmailNotification(false);
     setShowModal(true);
@@ -1076,33 +1082,91 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
                 </select>
 
                 {targetAudience === 'specific_course' && (
-                  <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+                  <div style={{ position: 'relative', animation: 'fadeIn 0.2s ease-out', marginBottom: '14px' }}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '800', color: '#475569', marginBottom: '6px' }}>
-                      Selecciona el Curso / Workshop Específico:
+                      Busca y selecciona el Curso / Workshop Específico:
                     </label>
-                    <select
-                      value={targetCourseId}
-                      onChange={(e) => setTargetCourseId(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        border: '2px solid #3b82f6',
-                        fontSize: '14px',
-                        fontWeight: '700',
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Escribe para buscar un curso..."
+                        value={targetCourseId ? (coursesList.find(c => c._id === targetCourseId)?.title || courseSearchTerm) : courseSearchTerm}
+                        onChange={(e) => {
+                          setCourseSearchTerm(e.target.value);
+                          if (targetCourseId) setTargetCourseId('');
+                          setShowCourseDropdown(true);
+                        }}
+                        onFocus={() => setShowCourseDropdown(true)}
+                        required={!targetCourseId}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          border: '2px solid #3b82f6',
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          backgroundColor: '#ffffff',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                      {targetCourseId && (
+                        <button
+                          type="button"
+                          onClick={() => { setTargetCourseId(''); setCourseSearchTerm(''); setShowCourseDropdown(true); }}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                          title="Quitar selección"
+                        >
+                          <IoCloseOutline size={22} />
+                        </button>
+                      )}
+                    </div>
+                    
+                    {showCourseDropdown && !targetCourseId && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
                         backgroundColor: '#ffffff',
-                        cursor: 'pointer',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <option value="">-- Elige una formación --</option>
-                      {coursesList.map(c => (
-                        <option key={c._id} value={c._id}>
-                          {c.contentType === 'workshop' ? '🛠️ Workshop:' : '📘 Curso:'} {c.title}
-                        </option>
-                      ))}
-                    </select>
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        marginTop: '4px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 50,
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }}>
+                        {coursesList.filter(c => c.title.toLowerCase().includes(courseSearchTerm.toLowerCase())).length === 0 ? (
+                          <div style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>
+                            No se encontraron cursos que coincidan
+                          </div>
+                        ) : (
+                          coursesList.filter(c => c.title.toLowerCase().includes(courseSearchTerm.toLowerCase())).map(c => (
+                            <div
+                              key={c._id}
+                              onClick={() => {
+                                setTargetCourseId(c._id);
+                                setCourseSearchTerm(c.title);
+                                setShowCourseDropdown(false);
+                              }}
+                              style={{
+                                padding: '12px 16px',
+                                fontSize: '13px',
+                                fontWeight: '700',
+                                color: '#1e293b',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                transition: 'background-color 0.1s'
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+                            >
+                              {c.contentType === 'workshop' ? '🛠️ Workshop:' : '📘 Curso:'} {c.title}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
