@@ -102,6 +102,14 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
     setAthletePhotos((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  const updateAthleteName = (indexToUpdate, newName) => {
+    setAthletePhotos((prev) => 
+      prev.map((photo, idx) => 
+        idx === indexToUpdate ? { ...photo, fullname: newName } : photo
+      )
+    );
+  };
+
   const handleTrainingSubmit = async (e) => {
     e.preventDefault();
     if (!title || !description || !googleFormLink) {
@@ -296,6 +304,21 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
                         src={photoObj.url}
                         alt={`Atleta ${index + 1}`}
                         style={{ width: '100%', height: '140px', objectFit: 'cover' }}
+                      />
+                      <input
+                        type="text"
+                        value={photoObj.fullname || ''}
+                        onChange={(e) => updateAthleteName(index, e.target.value)}
+                        placeholder="Nombre del atleta"
+                        style={{
+                          width: '100%',
+                          border: 'none',
+                          borderTop: '1px solid #e2e8f0',
+                          padding: '8px',
+                          fontSize: '12px',
+                          outline: 'none',
+                          backgroundColor: '#ffffff'
+                        }}
                       />
                       <button
                         type="button"
