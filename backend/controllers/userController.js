@@ -1,5 +1,6 @@
 import User from '../models/userModel.js';
-import { sendMembershipSubscribedEmail, sendMembershipCancelledEmail } from '../utils/emailService.js';
+import { sendMembershipSubscribedEmail, sendMembershipCancelledEmail, sendPasswordResetEmail } from '../utils/emailService.js';
+import crypto from 'crypto';
 
 // @desc    Get all users (students, professors, admins)
 // @route   GET /api/users
@@ -167,6 +168,102 @@ export const deleteUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Usuario eliminado con éxito'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Forgot Password
+// @route   POST /api/users/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      res.status(400);
+      throw new Error('Por favor, proporciona un correo electrónico');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Devolvemos success igual por seguridad para no revelar correos registrados
+      return res.status(200).json({ success: true, message: 'Si el correo existe, se enviará un enlace de recuperación.' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Set expire (15 minutes)
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset url
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+
+    // Send email
+    try {
+      await sendPasswordResetEmail(user, resetUrl);
+
+      res.status(200).json({
+        success: true,
+        message: 'Si el correo existe, se enviará un enlace de recuperación.',
+      });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+
+      await user.save({ validateBeforeSave: false });
+
+      res.status(500);
+      throw new Error('Error enviando el correo electrónico de recuperación');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/users/reset-password/:token
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      res.status(400);
+      throw new Error('El token de recuperación es inválido o ha expirado');
+    }
+
+    // Set new password
+    if (!req.body.password || req.body.password.length < 6) {
+      res.status(400);
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Contraseña actualizada con éxito',
     });
   } catch (error) {
     next(error);

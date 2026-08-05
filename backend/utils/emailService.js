@@ -77,6 +77,33 @@ export const sendMembershipCancelledEmail = async (user) => {
   }
 };
 
+export const sendPasswordResetEmail = async (user, resetUrl) => {
+  if (!process.env.RESEND_API_KEY) return;
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: user.email,
+      subject: 'Recuperación de Contraseña - NS Entrenamiento',
+      html: `
+        <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #0f172a;">Hola, ${user.name}</h1>
+          <p>Has solicitado restablecer tu contraseña. Haz clic en el botón de abajo para crear una nueva:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #1f75f5ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Restablecer Contraseña</a>
+          </div>
+          <p style="font-size: 13px; color: #64748b;">Si no solicitaste esto, puedes ignorar este correo. El enlace caducará en 15 minutos.</p>
+          <br/>
+          <p>Un saludo,</p>
+          <p><strong>El equipo de NS Entrenamiento</strong></p>
+        </div>
+      `,
+    });
+    console.log(`Password reset email sent to ${user.email}`);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+  }
+};
+
 export const sendNewContentEmail = async (users, content, url) => {
   if (!process.env.RESEND_API_KEY || users.length === 0) return;
 
