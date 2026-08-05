@@ -794,63 +794,63 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
 
               {/* LISTA DE CHARLAS / ZOOM */}
               {(selectedListFilter === 'all' || selectedListFilter === 'zooms') && (
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', borderBottom: '2px solid #eff6ff', paddingBottom: '12px' }}>
-                  <span style={{ backgroundColor: '#eff6ff', color: '#1e3a8a', padding: '8px', borderRadius: '12px', display: 'flex' }}>
-                    <IoVideocamOutline size={22} />
-                  </span>
-                  <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: 0 }}>
-                      Charlas & Reuniones de Zoom
-                    </h3>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-                      Encuentros en vivo, masterclasses y sesiones agendadas
-                    </p>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', borderBottom: '2px solid #eff6ff', paddingBottom: '12px' }}>
+                    <span style={{ backgroundColor: '#eff6ff', color: '#1e3a8a', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                      <IoVideocamOutline size={22} />
+                    </span>
+                    <div>
+                      <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: 0 }}>
+                        Charlas & Reuniones de Zoom
+                      </h3>
+                      <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                        Encuentros en vivo, masterclasses y sesiones agendadas
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {events.filter(ev => ev.type !== 'news').length === 0 ? (
+                      <div style={{ backgroundColor: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '16px', padding: '30px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                        No hay charlas de Zoom agendadas por el momento.
+                      </div>
+                    ) : (
+                      events.filter(ev => ev.type !== 'news').map(renderEventCard)
+                    )}
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {events.filter(ev => ev.type !== 'news').length === 0 ? (
-                    <div style={{ backgroundColor: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '16px', padding: '30px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-                      No hay charlas de Zoom agendadas por el momento.
-                    </div>
-                  ) : (
-                    events.filter(ev => ev.type !== 'news').map(renderEventCard)
-                  )}
-                </div>
-              </div>
               )}
 
               {/* LISTA DE NOTICIAS DEL MURO */}
               {(selectedListFilter === 'all' || selectedListFilter === 'news') && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', borderBottom: '2px solid #ecfdf5', paddingBottom: '12px' }}>
-                  <span style={{ backgroundColor: '#ecfdf5', color: '#065f46', padding: '8px', borderRadius: '12px', display: 'flex' }}>
-                    <IoNewspaperOutline size={22} />
-                  </span>
-                  <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: '0 0' }}>
-                      Noticias & Anuncios del Muro
-                    </h3>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-                      Comunicados oficiales visibles en el muro de noticias de la academia
-                    </p>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', borderBottom: '2px solid #ecfdf5', paddingBottom: '12px' }}>
+                    <span style={{ backgroundColor: '#ecfdf5', color: '#065f46', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                      <IoNewspaperOutline size={22} />
+                    </span>
+                    <div>
+                      <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', margin: '0 0' }}>
+                        Noticias & Anuncios del Muro
+                      </h3>
+                      <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                        Comunicados oficiales visibles en el muro de noticias de la academia
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {events.filter(ev => ev.type === 'news').length === 0 ? (
+                      <div style={{ backgroundColor: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '16px', padding: '30px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                        No hay noticias publicadas en el muro por el momento.
+                      </div>
+                    ) : (
+                      events
+                        .filter(ev => ev.type === 'news')
+                        .sort((a, b) => new Date(b.eventDate || b.createdAt) - new Date(a.eventDate || a.createdAt))
+                        .map(renderEventCard)
+                    )}
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {events.filter(ev => ev.type === 'news').length === 0 ? (
-                    <div style={{ backgroundColor: '#ffffff', border: '1px dashed #cbd5e1', borderRadius: '16px', padding: '30px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-                      No hay noticias publicadas en el muro por el momento.
-                    </div>
-                  ) : (
-                    events
-                      .filter(ev => ev.type === 'news')
-                      .sort((a, b) => new Date(b.eventDate || b.createdAt) - new Date(a.eventDate || a.createdAt))
-                      .map(renderEventCard)
-                  )}
-                </div>
-              </div>
               )}
             </>
           )}
@@ -1075,10 +1075,10 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
                     marginBottom: targetAudience === 'specific_course' ? '14px' : '0'
                   }}
                 >
-                  <option value="all">🌐 A Todos los Usuarios (Comunidad entera)</option>
-                  <option value="members">⭐ Solo Miembros Premium (Suscripción activa)</option>
-                  <option value="courses">🎓 Alumnos Anotados en cualquier Curso/Workshop</option>
-                  <option value="specific_course">📌 Alumnos de un Curso o Workshop Específico...</option>
+                  <option value="all"> A Todos los Usuarios (Comunidad entera)</option>
+                  <option value="members"> Solo Miembros Premium (Suscripción activa)</option>
+                  <option value="courses"> Alumnos Anotados en cualquier Curso/Workshop</option>
+                  <option value="specific_course"> Alumnos de un Curso o Workshop Específico...</option>
                 </select>
 
                 {targetAudience === 'specific_course' && (
@@ -1120,7 +1120,7 @@ const AdminZoomTab = ({ formMessage, setFormMessage }) => {
                         </button>
                       )}
                     </div>
-                    
+
                     {showCourseDropdown && !targetCourseId && (
                       <div style={{
                         position: 'absolute',

@@ -133,9 +133,9 @@ export const checkoutMercadoPago = async (req, res, next) => {
           },
         ],
         back_urls: {
-          success: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/success`,
-          failure: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/failure`,
-          pending: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/pending`,
+          success: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=success`,
+          failure: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=failure`,
+          pending: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=pending`,
         },
         auto_return: 'approved',
         notification_url: `${process.env.BACKEND_URL || 'https://tu-backend-url.onrender.com'}/api/payments/mercadopago/webhook`, // Public webhook endpoint
