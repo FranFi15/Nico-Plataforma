@@ -6,6 +6,7 @@ const AdminHomeTab = ({ formMessage, setFormMessage }) => {
   const [athletes, setAthletes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [draggedAthleteIndex, setDraggedAthleteIndex] = useState(null);
 
   // Editing state
   const [editingItem, setEditingItem] = useState(null);
@@ -118,16 +119,27 @@ const AdminHomeTab = ({ formMessage, setFormMessage }) => {
     }
   };
 
-  const moveAthleteOrder = async (index, direction) => {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= athletes.length) return;
+  const handleDragStart = (e, index) => {
+    setDraggedAthleteIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedAthleteIndex === null || draggedAthleteIndex === dropIndex) return;
 
     const newAthletes = [...athletes];
-    const temp = newAthletes[index];
-    newAthletes[index] = newAthletes[newIndex];
-    newAthletes[newIndex] = temp;
+    const draggedItem = newAthletes[draggedAthleteIndex];
+    newAthletes.splice(draggedAthleteIndex, 1);
+    newAthletes.splice(dropIndex, 0, draggedItem);
 
     setAthletes(newAthletes);
+    setDraggedAthleteIndex(null);
 
     const orderedIds = newAthletes.map((a) => a._id);
     try {
@@ -277,18 +289,27 @@ const AdminHomeTab = ({ formMessage, setFormMessage }) => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {athletes.map((a, index) => (
-              <div key={a._id} style={{
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '16px 20px',
-                backgroundColor: '#f8fafc',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '16px',
-                transition: 'all 0.2s ease'
-              }}>
+              <div 
+                key={a._id} 
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                style={{
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  backgroundColor: '#f8fafc',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  transition: 'all 0.2s ease',
+                  cursor: 'grab',
+                  opacity: draggedAthleteIndex === index ? 0.5 : 1
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <img
                     src={a.url}
@@ -306,37 +327,6 @@ const AdminHomeTab = ({ formMessage, setFormMessage }) => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  {/* Order Up/Down Buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', backgroundColor: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
-                    <button
-                      type="button"
-                      onClick={() => moveAthleteOrder(index, -1)}
-                      disabled={index === 0}
-                      title="Mover hacia arriba"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: index === 0 ? 'not-allowed' : 'pointer',
-                        padding: '2px 4px'
-                      }}
-                    >
-                      <IoChevronUp size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveAthleteOrder(index, 1)}
-                      disabled={index === athletes.length - 1}
-                      title="Mover hacia abajo"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: index === athletes.length - 1 ? 'not-allowed' : 'pointer',
-                        padding: '2px 4px'
-                      }}
-                    >
-                      <IoChevronDown size={18} />
-                    </button>
-                  </div>
                   <button
                     type="button"
                     onClick={() => startEditAthlete(a)}

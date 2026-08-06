@@ -17,6 +17,7 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
   const [youtubeShortLink, setYoutubeShortLink] = useState('');
   const [googleFormLink, setGoogleFormLink] = useState('');
   const [athletePhotos, setAthletePhotos] = useState([]);
+  const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
 
   // Status flags
   const [uploading, setUploading] = useState(false);
@@ -110,17 +111,28 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
     );
   };
 
-  const movePhoto = (index, direction) => {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= athletePhotos.length) return;
-    
+  const handleDragStart = (e, index) => {
+    setDraggedPhotoIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedPhotoIndex === null || draggedPhotoIndex === dropIndex) return;
+
     setAthletePhotos((prev) => {
       const newPhotos = [...prev];
-      const temp = newPhotos[index];
-      newPhotos[index] = newPhotos[newIndex];
-      newPhotos[newIndex] = temp;
+      const draggedItem = newPhotos[draggedPhotoIndex];
+      newPhotos.splice(draggedPhotoIndex, 1);
+      newPhotos.splice(dropIndex, 0, draggedItem);
       return newPhotos;
     });
+    setDraggedPhotoIndex(null);
   };
 
   const handleTrainingSubmit = async (e) => {
@@ -312,7 +324,22 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
               {athletePhotos.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '16px', marginTop: '16px' }}>
                   {athletePhotos.map((photoObj, index) => (
-                    <div key={index} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                    <div 
+                      key={index} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                      style={{ 
+                        position: 'relative', 
+                        borderRadius: '12px', 
+                        overflow: 'hidden', 
+                        border: '1px solid #e2e8f0', 
+                        backgroundColor: '#f8fafc',
+                        cursor: 'grab',
+                        opacity: draggedPhotoIndex === index ? 0.5 : 1
+                      }}
+                    >
                       <img
                         src={photoObj.url}
                         alt={`Atleta ${index + 1}`}
@@ -356,48 +383,6 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
                       >
                         <IoClose size={14} />
                       </button>
-                      <div style={{ position: 'absolute', top: '6px', left: '6px', display: 'flex', gap: '4px' }}>
-                        {index > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => movePhoto(index, -1)}
-                            style={{
-                              backgroundColor: '#f1f5f9',
-                              color: '#334155',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '50%',
-                              width: '24px',
-                              height: '24px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <IoArrowBack size={12} />
-                          </button>
-                        )}
-                        {index < athletePhotos.length - 1 && (
-                          <button
-                            type="button"
-                            onClick={() => movePhoto(index, 1)}
-                            style={{
-                              backgroundColor: '#f1f5f9',
-                              color: '#334155',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '50%',
-                              width: '24px',
-                              height: '24px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <IoArrowForward size={12} />
-                          </button>
-                        )}
-                      </div>
                     </div>
                   ))}
                 </div>
