@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { IoChevronDown, IoChevronUp, IoClose, IoTrashOutline, IoPencil } from 'react-icons/io5';
+import { IoChevronDown, IoChevronUp, IoClose, IoTrashOutline, IoPencil, IoArrowBack, IoArrowForward } from 'react-icons/io5';
 
 const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
   const [trainings, setTrainings] = useState([]);
@@ -108,6 +108,19 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
         idx === indexToUpdate ? { ...photo, fullname: newName } : photo
       )
     );
+  };
+
+  const movePhoto = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= athletePhotos.length) return;
+    
+    setAthletePhotos((prev) => {
+      const newPhotos = [...prev];
+      const temp = newPhotos[index];
+      newPhotos[index] = newPhotos[newIndex];
+      newPhotos[newIndex] = temp;
+      return newPhotos;
+    });
   };
 
   const handleTrainingSubmit = async (e) => {
@@ -343,6 +356,48 @@ const AdminTrainingsTab = ({ formMessage, setFormMessage }) => {
                       >
                         <IoClose size={14} />
                       </button>
+                      <div style={{ position: 'absolute', top: '6px', left: '6px', display: 'flex', gap: '4px' }}>
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, -1)}
+                            style={{
+                              backgroundColor: '#f1f5f9',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <IoArrowBack size={12} />
+                          </button>
+                        )}
+                        {index < athletePhotos.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, 1)}
+                            style={{
+                              backgroundColor: '#f1f5f9',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <IoArrowForward size={12} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
