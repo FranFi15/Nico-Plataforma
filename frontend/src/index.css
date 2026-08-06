@@ -39,7 +39,7 @@ html, body {
   background-color: var(--white);
   color: var(--dark);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
 }
 
