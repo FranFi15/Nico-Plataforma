@@ -30,7 +30,6 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
   const [cardImageUploading, setCardImageUploading] = useState(false);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
   const [showHtmlCode, setShowHtmlCode] = useState(false);
-  const [cNotifyUsers, setCNotifyUsers] = useState('none');
   const editorRef = useRef(null);
 
   // Category Management states
@@ -88,7 +87,6 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCBody('');
     setCIsPublished(true);
     setCAttachments([]);
-    setCNotifyUsers('none');
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
     }
@@ -110,7 +108,6 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCAttachments(item.attachments || []);
     setCPublishDate(item.publishDate ? new Date(item.publishDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
     setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
-    setCNotifyUsers('none'); // Reset to none when editing to avoid accidental re-sends
     setShowContentForm(true);
     if (editorRef.current) {
       editorRef.current.innerHTML = item.body || '';
@@ -324,8 +321,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
         publishDate: cPublishDate,
         isPublished: cIsPublished,
         status: cIsPublished ? 'published' : 'draft',
-        attachments: cAttachments,
-        notifyUsers: cNotifyUsers
+        attachments: cAttachments
       };
 
       if (editingItem) {
@@ -742,24 +738,6 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                       </div>
                     </div>
                   )}
-                </div>
-
-                <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
-                  <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Enviar Notificación por Email
-                  </label>
-                  <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este blog?</p>
-                  <select
-                    className="premium-input"
-                    value={cNotifyUsers}
-                    onChange={(e) => setCNotifyUsers(e.target.value)}
-                    style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
-                  >
-                    <option value="none">No enviar</option>
-                    <option value="all">A todos</option>
-                    <option value="premium">A miembros exclusivamente</option>
-                    {editingItem && <option value="enrolled">A usuarios vinculados a este blog</option>}
-                  </select>
                 </div>
               </div>
             </div>

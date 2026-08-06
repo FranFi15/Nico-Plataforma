@@ -86,7 +86,7 @@ const Cursos = () => {
       return false;
     }
     return true;
-  });
+  }).sort((a, b) => new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt));
 
   // Pagination logic
   const totalPages = Math.ceil(filteredContents.length / itemsPerPage);

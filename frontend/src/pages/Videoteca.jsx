@@ -45,7 +45,7 @@ const Videoteca = () => {
         return !folderRef; // General videos (no folder)
       }
       return folderRef === folderId;
-    });
+    }).sort((a, b) => new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt));
   };
 
   // Folders that actually have videos, or just all folders

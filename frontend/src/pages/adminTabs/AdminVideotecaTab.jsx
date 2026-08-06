@@ -22,7 +22,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const [cVideoFolder, setCVideoFolder] = useState('');
   const [cCategories, setCCategories] = useState([]);
   const [cVideoLink, setCVideoLink] = useState('');
-  const [cNotifyUsers, setCNotifyUsers] = useState('none');
+  const [showHtmlCode, setShowHtmlCode] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
   // Folder Management states
@@ -79,7 +79,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCVideoFolder('');
     setCCategories([]);
     setCVideoLink('');
-    setCNotifyUsers('none');
+    if (editorRef.current) {
+      editorRef.current.innerHTML = '';
+    }
     setShowContentForm(false);
   };
 
@@ -93,7 +95,9 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCVideoFolder(item.videoFolder?._id || item.videoFolder || '');
     setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
     setCVideoLink(item.videoLink || '');
-    setCNotifyUsers('none');
+    if (editorRef.current) {
+      editorRef.current.innerHTML = item.body || item.description || '';
+    }
     setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
   };
@@ -202,8 +206,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
         categories: cCategories,
         videoLink: cVideoLink,
         body: cDescription,
-        status: 'published',
-        notifyUsers: cNotifyUsers
+        status: 'published'
       };
 
       if (editingItem) {
@@ -659,23 +662,6 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                   />
                 </div>
 
-                <div className="form-group" style={{ backgroundColor: '#f0f9ff', padding: '16px', borderRadius: '12px', border: '1px solid #bae6fd', marginTop: '24px' }}>
-                  <label className="form-label" style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    ✉️ Enviar Notificación por Email
-                  </label>
-                  <p style={{ fontSize: '12px', color: '#0284c7', margin: '0 0 12px 0' }}>¿Deseas avisarle a los usuarios sobre este video?</p>
-                  <select
-                    className="premium-input"
-                    value={cNotifyUsers}
-                    onChange={(e) => setCNotifyUsers(e.target.value)}
-                    style={{ borderColor: '#7dd3fc', backgroundColor: '#fff' }}
-                  >
-                    <option value="none">No enviar</option>
-                    <option value="all">A todos</option>
-                    <option value="premium">A miembros </option>
-                    {editingItem && <option value="enrolled">A usuarios vinculados a este video</option>}
-                  </select>
-                </div>
               </div>
             </div>
 
