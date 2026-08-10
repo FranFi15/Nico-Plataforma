@@ -15,10 +15,12 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
   const [bTitle, setBTitle] = useState('');
   const [bDescription, setBDescription] = useState('');
   const [bLogoUrl, setBLogoUrl] = useState('');
+  const [bBackgroundImageUrl, setBBackgroundImageUrl] = useState('');
   const [bDiscountText, setBDiscountText] = useState('');
   const [bLinkUrl, setBLinkUrl] = useState('');
   const [bActive, setBActive] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBgImage, setUploadingBgImage] = useState(false);
 
   // Coupons state
   const [coupons, setCoupons] = useState([]);
@@ -98,6 +100,31 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
     }
   };
 
+  const handleBgImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingBgImage(true);
+    try {
+      const base64String = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+      });
+
+      const res = await api.post('/trainings/upload', { image: base64String });
+      if (res.data && res.data.url) {
+        setBBackgroundImageUrl(res.data.url);
+      }
+    } catch (err) {
+      console.error('Error subiendo imagen de fondo:', err);
+      alert('Error al subir la imagen de fondo.');
+    } finally {
+      setUploadingBgImage(false);
+    }
+  };
+
   // BENEFIT HANDLERS
   const handleOpenBenefitForm = (benefit = null) => {
     if (benefit) {
@@ -105,6 +132,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBTitle(benefit.title || '');
       setBDescription(benefit.description || '');
       setBLogoUrl(benefit.logoUrl || '');
+      setBBackgroundImageUrl(benefit.backgroundImageUrl || '');
       setBDiscountText(benefit.discountText || '');
       setBLinkUrl(benefit.linkUrl || '');
       setBActive(benefit.active !== undefined ? benefit.active : true);
@@ -113,6 +141,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBTitle('');
       setBDescription('');
       setBLogoUrl('');
+      setBBackgroundImageUrl('');
       setBDiscountText('');
       setBLinkUrl('');
       setBActive(true);
@@ -133,6 +162,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
         title: bTitle,
         description: bDescription,
         logoUrl: bLogoUrl,
+        backgroundImageUrl: bBackgroundImageUrl,
         discountText: bDiscountText,
         linkUrl: bLinkUrl,
         active: bActive
@@ -417,6 +447,39 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                   )}
                 </div>
 
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>Imagen de Fondo de la Tarjeta (Nuevo Diseño) *</label>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      placeholder="URL de la imagen de fondo o sube un archivo"
+                      value={bBackgroundImageUrl}
+                      onChange={(e) => setBBackgroundImageUrl(e.target.value)}
+                      style={{ flex: 1, minWidth: '240px', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', color: '#0f172a' }}
+                    />
+                    <label style={{
+                      backgroundColor: '#e2e8f0',
+                      color: '#0f172a',
+                      padding: '12px 20px',
+                      borderRadius: '12px',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: uploadingBgImage ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <IoCloudUploadOutline size={18} /> {uploadingBgImage ? 'Subiendo...' : 'Subir Fondo'}
+                      <input type="file" accept="image/*" onChange={handleBgImageUpload} style={{ display: 'none' }} disabled={uploadingBgImage} />
+                    </label>
+                  </div>
+                  {bBackgroundImageUrl && (
+                    <div style={{ marginTop: '10px' }}>
+                      <img src={bBackgroundImageUrl} alt="Fondo preview" style={{ height: '120px', width: '200px', borderRadius: '16px', objectFit: 'cover', border: '1px solid #e2e8f0' }} />
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                   <input
                     type="checkbox"
@@ -432,7 +495,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                   <button type="button" onClick={() => setShowBenefitForm(false)} style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#334155', fontWeight: '800', cursor: 'pointer' }}>
                     Cancelar
                   </button>
-                  <button type="submit" disabled={saving || uploadingLogo} style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', backgroundColor: '#1f75f5ff', color: '#ffffff', fontWeight: '800', cursor: 'pointer' }}>
+                  <button type="submit" disabled={saving || uploadingLogo || uploadingBgImage} style={{ padding: '12px 28px', borderRadius: '12px', border: 'none', backgroundColor: '#1f75f5ff', color: '#ffffff', fontWeight: '800', cursor: 'pointer' }}>
                     {saving ? 'Guardando...' : editingBenefit ? 'Guardar Cambios' : 'Crear Beneficio'}
                   </button>
                 </div>

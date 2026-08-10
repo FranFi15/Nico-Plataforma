@@ -17,7 +17,7 @@ export const getBenefits = async (req, res) => {
 // @access  Admin
 export const createBenefit = async (req, res) => {
   try {
-    const { title, description, logoUrl, discountText, linkUrl, active } = req.body;
+    const { title, description, logoUrl, backgroundImageUrl, discountText, linkUrl, active } = req.body;
 
     if (!title || !description || !logoUrl) {
       return res.status(400).json({ message: 'Por favor completa título, descripción e imagen/logo.' });
@@ -27,6 +27,7 @@ export const createBenefit = async (req, res) => {
       title,
       description,
       logoUrl,
+      backgroundImageUrl: backgroundImageUrl || '',
       discountText: discountText || '',
       linkUrl: linkUrl || '',
       active: active !== undefined ? active : true
@@ -44,7 +45,7 @@ export const createBenefit = async (req, res) => {
 // @access  Admin
 export const updateBenefit = async (req, res) => {
   try {
-    const { title, description, logoUrl, discountText, linkUrl, active } = req.body;
+    const { title, description, logoUrl, backgroundImageUrl, discountText, linkUrl, active } = req.body;
 
     const benefit = await Benefit.findById(req.params.id);
 
@@ -52,6 +53,7 @@ export const updateBenefit = async (req, res) => {
       benefit.title = title || benefit.title;
       benefit.description = description || benefit.description;
       benefit.logoUrl = logoUrl || benefit.logoUrl;
+      if (backgroundImageUrl !== undefined) benefit.backgroundImageUrl = backgroundImageUrl;
       if (discountText !== undefined) benefit.discountText = discountText;
       if (linkUrl !== undefined) benefit.linkUrl = linkUrl;
       if (active !== undefined) benefit.active = active;

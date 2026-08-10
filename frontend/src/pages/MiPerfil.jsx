@@ -795,106 +795,129 @@ const MiPerfil = () => {
                   onClick={() => benefit.linkUrl && window.open(benefit.linkUrl, '_blank', 'noopener,noreferrer')}
                   className="animated-discount-card"
                   style={{
-                    border: '1.5px solid #e2e8f0',
-                    borderRadius: '18px',
-                    padding: '15px',
-                    backgroundColor: '#ffffff',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.02)',
                     position: 'relative',
+                    borderRadius: '24px',
+                    height: '260px',
+                    backgroundColor: '#ffffff',
+                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
                     overflow: 'hidden',
                     cursor: benefit.linkUrl ? 'pointer' : 'default',
-                    animationDelay: `${0.3 + idx * 0.08}s`
+                    animationDelay: `${0.3 + idx * 0.08}s`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-start',
+                    padding: '30px',
+                    textDecoration: 'none',
+                    transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--primary)';
                     e.currentTarget.style.transform = 'translateY(-5px) scale(1.01)';
-                    e.currentTarget.style.boxShadow = '0 16px 32px rgba(31, 117, 245, 0.15)';
+                    e.currentTarget.style.boxShadow = '0 16px 32px rgba(0, 0, 0, 0.15)';
+                    const bgImg = e.currentTarget.querySelector('.bg-image');
+                    if (bgImg) bgImg.style.transform = 'scale(1.05)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#e2e8f0';
                     e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.02)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
+                    const bgImg = e.currentTarget.querySelector('.bg-image');
+                    if (bgImg) bgImg.style.transform = 'scale(1)';
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: benefit.description ? '16px' : '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      {benefit.logoUrl ? (
-                        <img
-                          src={benefit.logoUrl}
-                          alt={benefit.title}
-                          style={{
-                            width: '100px',
-                            height: '100px',
-                            objectFit: 'contain',
-                            borderRadius: '14px',
-                            border: '1px solid #f1f5f9',
-                            padding: '6px',
-                            backgroundColor: '#ffffff',
-                            flexShrink: 0
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: '64px',
-                          height: '64px',
-                          borderRadius: '14px',
-                          backgroundColor: '#f1f5f9',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#64748b',
-                          flexShrink: 0
+                  {/* Background Image */}
+                  <div
+                    className="bg-image"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundImage: `url(${benefit.backgroundImageUrl || benefit.logoUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      zIndex: 1
+                    }}
+                  />
+                  
+                  {/* Gradient Overlay for Text Readability */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)',
+                    zIndex: 2
+                  }} />
+
+                  {/* Content Overlay */}
+                  <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    {/* Top Texts */}
+                    <div style={{ maxWidth: '65%' }}>
+                      <h4 style={{ 
+                        fontSize: '28px', 
+                        fontWeight: '900', 
+                        color: '#0f172a', 
+                        margin: '0 0 12px 0', 
+                        lineHeight: '1.1',
+                        letterSpacing: '-0.5px'
+                      }}>
+                        {benefit.title} {benefit.discountText && <span style={{ color: '#1f75f5ff' }}>{benefit.discountText}</span>}
+                      </h4>
+                      {benefit.description && (
+                        <p style={{
+                          fontSize: '16px',
+                          color: '#334155',
+                          margin: '0 0 20px 0',
+                          lineHeight: '1.4',
+                          fontWeight: '500',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
                         }}>
-                          <IoStorefrontOutline size={28} />
+                          {benefit.description}
+                        </p>
+                      )}
+                      
+                      {benefit.linkUrl && (
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#0f172a',
+                          fontWeight: '800',
+                          fontSize: '15px',
+                        }}>
+                          Comprar &rarr;
                         </div>
                       )}
-                      <div>
-                        <h4 style={{ fontSize: '25px', fontWeight: '900', color: 'var(--dark)', margin: '0 0 6px 0' }}>
-                          {benefit.title}
-                        </h4>
-                        {benefit.discountText && (
-                          <span style={{
-                            color: '#065f46',
-                            padding: '4px 12px',
-                            borderRadius: '20px',
-                            fontWeight: '900',
-                            fontSize: '18px',
-                            display: 'inline-block'
-                          }}>
-                            {benefit.discountText}
-                          </span>
-                        )}
-                      </div>
                     </div>
-
-                    {benefit.linkUrl && (
+                    
+                    {/* Floating Logo */}
+                    {benefit.logoUrl && (
                       <div style={{
-                        color: 'var(--primary)',
-                        backgroundColor: 'rgba(31, 117, 245, 0.08)',
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
+                        position: 'absolute',
+                        bottom: '0',
+                        right: '0',
+                        width: '70px',
+                        height: '70px',
+                        borderRadius: '50%',
+                        backgroundColor: '#ffffff',
+                        padding: '8px',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        overflow: 'hidden',
+                        border: '2px solid #f1f5f9'
                       }}>
-                        <IoOpenOutline size={18} />
+                        <img src={benefit.logoUrl} alt={benefit.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       </div>
                     )}
                   </div>
-
-                  {benefit.description && (
-                    <p style={{
-                      fontSize: '14px',
-                      color: 'var(--gray-500)',
-                      margin: 0,
-                      lineHeight: '1.6',
-                      whiteSpace: 'pre-line'
-                    }}>
-                      {benefit.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

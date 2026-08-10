@@ -15,6 +15,10 @@ const benefitSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Por favor sube la imagen/logo del local']
     },
+    backgroundImageUrl: {
+      type: String,
+      default: '' // Imagen de fondo para el nuevo diseño tipo tarjeta
+    },
     discountText: {
       type: String,
       default: '' // Ej: "20% OFF", "2x1", "Envío Gratis"
