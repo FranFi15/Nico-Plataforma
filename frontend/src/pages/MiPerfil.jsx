@@ -45,6 +45,34 @@ const MiPerfil = () => {
     fetchBenefits();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    const preapprovalId = params.get('preapproval_id');
+
+    // Comprobar membresía
+    const isPremium = user && (user.membership === 'premium' || user.isSubscribed);
+
+    if (payment === 'success' && preapprovalId && !isPremium) {
+      const verifyMP = async () => {
+        try {
+          const res = await api.post('/payments/mercadopago/verify', { preapproval_id: preapprovalId });
+          if (res.data && res.data.isActive) {
+            // Recargar para que el AuthContext tome la suscripción activa y limpie la URL
+            window.location.href = window.location.pathname;
+          }
+        } catch (err) {
+          console.error("Error verificando suscripción MP al volver:", err);
+          navigate(window.location.pathname, { replace: true });
+        }
+      };
+      verifyMP();
+    } else if (payment) {
+      // Si ya tiene membresía o fue un pago único o payment=failure, limpiar la URL
+      navigate(window.location.pathname, { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleSaveAllProfile = async () => {
     setSavingProfile(true);
     setProfileError('');

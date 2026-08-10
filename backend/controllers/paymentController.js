@@ -78,6 +78,47 @@ export const subscribeMercadoPago = async (req, res, next) => {
   }
 };
 
+// @desc    Verify Mercado Pago Subscription Status (Fast-track activation)
+// @route   POST /api/payments/mercadopago/verify
+// @access  Private
+export const verifyMercadoPago = async (req, res, next) => {
+  try {
+    const { preapproval_id } = req.body;
+    if (!preapproval_id) {
+      return res.status(400).json({ success: false, message: 'Falta preapproval_id' });
+    }
+
+    const { default: axios } = await import('axios');
+    const response = await axios.get(`https://api.mercadopago.com/preapproval/${preapproval_id}`, {
+      headers: { Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN.trim()}` }
+    });
+
+    const preApprovalData = response.data;
+
+    // Check if it belongs to this user
+    if (preApprovalData.external_reference !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Suscripción no pertenece a este usuario' });
+    }
+
+    if (preApprovalData.status === 'authorized') {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.isSubscribed = true;
+        user.subscriptionId = preapproval_id;
+        user.membership = 'premium';
+        user.membershipExpiresAt = null;
+        await user.save();
+        return res.status(200).json({ success: true, message: 'Membresía activada', isActive: true });
+      }
+    }
+
+    res.status(200).json({ success: true, isActive: false, status: preApprovalData.status });
+  } catch (error) {
+    console.error('Error verifying MP subscription:', error.message);
+    res.status(500).json({ success: false, message: 'Error verificando suscripción' });
+  }
+};
+
 // @desc    Create Mercado Pago Checkout Preference (One-time Purchase)
 // @route   POST /api/payments/mercadopago/checkout
 // @access  Private
