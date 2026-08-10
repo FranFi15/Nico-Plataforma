@@ -115,6 +115,61 @@ export const subscribePayPal = async (req, res, next) => {
   }
 };
 
+// @desc    Verify PayPal Subscription Status (Fast-track activation)
+// @route   POST /api/payments/paypal/verify
+// @access  Private
+export const verifyPayPal = async (req, res, next) => {
+  try {
+    const { subscription_id } = req.body;
+    if (!subscription_id) {
+      return res.status(400).json({ success: false, message: 'Falta subscription_id' });
+    }
+
+    const accessToken = await getPayPalAccessToken();
+    const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
+
+    const response = await axios.get(
+      `${baseUrl}/v1/billing/subscriptions/${subscription_id}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+
+    const subscriptionData = response.data;
+    
+    // Check if subscription belongs to user
+    if (req.user.subscriptionId !== subscription_id) {
+        let userIdFromCustomId = null;
+        if (subscriptionData.custom_id) {
+           try {
+              const parsed = JSON.parse(subscriptionData.custom_id);
+              userIdFromCustomId = parsed.userId;
+           } catch(e) {}
+        }
+        if (userIdFromCustomId !== req.user._id.toString()) {
+           return res.status(403).json({ success: false, message: 'Suscripción no pertenece a este usuario' });
+        }
+    }
+
+    if (subscriptionData.status === 'ACTIVE') {
+      const user = await User.findById(req.user._id);
+      if (user) {
+        user.isSubscribed = true;
+        user.subscriptionId = subscription_id;
+        user.membership = 'premium';
+        user.membershipExpiresAt = null;
+        await user.save();
+        return res.status(200).json({ success: true, message: 'Membresía activada', isActive: true });
+      }
+    }
+
+    res.status(200).json({ success: true, isActive: false, status: subscriptionData.status });
+  } catch (error) {
+    console.error('Error verifying PayPal subscription:', error.message);
+    res.status(500).json({ success: false, message: 'Error verificando suscripción de PayPal' });
+  }
+};
+
 // @desc    Create PayPal Order Checkout (One-time Purchase)
 // @route   POST /api/payments/paypal/checkout
 // @access  Private

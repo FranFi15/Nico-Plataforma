@@ -48,7 +48,8 @@ const MiPerfil = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
-    const preapprovalId = params.get('preapproval_id');
+    const preapprovalId = params.get('preapproval_id'); // Mercado Pago
+    const subscriptionId = params.get('subscription_id'); // PayPal
 
     // Comprobar membresía
     const isPremium = user && (user.membership === 'premium' || user.isSubscribed);
@@ -67,6 +68,19 @@ const MiPerfil = () => {
         }
       };
       verifyMP();
+    } else if (payment === 'success' && subscriptionId && !isPremium) {
+      const verifyPayPal = async () => {
+        try {
+          const res = await api.post('/payments/paypal/verify', { subscription_id: subscriptionId });
+          if (res.data && res.data.isActive) {
+            window.location.href = window.location.pathname;
+          }
+        } catch (err) {
+          console.error("Error verificando suscripción PayPal al volver:", err);
+          navigate(window.location.pathname, { replace: true });
+        }
+      };
+      verifyPayPal();
     } else if (payment) {
       // Si ya tiene membresía o fue un pago único o payment=failure, limpiar la URL
       navigate(window.location.pathname, { replace: true });
