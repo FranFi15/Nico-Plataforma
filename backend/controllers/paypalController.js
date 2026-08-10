@@ -98,6 +98,10 @@ export const subscribePayPal = async (req, res, next) => {
 
     const approvalLink = response.data.links.find((link) => link.rel === 'approve');
 
+    // Pre-save the subscription ID on the user so the webhook can find it even if custom_id is dropped
+    req.user.subscriptionId = response.data.id;
+    await req.user.save();
+
     res.status(200).json({
       success: true,
       message: 'Orden de suscripción de PayPal creada con éxito',
