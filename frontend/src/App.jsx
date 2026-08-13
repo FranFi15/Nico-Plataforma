@@ -18,6 +18,7 @@ import VideotecaDetail from './pages/VideotecaDetail';
 import MisCursos from './pages/MisCursos';
 import MisCarpetas from './pages/MisCarpetas';
 import MiPerfil from './pages/MiPerfil';
+import PaymentProcessing from './pages/PaymentProcessing';
 
 import Home from './pages/Home';
 import EntrenamientoADistancia from './pages/EntrenamientoADistancia';
@@ -59,6 +60,7 @@ function App() {
           <Route path="mis-cursos" element={<MisCursos />} />
           <Route path="mis-carpetas" element={<MisCarpetas />} />
           <Route path="mi-perfil" element={<MiPerfil />} />
+          <Route path="pago-procesando" element={<PaymentProcessing />} />
           <Route path="charlas-zoom" element={<CharlasZoom />} />
           <Route path="agenda" element={<CharlasZoom />} />
           <Route path="noticias" element={<Noticias />} />

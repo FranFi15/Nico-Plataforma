@@ -76,7 +76,7 @@ export const subscribePayPal = async (req, res, next) => {
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'SUBSCRIBE_NOW',
-        return_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=success`,
+        return_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/pago-procesando`,
         cancel_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=cancel`,
       },
       custom_id: JSON.stringify({
@@ -234,7 +234,7 @@ export const checkoutPayPal = async (req, res, next) => {
         locale: 'es-ES',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW',
-        return_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=success`,
+        return_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/pago-procesando`,
         cancel_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=cancel`,
       },
     };

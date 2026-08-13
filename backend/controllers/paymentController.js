@@ -36,7 +36,7 @@ export const subscribeMercadoPago = async (req, res, next) => {
     const response = await axios.post(
       'https://api.mercadopago.com/preapproval',
       {
-        back_url: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/payments/status`,
+        back_url: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/pago-procesando`,
         reason: 'Suscripcion Mensual',
         auto_recurring: {
           frequency: 1,
@@ -174,9 +174,9 @@ export const checkoutMercadoPago = async (req, res, next) => {
           },
         ],
         back_urls: {
-          success: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=success`,
+          success: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/pago-procesando`,
           failure: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=failure`,
-          pending: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/mi-perfil?payment=pending`,
+          pending: `${process.env.FRONTEND_URL || 'https://nsentrenamiento.com'}/pago-procesando`,
         },
         auto_return: 'approved',
         notification_url: `${process.env.BACKEND_URL || 'https://tu-backend-url.onrender.com'}/api/payments/mercadopago/webhook`, // Public webhook endpoint
