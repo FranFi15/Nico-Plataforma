@@ -643,7 +643,7 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                   </div>
                 )}
                 
-                {cAccessType === 'one-time-purchase' && !cAllowPremiumAccess && (
+                {cAccessType === 'one-time-purchase' && (
                   <div className="form-group" style={{ marginTop: '16px' }}>
                     <label className="form-label" style={{ color: '#1d4ed8' }}>% Descuento Suscriptores Premium</label>
                     <input

@@ -541,22 +541,20 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                         required
                       />
                     </div>
-                    {!cAllowPremiumAccess && (
-                      <div className="form-group" style={{ margin: 0 }}>
-                        <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          className="premium-input"
-                          value={cMemberDiscountPercentage}
-                          onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
-                          placeholder="Ej. 20 (20% OFF)"
-                          style={{ border: '1.5px solid #3b82f6' }}
-                        />
-                      </div>
-                    )}
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        className="premium-input"
+                        value={cMemberDiscountPercentage}
+                        onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                        placeholder="Ej. 20 (20% OFF)"
+                        style={{ border: '1.5px solid #3b82f6' }}
+                      />
+                    </div>
                       <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', backgroundColor: '#e0f2fe', padding: '12px', borderRadius: '12px', border: '1px solid #7dd3fc' }}>
                         <input
                           type="checkbox"
