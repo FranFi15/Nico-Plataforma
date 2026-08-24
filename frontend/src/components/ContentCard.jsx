@@ -50,7 +50,8 @@ const ContentCard = ({ content }) => {
     (item) => (item._id || item) === content._id
   );
 
-  const hasAccess = isPrivileged || (isFree && (!isCourseOrWorkshop || !!user)) || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && isOwned);
+  const isPremiumAccessGranted = content.accessType === 'one-time-purchase' && content.allowPremiumAccess && isSubscribed;
+  const hasAccess = isPrivileged || (isFree && (!isCourseOrWorkshop || !!user)) || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && (isOwned || isPremiumAccessGranted));
 
   // Calculate course progress if started
   let progressPercent = 0;
@@ -300,7 +301,8 @@ const ContentCard = ({ content }) => {
                 )}
                 <span style={{ fontSize: '11px', color: 'var(--gray-500)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: 'auto' }}>
                   {content.accessType === 'subscription' && 'Membresía'}
-                  {content.accessType === 'one-time-purchase' && 'Pago Único'}
+                  {content.accessType === 'one-time-purchase' && !isPremiumAccessGranted && 'Pago Único'}
+                  {isPremiumAccessGranted && 'Acceso Libre Miembros'}
                 </span>
               </div>
 
@@ -342,7 +344,7 @@ const ContentCard = ({ content }) => {
 
           <div style={{ padding: '0 24px 24px 24px', marginTop: 'auto' }}>
             {/* Pricing section */}
-            {content.accessType === 'one-time-purchase' && !isOwned && (
+            {content.accessType === 'one-time-purchase' && !isOwned && !isPremiumAccessGranted && (
               <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {showDiscount ? (
                   <>
@@ -382,10 +384,10 @@ const ContentCard = ({ content }) => {
             )}
 
             {/* Free or already owned price tag spacer */}
-            {isOwned && (
+            {(isOwned || isPremiumAccessGranted) && (
               <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <IoCheckmarkCircle size={14} /> Acceso Concedido
+                  <IoCheckmarkCircle size={14} /> {isPremiumAccessGranted ? 'Desbloqueado con Membresía' : 'Acceso Concedido'}
                 </span>
               </div>
             )}
@@ -507,7 +509,8 @@ const ContentCard = ({ content }) => {
                 )}
                 <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {content.accessType === 'subscription' && 'Premium'}
-                  {content.accessType === 'one-time-purchase' && 'Compra'}
+                  {content.accessType === 'one-time-purchase' && !isPremiumAccessGranted && 'Compra'}
+                  {isPremiumAccessGranted && 'Acceso Miembros'}
                   {content.accessType === 'free' && 'Acceso Libre'}
                 </span>
               </div>
@@ -538,7 +541,7 @@ const ContentCard = ({ content }) => {
             </div>
 
             <div style={{ marginTop: 'auto' }}>
-              {content.accessType === 'one-time-purchase' && !isOwned && (
+              {content.accessType === 'one-time-purchase' && !isOwned && !isPremiumAccessGranted && (
                 <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {showDiscount ? (
                     <>
@@ -579,10 +582,10 @@ const ContentCard = ({ content }) => {
                 </div>
               )}
 
-              {isOwned && (
+              {(isOwned || isPremiumAccessGranted) && (
                 <div style={{ marginBottom: '16px' }}>
                   <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--white)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <IoCheckmarkCircle size={14} /> Acceso Concedido
+                    <IoCheckmarkCircle size={14} /> {isPremiumAccessGranted ? 'Desbloqueado con Membresía' : 'Acceso Concedido'}
                   </span>
                 </div>
               )}
