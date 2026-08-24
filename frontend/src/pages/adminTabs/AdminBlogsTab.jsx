@@ -19,6 +19,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
   const [cAccessType, setCAccessType] = useState('free');
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
+  const [cAllowPremiumAccess, setCAllowPremiumAccess] = useState(false);
   const [cMemberDiscountPercentage, setCMemberDiscountPercentage] = useState(0);
   const [cCardImage, setCCardImage] = useState('');
   const [cCardImagePosition, setCCardImagePosition] = useState('50%');
@@ -79,6 +80,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType('free');
     setCPriceUsd(0);
     setCPriceArs(0);
+    setCAllowPremiumAccess(false);
     setCMemberDiscountPercentage(0);
     setCCardImage('');
     setCCardImagePosition('50%');
@@ -100,6 +102,7 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType(item.accessType || 'free');
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
+    setCAllowPremiumAccess(item.allowPremiumAccess || false);
     setCMemberDiscountPercentage(item.memberDiscountPercentage || 0);
     setCCardImage(item.cardImage || '');
     setCCardImagePosition(item.cardImagePosition || '50%');
@@ -310,10 +313,10 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
         description: cDescription,
         contentType: 'blog',
         accessType: cAccessType,
-        priceUsd: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
-        priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
-        price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
-        memberDiscountPercentage: cAccessType === 'one-time-purchase' ? Number(cMemberDiscountPercentage) : 0,
+        priceUsd: Number(cPriceUsd),
+        priceArs: Number(cPriceArs),
+        allowPremiumAccess: cAllowPremiumAccess,
+        memberDiscountPercentage: Number(cMemberDiscountPercentage),
         cardImage: cCardImage,
         cardImagePosition: cCardImagePosition,
         body: cBody,
@@ -538,22 +541,36 @@ const AdminBlogsTab = ({ formMessage, setFormMessage }) => {
                         required
                       />
                     </div>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        className="premium-input"
-                        value={cMemberDiscountPercentage}
-                        onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
-                        placeholder="Ej. 20 (20% OFF)"
-                        style={{ border: '1.5px solid #3b82f6' }}
-                      />
+                    {!cAllowPremiumAccess && (
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ color: '#1d4ed8' }}>Descuento Miembros (%)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          className="premium-input"
+                          value={cMemberDiscountPercentage}
+                          onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                          placeholder="Ej. 20 (20% OFF)"
+                          style={{ border: '1.5px solid #3b82f6' }}
+                        />
+                      </div>
+                    )}
+                      <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', backgroundColor: '#e0f2fe', padding: '12px', borderRadius: '12px', border: '1px solid #7dd3fc' }}>
+                        <input
+                          type="checkbox"
+                          id="allowPremiumAccessCheckboxBlog"
+                          checked={cAllowPremiumAccess}
+                          onChange={(e) => setCAllowPremiumAccess(e.target.checked)}
+                          style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                        />
+                        <label htmlFor="allowPremiumAccessCheckboxBlog" style={{ margin: 0, cursor: 'pointer', fontSize: '14px', color: 'var(--dark)' }}>
+                          <strong>Acceso Libre Miembros:</strong> Alumnos con membresía activa pueden acceder a este contenido sin volver a pagar.
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="form-group">
                   <label className="form-label">Fecha de Publicación</label>

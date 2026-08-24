@@ -25,6 +25,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
   const [cAccessType, setCAccessType] = useState('free');
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
+  const [cAllowPremiumAccess, setCAllowPremiumAccess] = useState(false);
   const [cMemberDiscountPercentage, setCMemberDiscountPercentage] = useState(0);
   const [cSubtype, setCSubtype] = useState('course'); // 'course' or 'workshop'
   const [cModules, setCModules] = useState([]);
@@ -99,6 +100,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType('free');
     setCPriceUsd(0);
     setCPriceArs(0);
+    setCAllowPremiumAccess(false);
     setCMemberDiscountPercentage(0);
     setCSubtype('course');
     setCModules([]);
@@ -124,6 +126,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
     setCAccessType(item.accessType || 'free');
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
+    setCAllowPremiumAccess(item.allowPremiumAccess || false);
     setCMemberDiscountPercentage(item.memberDiscountPercentage || 0);
     setCSubtype(item.contentType === 'workshop' ? 'workshop' : 'course');
     setCModules(item.modules || []);
@@ -550,6 +553,7 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
         priceUsd: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
         priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
         price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
+        allowPremiumAccess: cAllowPremiumAccess,
         memberDiscountPercentage: cAccessType === 'one-time-purchase' ? Number(cMemberDiscountPercentage) : 0,
         cardImage: cCardImage,
         cardImagePosition: cCardImagePosition,
@@ -1056,18 +1060,32 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                         />
                       </div>
 
-                      <div className="form-group" style={{ margin: 0 }}>
-                        <label className="form-label">% Descuento Suscriptores</label>
+                      {!cAllowPremiumAccess && (
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label className="form-label">% Descuento Suscriptores</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            className="premium-input"
+                            value={cMemberDiscountPercentage}
+                            onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                            placeholder="Ej. 20 (20% OFF)"
+                            style={{ border: '1.5px solid #3b82f6' }}
+                          />
+                        </div>
+                      )}
+                      <div className="form-group" style={{ margin: 0, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', backgroundColor: '#e0f2fe', padding: '12px', borderRadius: '12px', border: '1px solid #7dd3fc' }}>
                         <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          className="premium-input"
-                          value={cMemberDiscountPercentage}
-                          onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
-                          placeholder="Ej. 20 (20% OFF)"
-                          style={{ border: '1.5px solid #3b82f6' }}
+                          type="checkbox"
+                          id="allowPremiumAccessCheckboxWorkshop"
+                          checked={cAllowPremiumAccess}
+                          onChange={(e) => setCAllowPremiumAccess(e.target.checked)}
+                          style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: 'var(--primary)' }}
                         />
+                        <label htmlFor="allowPremiumAccessCheckboxWorkshop" style={{ margin: 0, cursor: 'pointer', fontSize: '14px', color: 'var(--dark)' }}>
+                          <strong>Acceso Libre Miembros:</strong> Alumnos con membresía activa pueden acceder a este contenido sin volver a pagar.
+                        </label>
                       </div>
                     </div>
                   )}

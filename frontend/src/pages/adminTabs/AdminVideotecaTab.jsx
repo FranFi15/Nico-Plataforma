@@ -19,6 +19,8 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
   const [cAccessType, setCAccessType] = useState('free');
   const [cPriceUsd, setCPriceUsd] = useState(0);
   const [cPriceArs, setCPriceArs] = useState(0);
+  const [cAllowPremiumAccess, setCAllowPremiumAccess] = useState(false);
+  const [cMemberDiscountPercentage, setCMemberDiscountPercentage] = useState(0);
   const [cVideoFolder, setCVideoFolder] = useState('');
   const [cCategories, setCCategories] = useState([]);
   const [cVideoLink, setCVideoLink] = useState('');
@@ -76,6 +78,8 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCAccessType('free');
     setCPriceUsd(0);
     setCPriceArs(0);
+    setCAllowPremiumAccess(false);
+    setCMemberDiscountPercentage(0);
     setCVideoFolder('');
     setCCategories([]);
     setCVideoLink('');
@@ -92,6 +96,8 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCAccessType(item.accessType || 'free');
     setCPriceUsd(item.priceUsd !== undefined ? item.priceUsd : (item.price || 0));
     setCPriceArs(item.priceArs !== undefined ? item.priceArs : 0);
+    setCAllowPremiumAccess(item.allowPremiumAccess || false);
+    setCMemberDiscountPercentage(item.memberDiscountPercentage || 0);
     setCVideoFolder(item.videoFolder?._id || item.videoFolder || '');
     setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
     setCVideoLink(item.videoLink || '');
@@ -199,9 +205,10 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
         description: cDescription,
         contentType: 'videoteca',
         accessType: cAccessType,
-        priceUsd: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
-        priceArs: cAccessType === 'one-time-purchase' ? Number(cPriceArs) : 0,
-        price: cAccessType === 'one-time-purchase' ? Number(cPriceUsd) : 0,
+        priceUsd: Number(cPriceUsd),
+        priceArs: Number(cPriceArs),
+        allowPremiumAccess: cAllowPremiumAccess,
+        memberDiscountPercentage: Number(cMemberDiscountPercentage),
         videoFolder: cVideoFolder || undefined,
         categories: cCategories,
         videoLink: cVideoLink,
@@ -633,6 +640,38 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
                         required
                       />
                     </div>
+                  </div>
+                )}
+                
+                {cAccessType === 'one-time-purchase' && !cAllowPremiumAccess && (
+                  <div className="form-group" style={{ marginTop: '16px' }}>
+                    <label className="form-label" style={{ color: '#1d4ed8' }}>% Descuento Suscriptores Premium</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      className="premium-input"
+                      value={cMemberDiscountPercentage}
+                      onChange={(e) => setCMemberDiscountPercentage(e.target.value)}
+                      placeholder="Ej. 20 (20% OFF)"
+                      style={{ border: '1.5px solid #3b82f6' }}
+                    />
+                  </div>
+                )}
+                
+                {cAccessType === 'one-time-purchase' && (
+                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', backgroundColor: 'rgba(56, 189, 248, 0.05)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    <input
+                      type="checkbox"
+                      id="allowPremiumAccessCheckbox"
+                      checked={cAllowPremiumAccess}
+                      onChange={(e) => setCAllowPremiumAccess(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                    />
+                    <label htmlFor="allowPremiumAccessCheckbox" style={{ margin: 0, cursor: 'pointer', fontSize: '14px', color: 'var(--dark)' }}>
+                      <strong>Acceso Libre Miembros:</strong> Alumnos con membresía activa pueden acceder a este contenido sin volver a pagar.
+                    </label>
                   </div>
                 )}
               </div>

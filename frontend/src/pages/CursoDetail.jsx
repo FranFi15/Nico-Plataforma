@@ -192,7 +192,7 @@ const CursoDetail = () => {
   const isOwned = user && user.purchasedItems && content && user.purchasedItems.some(
     (item) => (item._id || item) === content._id
   );
-  const hasAccess = isPrivileged || isFree || (content?.accessType === 'subscription' && isSubscribed) || (content?.accessType === 'one-time-purchase' && isOwned);
+  const hasAccess = isPrivileged || isFree || (content?.accessType === 'subscription' && isSubscribed) || (content?.accessType === 'one-time-purchase' && (isOwned || (content?.allowPremiumAccess && isSubscribed)));
 
   useEffect(() => {
     if (content && user && !isPrivileged && !isOwned && hasAccess && (content.contentType === 'course' || content.contentType === 'workshop')) {

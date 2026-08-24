@@ -125,7 +125,7 @@ const BlogDetail = () => {
   const isOwned = user && user.purchasedItems && user.purchasedItems.some(
     (item) => (item._id || item) === content._id
   );
-  const hasAccess = isPrivileged || isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && isOwned);
+  const hasAccess = isPrivileged || isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && (isOwned || (content.allowPremiumAccess && isSubscribed)));
 
   // Formatter for publish date
   const formatDate = (dateStr) => {

@@ -101,6 +101,10 @@ const contentSchema = new mongoose.Schema(
       type: String,
       default: '50%',
     },
+    allowPremiumAccess: {
+      type: Boolean,
+      default: false,
+    },
     publishDate: {
       type: Date,
       default: Date.now,

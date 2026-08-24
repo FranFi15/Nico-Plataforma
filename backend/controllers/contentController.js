@@ -61,7 +61,7 @@ export const getContents = async (req, res, next) => {
 // @access  Private/Admin
 export const createContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, allowPremiumAccess, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
 
     if (!title || !description || !contentType || !accessType) {
       res.status(400);
@@ -79,6 +79,7 @@ export const createContent = async (req, res, next) => {
       priceArs: priceArs !== undefined ? priceArs : 0,
       price: priceUsd !== undefined ? priceUsd : (price || 0),
       memberDiscountPercentage: memberDiscountPercentage !== undefined ? Number(memberDiscountPercentage) : 0,
+      allowPremiumAccess: allowPremiumAccess === true || allowPremiumAccess === 'true',
       cardImage: cardImage || '',
       cardImagePosition: cardImagePosition || '50%',
       publishDate: publishDate || undefined,
@@ -225,7 +226,7 @@ export const checkoutContent = async (req, res, next) => {
 // @access  Private/Admin
 export const updateContent = async (req, res, next) => {
   try {
-    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
+    const { title, description, contentType, accessType, price, priceUsd, priceArs, memberDiscountPercentage, allowPremiumAccess, cardImage, cardImagePosition, publishDate, category, categories, body, isPublished, status, videoFolder, videoLink, attachments, modules, certificate, certificateType, certificateTemplate, certificateSettings, duration } = req.body;
 
     let content = await Content.findById(req.params.id);
 
@@ -244,6 +245,7 @@ export const updateContent = async (req, res, next) => {
     if (memberDiscountPercentage !== undefined) {
       content.memberDiscountPercentage = Number(memberDiscountPercentage);
     }
+    content.allowPremiumAccess = allowPremiumAccess !== undefined ? (allowPremiumAccess === true || allowPremiumAccess === 'true') : content.allowPremiumAccess;
     content.cardImage = cardImage !== undefined ? cardImage : content.cardImage;
     content.cardImagePosition = cardImagePosition !== undefined ? cardImagePosition : content.cardImagePosition;
     content.publishDate = publishDate !== undefined ? publishDate : content.publishDate;
