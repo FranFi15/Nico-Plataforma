@@ -514,7 +514,29 @@ export const uploadContentFile = async (req, res, next) => {
     const cleanName = filename ? filename.replace(/[^a-zA-Z0-9.\-_]/g, '_') : `archivo_${Date.now()}.${ext}`;
     const uniqueFilename = `blog_${Date.now()}_${cleanName}`;
 
-    // 1. Try Cloudinary if Production SDK is configured
+    // 1. Save locally first (acts as both temp file for Cloudinary and fallback)
+    const base64Data = file.replace(/^data:.*?;base64,/, '');
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+
+    const backendUploadsDir = path.join(__dirname, '../public/uploads');
+    if (!fs.existsSync(backendUploadsDir)) {
+      fs.mkdirSync(backendUploadsDir, { recursive: true });
+    }
+    const backendFilePath = path.join(backendUploadsDir, uniqueFilename);
+    await fs.promises.writeFile(backendFilePath, fileBuffer);
+
+    // Try saving to frontend as well (for local dev)
+    try {
+      const frontendUploadsDir = path.join(__dirname, '../../frontend/public/uploads');
+      if (!fs.existsSync(frontendUploadsDir)) {
+        fs.mkdirSync(frontendUploadsDir, { recursive: true });
+      }
+      await fs.promises.writeFile(path.join(frontendUploadsDir, uniqueFilename), fileBuffer);
+    } catch (feErr) {
+      // Ignore if frontend directory not reachable in production
+    }
+
+    // 2. Try Cloudinary if Production SDK is configured
     if (cloudName && apiKey && apiSecret) {
       cloudinary.config({
         cloud_name: cloudName,
@@ -524,7 +546,8 @@ export const uploadContentFile = async (req, res, next) => {
 
       try {
         const resourceType = ext === 'mp4' || ext === 'webm' || ext === 'mov' || ext === 'avi' ? 'video' : 'raw';
-        const uploadRes = await cloudinary.uploader.upload(file, {
+        // Use backendFilePath instead of base64 to support chunked uploads for large files
+        const uploadRes = await cloudinary.uploader.upload(backendFilePath, {
           resource_type: resourceType,
           type: 'upload',
           access_mode: 'public',
@@ -536,6 +559,7 @@ export const uploadContentFile = async (req, res, next) => {
         });
 
         if (uploadRes && uploadRes.secure_url) {
+          // Optional: fs.unlinkSync(backendFilePath) - but we can keep it as local cache/fallback
           return res.status(200).json({
             success: true,
             url: uploadRes.secure_url,
@@ -544,31 +568,11 @@ export const uploadContentFile = async (req, res, next) => {
           });
         }
       } catch (cloudErr) {
-        console.warn('Cloudinary upload falló, guardando en servidor local:', cloudErr.message);
+        console.warn('Cloudinary upload falló, usando servidor local:', cloudErr.message);
       }
     }
 
-    // 2. Local Disk Storage (Always works as robust fallback or local dev)
-    const base64Data = file.replace(/^data:.*?;base64,/, '');
-    const fileBuffer = Buffer.from(base64Data, 'base64');
-
-    const backendUploadsDir = path.join(__dirname, '../public/uploads');
-    if (!fs.existsSync(backendUploadsDir)) {
-      fs.mkdirSync(backendUploadsDir, { recursive: true });
-    }
-    const backendFilePath = path.join(backendUploadsDir, uniqueFilename);
-    await fs.promises.writeFile(backendFilePath, fileBuffer);
-
-    try {
-      const frontendUploadsDir = path.join(__dirname, '../../frontend/public/uploads');
-      if (!fs.existsSync(frontendUploadsDir)) {
-        fs.mkdirSync(frontendUploadsDir, { recursive: true });
-      }
-      await fs.promises.writeFile(path.join(frontendUploadsDir, uniqueFilename), fileBuffer);
-    } catch (feErr) {
-      // Ignore if frontend directory not reachable in production
-    }
-
+    // 3. Local fallback response (used if Cloudinary fails or is not configured)
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${uniqueFilename}`;
 
     res.status(200).json({

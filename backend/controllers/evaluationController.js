@@ -72,11 +72,26 @@ export const uploadPdfFile = async (req, res, next) => {
       throw new Error('Por favor, proporcione el archivo en formato base64');
     }
 
+    // 1. Save locally first (acts as both temp file for Cloudinary and fallback)
+    const base64Data = file.replace(/^data:.*?;base64,/, '');
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+    const fileSizeBytes = fileBuffer.length;
+    
+    const filename = `evaluacion_${Date.now()}.pdf`;
+    const backendUploadsDir = path.join(__dirname, '../public/uploads');
+
+    if (!fs.existsSync(backendUploadsDir)) {
+      fs.mkdirSync(backendUploadsDir, { recursive: true });
+    }
+    const backendFilePath = path.join(backendUploadsDir, filename);
+    await fs.promises.writeFile(backendFilePath, fileBuffer);
+
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
 
-    // 1. Production Mode / Cloudinary Signed SDK Upload (when API_KEY and API_SECRET are configured)
+    // 2. Production Mode / Cloudinary Signed SDK Upload
     if (cloudName && apiKey && apiSecret) {
       cloudinary.config({
         cloud_name: cloudName,
@@ -85,13 +100,13 @@ export const uploadPdfFile = async (req, res, next) => {
       });
 
       try {
-        const uploadRes = await cloudinary.uploader.upload(file, {
+        const uploadRes = await cloudinary.uploader.upload(backendFilePath, {
           resource_type: 'raw',
           type: 'upload',
           access_mode: 'public',
           chunk_size: 6000000, // 6 MB chunk size to reliably handle large PDFs > 10MB up to 100MB
           folder: 'evaluations',
-          filename_override: `evaluacion_${Date.now()}.pdf`,
+          filename_override: filename,
           use_filename: true,
           unique_filename: true,
         });
@@ -105,17 +120,11 @@ export const uploadPdfFile = async (req, res, next) => {
         }
       } catch (cloudErr) {
         console.error('Error in Cloudinary Signed SDK Upload:', cloudErr);
-        // Fallback to local disk if Cloudinary SDK fails, but log error
-        console.warn('Cloudinary SDK falló, intentando guardar en servidor local...');
+        console.warn('Cloudinary SDK falló, intentando Unsigned o servidor local...');
       }
     }
 
-    // 2. Unsigned Preset Attempt (if only upload_preset is configured and file <= 9.5MB)
-    const base64Data = file.replace(/^data:.*?;base64,/, '');
-    const fileBuffer = Buffer.from(base64Data, 'base64');
-    const fileSizeBytes = fileBuffer.length;
-    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
-
+    // 3. Unsigned Preset Attempt
     if (cloudName && uploadPreset && !apiKey && fileSizeBytes <= 9.5 * 1024 * 1024) {
       try {
         const cloudinaryRes = await axios.post(
@@ -123,7 +132,7 @@ export const uploadPdfFile = async (req, res, next) => {
           {
             file: file,
             upload_preset: uploadPreset,
-            filename_override: `evaluacion_${Date.now()}.pdf`
+            filename_override: filename
           }
         );
 
@@ -139,17 +148,7 @@ export const uploadPdfFile = async (req, res, next) => {
       }
     }
 
-    // 3. Fallback / Local Server Storage (Always works for local development or VPS)
-    const filename = `evaluacion_${Date.now()}.pdf`;
-    const backendUploadsDir = path.join(__dirname, '../public/uploads');
-
-    if (!fs.existsSync(backendUploadsDir)) {
-      fs.mkdirSync(backendUploadsDir, { recursive: true });
-    }
-
-    const backendFilePath = path.join(backendUploadsDir, filename);
-    await fs.promises.writeFile(backendFilePath, fileBuffer);
-
+    // 4. Fallback / Local Server Storage
     try {
       const frontendUploadsDir = path.join(__dirname, '../../frontend/public/uploads');
       if (!fs.existsSync(frontendUploadsDir)) {
@@ -157,8 +156,10 @@ export const uploadPdfFile = async (req, res, next) => {
       }
       await fs.promises.writeFile(path.join(frontendUploadsDir, filename), fileBuffer);
     } catch (feErr) {
-      // Ignore if frontend directory is not writable/present in production
+      // Ignore
     }
+
+
 
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
 
