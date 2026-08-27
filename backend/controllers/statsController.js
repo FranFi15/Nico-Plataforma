@@ -87,7 +87,7 @@ export const getPlatformStats = async (req, res, next) => {
       .map(item => ({
         name: `${monthNames[item.month - 1]} ${item.year}`,
         NuevosAlumnos: item.NuevosAlumnos,
-        NuevosPremium: item.NuevosPremium
+        NuevosMiembros: item.NuevosPremium
       }));
 
     // Income Stats
@@ -116,7 +116,7 @@ export const getPlatformStats = async (req, res, next) => {
         hObj = {
           name: `${monthNames[item._id.month - 1]} ${item._id.year}`,
           NuevosAlumnos: 0,
-          NuevosPremium: 0,
+          NuevosMiembros: 0,
           Ingresos: 0,
           IngresosMembresia: 0,
           IngresosPagoUnico: 0,

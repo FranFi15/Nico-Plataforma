@@ -19,7 +19,9 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  BarChart,
+  Bar
 } from 'recharts';
 
 const AdminStatsTab = () => {
@@ -33,8 +35,9 @@ const AdminStatsTab = () => {
   const [kinventTab, setKinventTab] = useState('pending'); // 'pending' or 'history'
   
   // New states for month comparison
-  const [compareMonth1, setCompareMonth1] = useState('');
-  const [compareMonth2, setCompareMonth2] = useState('');
+  const [startMonth, setStartMonth] = useState('');
+  const [endMonth, setEndMonth] = useState('');
+  const [selectedMetric, setSelectedMetric] = useState('NuevosAlumnos');
   
   // New state for viewing users in a specific course
   const [selectedCourseTitle, setSelectedCourseTitle] = useState('');
@@ -163,7 +166,7 @@ const AdminStatsTab = () => {
             <IoStarOutline size={28} />
           </div>
           <div>
-            <h4 style={{ fontSize: '13px', color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Alumnos Premium</h4>
+            <h4 style={{ fontSize: '13px', color: '#64748b', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>Miembros</h4>
             <div style={{ fontSize: '32px', fontWeight: '800', color: '#0f172a', lineHeight: '1', letterSpacing: '-1px' }}>{stats.users.premium}</div>
           </div>
         </div>
@@ -240,8 +243,8 @@ const AdminStatsTab = () => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="NuevosPremium" 
-                  name="Nuevos Premium" 
+                  dataKey="NuevosMiembros" 
+                  name="Nuevos Miembros" 
                   stroke="#eab308" 
                   strokeWidth={3} 
                   dot={{ r: 4, strokeWidth: 2 }} 
@@ -261,74 +264,106 @@ const AdminStatsTab = () => {
                   marginBottom: '40px',
                   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
                 }}>
-                  <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 1</label>
+                  <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '150px' }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Desde</label>
                       <select 
-                        value={compareMonth1} 
-                        onChange={e => setCompareMonth1(e.target.value)}
+                        value={startMonth} 
+                        onChange={e => setStartMonth(e.target.value)}
                         style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
                       >
-                        <option value="">Seleccionar Mes</option>
+                        <option value="">Seleccionar (Inicio)</option>
                         {filteredHistory.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
                       </select>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 2</label>
+                    <div style={{ flex: 1, minWidth: '150px' }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Hasta</label>
                       <select 
-                        value={compareMonth2} 
-                        onChange={e => setCompareMonth2(e.target.value)}
+                        value={endMonth} 
+                        onChange={e => setEndMonth(e.target.value)}
                         style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
                       >
-                        <option value="">Seleccionar Mes</option>
+                        <option value="">Seleccionar (Fin)</option>
                         {filteredHistory.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Métrica</label>
+                      <select 
+                        value={selectedMetric} 
+                        onChange={e => setSelectedMetric(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      >
+                        <option value="NuevosAlumnos">Nuevos Alumnos</option>
+                        <option value="NuevosMiembros">Nuevos Miembros</option>
+                        <option value="Ingresos">Ingresos Totales</option>
+                        <option value="IngresosMembresia">Ingresos Membresía</option>
+                        <option value="IngresosPagoUnico">Ingresos Pago Único</option>
                       </select>
                     </div>
                   </div>
 
-                  {compareMonth1 && compareMonth2 && (
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Métrica</th>
-                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth1}</th>
-                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth2}</th>
-                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Diferencia</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(() => {
-                            const m1 = stats.history.find(h => h.name === compareMonth1) || {};
-                            const m2 = stats.history.find(h => h.name === compareMonth2) || {};
-                            const metrics = [
-                              { label: 'Nuevos Alumnos', key: 'NuevosAlumnos', prefix: '' },
-                              { label: 'Nuevos Premium', key: 'NuevosPremium', prefix: '' },
-                              { label: 'Ingresos Totales', key: 'Ingresos', prefix: '$' },
-                              { label: 'Ingresos Membresía', key: 'IngresosMembresia', prefix: '$' },
-                              { label: 'Ingresos Pago Único', key: 'IngresosPagoUnico', prefix: '$' }
-                            ];
-                            return metrics.map((m, i) => {
-                              const val1 = m1[m.key] || 0;
-                              const val2 = m2[m.key] || 0;
-                              const diff = val2 - val1;
-                              const diffColor = diff > 0 ? '#10b981' : diff < 0 ? '#ef4444' : '#64748b';
-                              return (
-                                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                  <td style={{ padding: '12px', fontWeight: '600', color: '#0f172a' }}>{m.label}</td>
-                                  <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val1}</td>
-                                  <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val2}</td>
-                                  <td style={{ padding: '12px', color: diffColor, fontWeight: '700' }}>
-                                    {diff > 0 ? '+' : ''}{m.prefix}{diff}
-                                  </td>
-                                </tr>
-                              );
-                            });
-                          })()}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <div style={{ height: '350px', marginTop: '30px' }}>
+                    {(() => {
+                      let startIndex = 0;
+                      let endIndex = filteredHistory.length - 1;
+                      if (startMonth) {
+                        const idx = filteredHistory.findIndex(h => h.name === startMonth);
+                        if (idx !== -1) startIndex = idx;
+                      }
+                      if (endMonth) {
+                        const idx = filteredHistory.findIndex(h => h.name === endMonth);
+                        if (idx !== -1) endIndex = idx;
+                      }
+                      
+                      // Ensure startIndex <= endIndex
+                      if (startIndex > endIndex) {
+                        const temp = startIndex;
+                        startIndex = endIndex;
+                        endIndex = temp;
+                      }
+
+                      const chartData = filteredHistory.slice(startIndex, endIndex + 1);
+
+                      let metricName = "Nuevos Alumnos";
+                      let metricColor = "#3b82f6";
+                      let isCurrency = false;
+
+                      if (selectedMetric === "NuevosMiembros") { metricName = "Nuevos Miembros"; metricColor = "#eab308"; }
+                      if (selectedMetric === "Ingresos") { metricName = "Ingresos Totales"; metricColor = "#10b981"; isCurrency = true; }
+                      if (selectedMetric === "IngresosMembresia") { metricName = "Ingresos Membresía"; metricColor = "#8b5cf6"; isCurrency = true; }
+                      if (selectedMetric === "IngresosPagoUnico") { metricName = "Ingresos Pago Único"; metricColor = "#f43f5e"; isCurrency = true; }
+
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dy={10} />
+                            <YAxis 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: '#64748b', fontSize: 13 }} 
+                              dx={-10} 
+                              tickFormatter={value => isCurrency ? `$${value}` : value}
+                            />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                              labelStyle={{ fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}
+                              formatter={(value) => [isCurrency ? `$${value}` : value, metricName]}
+                            />
+                            <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                            <Bar 
+                              dataKey={selectedMetric} 
+                              name={metricName} 
+                              fill={metricColor} 
+                              radius={[6, 6, 0, 0]}
+                              barSize={40}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
+                  </div>
                 </div>
               </>
             );
