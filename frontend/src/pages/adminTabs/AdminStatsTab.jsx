@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import {
   IoPeopleOutline,
@@ -428,7 +429,7 @@ const AdminStatsTab = () => {
       `}</style>
 
       {/* Enrollments Modal */}
-      {showEnrollmentsModal && (
+      {showEnrollmentsModal && createPortal(
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -547,7 +548,8 @@ const AdminStatsTab = () => {
               )
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Kinvent Certifications Table */}
