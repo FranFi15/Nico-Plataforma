@@ -269,3 +269,41 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Notify admin about course completion
+// @route   POST /api/users/notify-completion
+// @access  Private
+export const notifyCourseCompletion = async (req, res, next) => {
+  try {
+    const { contentId, contentTitle } = req.body;
+
+    if (!contentId || !contentTitle) {
+      res.status(400);
+      throw new Error('Datos incompletos para notificar la finalización');
+    }
+
+    const adminSubject = `Curso Completado: ${req.user.name}`;
+    const adminHtml = `
+      <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+        <h2 style="color: #8b5cf6;">Alumno finalizó un curso</h2>
+        <p>Un alumno ha completado al 100% un curso o workshop en la plataforma.</p>
+        <ul>
+          <li><strong>Nombre:</strong> ${req.user.name}</li>
+          <li><strong>Email:</strong> ${req.user.email}</li>
+          <li><strong>Contenido:</strong> ${contentTitle}</li>
+        </ul>
+      </div>
+    `;
+    
+    import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+      sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Notificación enviada con éxito',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUsers, createUser, updateUserRole, updateUserMembership, markNotificationsRead, deleteUser, forgotPassword, resetPassword } from '../controllers/userController.js';
+import { getUsers, createUser, updateUserRole, updateUserMembership, markNotificationsRead, deleteUser, forgotPassword, resetPassword, notifyCourseCompletion } from '../controllers/userController.js';
 import { protect, admin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -10,6 +10,8 @@ router.route('/')
 
 router.post('/forgot-password', forgotPassword);
 router.put('/reset-password/:token', resetPassword);
+
+router.post('/notify-completion', protect, notifyCourseCompletion);
 
 router.put('/notifications/read', protect, markNotificationsRead);
 

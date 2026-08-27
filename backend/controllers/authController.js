@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
-import { sendWelcomeEmail } from '../utils/emailService.js';
+import { sendWelcomeEmail, sendAdminNotification } from '../utils/emailService.js';
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -42,6 +42,21 @@ export const registerUser = async (req, res, next) => {
     if (user) {
       // Send Welcome Email asynchronously
       sendWelcomeEmail(user).catch(console.error);
+
+      // Notify admin
+      const adminSubject = `Nuevo alumno registrado: ${user.name}`;
+      const adminHtml = `
+        <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+          <h2 style="color: #0f172a;">Nuevo Registro en la Plataforma</h2>
+          <p>Un nuevo usuario se ha registrado en NS Entrenamiento.</p>
+          <ul>
+            <li><strong>Nombre:</strong> ${user.name}</li>
+            <li><strong>Email:</strong> ${user.email}</li>
+            <li><strong>Profesión:</strong> ${user.profession || 'No especificada'}</li>
+          </ul>
+        </div>
+      `;
+      sendAdminNotification(adminSubject, adminHtml).catch(console.error);
 
       res.status(201).json({
         success: true,

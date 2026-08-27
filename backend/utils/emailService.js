@@ -4,6 +4,22 @@ dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 const FROM_EMAIL = 'Nico <hola@nsentrenamiento.com>'; // Ajustar según preferencia del usuario
+const ADMIN_EMAIL = 'nicosesmaplay6@gmail.com';
+
+export const sendAdminNotification = async (subject, htmlContent) => {
+  if (!process.env.RESEND_API_KEY) return;
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: subject,
+      html: htmlContent,
+    });
+    console.log(`Admin notification sent: ${subject}`);
+  } catch (error) {
+    console.error('Error sending admin notification:', error);
+  }
+};
 
 export const sendWelcomeEmail = async (user) => {
   if (!process.env.RESEND_API_KEY) return;

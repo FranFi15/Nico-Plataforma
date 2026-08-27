@@ -171,6 +171,23 @@ const CursoDetail = () => {
     }
   }, [progressPercent, content, user, id]);
 
+  // Notify backend upon 100% course completion for admin email
+  useEffect(() => {
+    if (progressPercent === 100 && content && user) {
+      const notifiedKey = `notified_completion_${id}_${user._id}`;
+      if (!localStorage.getItem(notifiedKey)) {
+        api.post('/users/notify-completion', {
+          contentId: content._id,
+          contentTitle: content.title
+        }).then(res => {
+          if (res.data?.success) {
+            localStorage.setItem(notifiedKey, 'true');
+          }
+        }).catch(err => console.error('Error notifying completion:', err));
+      }
+    }
+  }, [progressPercent, content, user, id]);
+
   // Auto trigger Kinvent Certification upon 100% course completion
   useEffect(() => {
     if (progressPercent === 100 && content?.certificateType === 'kinvent' && user && !kinventRegistered) {

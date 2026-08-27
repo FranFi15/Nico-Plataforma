@@ -488,6 +488,25 @@ export const createContentReview = async (req, res, next) => {
       content.reviews.length;
 
     await content.save();
+
+    // Notify admin
+    const adminSubject = `Nueva reseña en: ${content.title}`;
+    const adminHtml = `
+      <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+        <h2 style="color: #f59e0b;">Nueva Reseña de Alumno</h2>
+        <p>Un alumno ha dejado una nueva valoración en la plataforma.</p>
+        <ul>
+          <li><strong>Contenido:</strong> ${content.title}</li>
+          <li><strong>Alumno:</strong> ${req.user.name}</li>
+          <li><strong>Calificación:</strong> ${rating} estrellas</li>
+          <li><strong>Comentario:</strong> "${comment || 'Sin comentario'}"</li>
+        </ul>
+      </div>
+    `;
+    import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+      sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+    });
+
     res.status(201).json({ success: true, message: 'Reseña agregada con éxito', data: content });
   } catch (error) {
     next(error);

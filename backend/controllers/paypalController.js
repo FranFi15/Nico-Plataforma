@@ -336,6 +336,23 @@ export const webhookPayPal = async (req, res) => {
             user.membershipExpiresAt = null;
             await user.save();
             console.log(`[Webhook PayPal] Suscripción Premium activa para usuario: ${user.email} | ID: ${subscriptionId}`);
+
+            // Notify admin
+            const adminSubject = `Suscripción Premium Activada: ${user.name}`;
+            const adminHtml = `
+              <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+                <h2 style="color: #10b981;">Nueva Membresía (PayPal)</h2>
+                <p>El siguiente usuario ha pagado/activado su membresía premium.</p>
+                <ul>
+                  <li><strong>Nombre:</strong> ${user.name}</li>
+                  <li><strong>Email:</strong> ${user.email}</li>
+                  <li><strong>ID Suscripción:</strong> ${subscriptionId}</li>
+                </ul>
+              </div>
+            `;
+            import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+              sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+            });
           }
         }
       }
@@ -413,6 +430,23 @@ export const webhookPayPal = async (req, res) => {
                   user.purchasedItems.push(metadata.contentId);
                   await user.save();
                   console.log(`[Webhook PayPal] Compra (verificada) con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
+                  
+                  // Notify admin
+                  const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
+                  const adminHtml = `
+                    <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+                      <h2 style="color: #3b82f6;">Nueva Compra (PayPal)</h2>
+                      <p>El siguiente usuario ha comprado un contenido de pago único.</p>
+                      <ul>
+                        <li><strong>Nombre:</strong> ${user.name}</li>
+                        <li><strong>Email:</strong> ${user.email}</li>
+                        <li><strong>ID Contenido:</strong> ${metadata.contentId}</li>
+                      </ul>
+                    </div>
+                  `;
+                  import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+                    sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+                  });
                 }
               }
             } catch (err) {
