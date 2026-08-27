@@ -3,6 +3,7 @@ import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import Coupon from '../models/couponModel.js';
 import SubscriptionPlan from '../models/subscriptionPlanModel.js';
+import Transaction from '../models/transactionModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 
 // Get Mercado Pago config using ACCESS_TOKEN from env dynamically
@@ -248,6 +249,22 @@ export const webhookMercadoPago = async (req, res, next) => {
             if (!user.purchasedItems.includes(metadata.contentId)) {
               user.purchasedItems.push(metadata.contentId);
               await user.save();
+              
+              // Record Transaction
+              try {
+                await Transaction.create({
+                  user: user._id,
+                  amount: paymentData.transaction_amount || 0,
+                  currency: paymentData.currency_id || 'ARS',
+                  platform: 'mercadopago',
+                  type: 'one-time-purchase',
+                  content: metadata.contentId,
+                  externalId: resourceId
+                });
+              } catch (txErr) {
+                console.error('[Webhook MP] Error al registrar Transaction:', txErr.message);
+              }
+
               console.log(
                 `[Webhook] Compra registrada con éxito para usuario: ${user.email} | Contenido: ${metadata.contentId}`
               );
@@ -306,6 +323,25 @@ export const webhookMercadoPago = async (req, res, next) => {
             // Si renueva o activa, quitamos cualquier fecha límite previa de expiración
             user.membershipExpiresAt = null;
             await user.save();
+            
+            // Record Transaction
+            try {
+              // Extract payment info from authorized preapproval
+              const amount = preApprovalData.auto_recurring?.transaction_amount || 0;
+              const currency = preApprovalData.auto_recurring?.currency_id || 'ARS';
+              
+              await Transaction.create({
+                user: user._id,
+                amount,
+                currency,
+                platform: 'mercadopago',
+                type: 'subscription',
+                externalId: resourceId
+              });
+            } catch (txErr) {
+              console.error('[Webhook MP] Error al registrar Transaction para sub:', txErr.message);
+            }
+
             console.log(
               `[Webhook MP] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${resourceId}`
             );

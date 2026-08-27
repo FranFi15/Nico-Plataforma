@@ -4,6 +4,7 @@ import Content from '../models/contentModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
 import Coupon from '../models/couponModel.js';
 import SubscriptionPlan from '../models/subscriptionPlanModel.js';
+import Transaction from '../models/transactionModel.js';
 
 // Retrieve access token from PayPal using basic auth credentials
 const getPayPalAccessToken = async () => {
@@ -335,6 +336,23 @@ export const webhookPayPal = async (req, res) => {
             user.membership = 'premium';
             user.membershipExpiresAt = null;
             await user.save();
+            
+            // Record Transaction for Subscription
+            try {
+              const amount = resource.billing_info?.last_payment?.amount?.value || 0;
+              const currency = resource.billing_info?.last_payment?.amount?.currency_code || 'USD';
+              await Transaction.create({
+                user: user._id,
+                amount: Number(amount),
+                currency,
+                platform: 'paypal',
+                type: 'subscription',
+                externalId: subscriptionId
+              });
+            } catch (txErr) {
+              console.error('[Webhook PayPal] Error al registrar Transaction para sub:', txErr.message);
+            }
+
             console.log(`[Webhook PayPal] Suscripción Premium activa para usuario: ${user.email} | ID: ${subscriptionId}`);
 
             // Notify admin
@@ -429,6 +447,24 @@ export const webhookPayPal = async (req, res) => {
                 if (!user.purchasedItems.includes(metadata.contentId)) {
                   user.purchasedItems.push(metadata.contentId);
                   await user.save();
+                  
+                  // Record Transaction for One-Time Purchase
+                  try {
+                    const amount = resource.amount?.value || 0;
+                    const currency = resource.amount?.currency_code || 'USD';
+                    await Transaction.create({
+                      user: user._id,
+                      amount: Number(amount),
+                      currency,
+                      platform: 'paypal',
+                      type: 'one-time-purchase',
+                      content: metadata.contentId,
+                      externalId: resource.id
+                    });
+                  } catch (txErr) {
+                    console.error('[Webhook PayPal] Error al registrar Transaction:', txErr.message);
+                  }
+
                   console.log(`[Webhook PayPal] Compra (verificada) con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
                   
                   // Notify admin

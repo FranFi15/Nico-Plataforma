@@ -31,6 +31,14 @@ const AdminStatsTab = () => {
   const [kinventLoading, setKinventLoading] = useState(false);
   const [kinventSearch, setKinventSearch] = useState('');
   const [kinventTab, setKinventTab] = useState('pending'); // 'pending' or 'history'
+  
+  // New states for month comparison
+  const [compareMonth1, setCompareMonth1] = useState('');
+  const [compareMonth2, setCompareMonth2] = useState('');
+  
+  // New state for viewing users in a specific course
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState('');
+  const [selectedCourseUsers, setSelectedCourseUsers] = useState(null);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -219,6 +227,84 @@ const AdminStatsTab = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Comparativa Mensual */}
+          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#334155', marginBottom: '20px', letterSpacing: '-0.3px' }}>Comparativa Mensual</h3>
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1px solid #f1f5f9',
+            borderRadius: '20px',
+            padding: '24px',
+            marginBottom: '40px',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 1</label>
+                <select 
+                  value={compareMonth1} 
+                  onChange={e => setCompareMonth1(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                >
+                  <option value="">Seleccionar Mes</option>
+                  {stats.history.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 2</label>
+                <select 
+                  value={compareMonth2} 
+                  onChange={e => setCompareMonth2(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                >
+                  <option value="">Seleccionar Mes</option>
+                  {stats.history.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {compareMonth1 && compareMonth2 && (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Métrica</th>
+                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth1}</th>
+                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth2}</th>
+                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Diferencia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const m1 = stats.history.find(h => h.name === compareMonth1) || {};
+                      const m2 = stats.history.find(h => h.name === compareMonth2) || {};
+                      const metrics = [
+                        { label: 'Nuevos Alumnos', key: 'NuevosAlumnos', prefix: '' },
+                        { label: 'Nuevos Premium', key: 'NuevosPremium', prefix: '' },
+                        { label: 'Ingresos', key: 'Ingresos', prefix: '$' }
+                      ];
+                      return metrics.map((m, i) => {
+                        const val1 = m1[m.key] || 0;
+                        const val2 = m2[m.key] || 0;
+                        const diff = val2 - val1;
+                        const diffColor = diff > 0 ? '#10b981' : diff < 0 ? '#ef4444' : '#64748b';
+                        return (
+                          <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '12px', fontWeight: '600', color: '#0f172a' }}>{m.label}</td>
+                            <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val1}</td>
+                            <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val2}</td>
+                            <td style={{ padding: '12px', color: diffColor, fontWeight: '700' }}>
+                              {diff > 0 ? '+' : ''}{m.prefix}{diff}
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -315,58 +401,87 @@ const AdminStatsTab = () => {
               </button>
             </div>
             
-            {stats.enrollmentsBreakdown && stats.enrollmentsBreakdown.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {stats.enrollmentsBreakdown.map((item, index) => (
-                  <div key={index} style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    padding: '16px', 
-                    backgroundColor: '#ffffff', 
-                    borderRadius: '16px', 
-                    border: '1px solid #f1f5f9', 
-                    transition: 'all 0.2s',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
-                  }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)'; }}
-                  >
-                    <div style={{ flex: 1, marginRight: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <div style={{
-                        width: '40px', height: '40px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0,
-                        backgroundColor: item.contentType === 'course' ? '#f5f3ff' : '#fff1f2',
-                        color: item.contentType === 'course' ? '#8b5cf6' : '#f43f5e'
-                      }}>
-                        {item.contentType === 'course' ? <IoBookOutline size={20} /> : <IoFolderOpenOutline size={20} />}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px', marginBottom: '2px', lineHeight: '1.3' }}>{item.title}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>
-                          {item.contentType === 'course' ? 'Curso' : 'Workshop'}
-                        </div>
-                      </div>
+            {selectedCourseUsers ? (
+              <div>
+                <button 
+                  onClick={() => setSelectedCourseUsers(null)} 
+                  style={{ background: 'none', border: 'none', color: '#3b82f6', fontWeight: '600', cursor: 'pointer', marginBottom: '16px', padding: 0 }}
+                >
+                  &larr; Volver al listado
+                </button>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', marginBottom: '16px' }}>
+                  Alumnos en: {selectedCourseTitle}
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedCourseUsers.length > 0 ? selectedCourseUsers.map((u, i) => (
+                    <div key={i} style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: '600', color: '#1e293b' }}>{u.name}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>{u.email}</div>
                     </div>
-                    <div style={{ 
-                      backgroundColor: '#f8fafc', 
-                      color: '#0f172a', 
-                      fontWeight: '700', 
-                      padding: '6px 12px', 
-                      borderRadius: '8px', 
-                      fontSize: '14px', 
-                      minWidth: '80px', 
-                      textAlign: 'center',
-                      border: '1px solid #e2e8f0'
-                    }}>
-                      {item.count} <span style={{ color: '#64748b', fontWeight: '500', fontSize: '12px' }}>alumnos</span>
-                    </div>
-                  </div>
-                ))}
+                  )) : (
+                    <p style={{ color: '#64748b', fontSize: '14px' }}>No hay información detallada de alumnos para este curso antiguo.</p>
+                  )}
+                </div>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-                <p style={{ fontWeight: '500', margin: 0 }}>No hay inscripciones registradas todavía.</p>
-              </div>
+              stats.enrollmentsBreakdown && stats.enrollmentsBreakdown.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {stats.enrollmentsBreakdown.map((item, index) => (
+                    <div key={index} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      padding: '16px', 
+                      backgroundColor: '#ffffff', 
+                      borderRadius: '16px', 
+                      border: '1px solid #f1f5f9', 
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setSelectedCourseTitle(item.title);
+                      setSelectedCourseUsers(item.users || []);
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)'; }}
+                    >
+                      <div style={{ flex: 1, marginRight: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{
+                          width: '40px', height: '40px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+                          backgroundColor: item.contentType === 'course' ? '#f5f3ff' : '#fff1f2',
+                          color: item.contentType === 'course' ? '#8b5cf6' : '#f43f5e'
+                        }}>
+                          {item.contentType === 'course' ? <IoBookOutline size={20} /> : <IoFolderOpenOutline size={20} />}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '700', color: '#1e293b', fontSize: '15px', marginBottom: '2px', lineHeight: '1.3' }}>{item.title}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>
+                            {item.contentType === 'course' ? 'Curso' : 'Workshop'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ 
+                        backgroundColor: '#f8fafc', 
+                        color: '#0f172a', 
+                        fontWeight: '700', 
+                        padding: '6px 12px', 
+                        borderRadius: '8px', 
+                        fontSize: '14px', 
+                        minWidth: '80px', 
+                        textAlign: 'center',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        {item.count} <span style={{ color: '#64748b', fontWeight: '500', fontSize: '12px' }}>alumnos</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                  <p style={{ fontWeight: '500', margin: 0 }}>No hay inscripciones registradas todavía.</p>
+                </div>
+              )
             )}
           </div>
         </div>

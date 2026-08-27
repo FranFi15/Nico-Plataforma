@@ -1,6 +1,7 @@
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import ZoomEvent from '../models/zoomEventModel.js';
+import Transaction from '../models/transactionModel.js';
 
 // @desc    Get platform statistics
 // @route   GET /api/stats
@@ -89,11 +90,56 @@ export const getPlatformStats = async (req, res, next) => {
         NuevosPremium: item.NuevosPremium
       }));
 
+    // Income Stats
+    const incomeAgg = await Transaction.aggregate([
+      { $match: { status: 'completed' } },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" }
+          },
+          totalIncome: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    incomeAgg.forEach(item => {
+      const key = `${item._id.year}-${item._id.month}`;
+      const historyIndex = history.findIndex(h => h.name === `${monthNames[item._id.month - 1]} ${item._id.year}`);
+      if (historyIndex !== -1) {
+        history[historyIndex].Ingresos = item.totalIncome;
+      } else {
+        history.push({
+          name: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+          NuevosAlumnos: 0,
+          NuevosPremium: 0,
+          Ingresos: item.totalIncome,
+          year: item._id.year,
+          month: item._id.month
+        });
+      }
+    });
+
+    // Ensure all history objects have Ingresos
+    history.forEach(h => {
+      if (h.Ingresos === undefined) h.Ingresos = 0;
+    });
+
+    // Re-sort in case new elements were added
+    history.sort((a, b) => {
+      const yearA = a.year || parseInt(a.name.split(' ')[1]);
+      const yearB = b.year || parseInt(b.name.split(' ')[1]);
+      const monthA = a.month || (monthNames.indexOf(a.name.split(' ')[0]) + 1);
+      const monthB = b.month || (monthNames.indexOf(b.name.split(' ')[0]) + 1);
+      return yearA !== yearB ? yearA - yearB : monthA - monthB;
+    });
+
     // 6. Course Enrollments Breakdown
     const enrollmentsAgg = await User.aggregate([
       { $match: { role: 'student', purchasedItems: { $exists: true, $not: { $size: 0 } } } },
       { $unwind: "$purchasedItems" },
-      { $group: { _id: "$purchasedItems", count: { $sum: 1 } } },
+      { $group: { _id: "$purchasedItems", count: { $sum: 1 }, users: { $push: { _id: "$_id", name: "$name", email: "$email" } } } },
       { $sort: { count: -1 } }
     ]);
 
@@ -108,7 +154,8 @@ export const getPlatformStats = async (req, res, next) => {
         id: agg._id,
         title: content ? content.title : 'Contenido Eliminado o Desconocido',
         contentType: content ? content.contentType : 'unknown',
-        count: agg.count
+        count: agg.count,
+        users: agg.users
       };
     }).filter(e => e.contentType === 'course' || e.contentType === 'workshop');
 
