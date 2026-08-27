@@ -97,7 +97,8 @@ export const getPlatformStats = async (req, res, next) => {
         $group: {
           _id: {
             month: { $month: "$createdAt" },
-            year: { $year: "$createdAt" }
+            year: { $year: "$createdAt" },
+            type: "$type"
           },
           totalIncome: { $sum: "$amount" }
         }
@@ -107,23 +108,42 @@ export const getPlatformStats = async (req, res, next) => {
     incomeAgg.forEach(item => {
       const key = `${item._id.year}-${item._id.month}`;
       const historyIndex = history.findIndex(h => h.name === `${monthNames[item._id.month - 1]} ${item._id.year}`);
+      
+      let hObj;
       if (historyIndex !== -1) {
-        history[historyIndex].Ingresos = item.totalIncome;
+        hObj = history[historyIndex];
       } else {
-        history.push({
+        hObj = {
           name: `${monthNames[item._id.month - 1]} ${item._id.year}`,
           NuevosAlumnos: 0,
           NuevosPremium: 0,
-          Ingresos: item.totalIncome,
+          Ingresos: 0,
+          IngresosMembresia: 0,
+          IngresosPagoUnico: 0,
           year: item._id.year,
           month: item._id.month
-        });
+        };
+        history.push(hObj);
+      }
+
+      if (hObj.Ingresos === undefined) hObj.Ingresos = 0;
+      if (hObj.IngresosMembresia === undefined) hObj.IngresosMembresia = 0;
+      if (hObj.IngresosPagoUnico === undefined) hObj.IngresosPagoUnico = 0;
+
+      hObj.Ingresos += item.totalIncome;
+      if (item._id.type === 'subscription') {
+        hObj.IngresosMembresia += item.totalIncome;
+      } else if (item._id.type === 'one-time-purchase') {
+        hObj.IngresosPagoUnico += item.totalIncome;
       }
     });
 
-    // Ensure all history objects have Ingresos
+    // Ensure all history objects have all fields
     history.forEach(h => {
       if (h.Ingresos === undefined) h.Ingresos = 0;
+      if (h.IngresosMembresia === undefined) h.IngresosMembresia = 0;
+      if (h.IngresosPagoUnico === undefined) h.IngresosPagoUnico = 0;
+      if (h.year === undefined) h.year = parseInt(h.name.split(' ')[1]);
     });
 
     // Re-sort in case new elements were added

@@ -40,6 +40,9 @@ const AdminStatsTab = () => {
   const [selectedCourseTitle, setSelectedCourseTitle] = useState('');
   const [selectedCourseUsers, setSelectedCourseUsers] = useState(null);
 
+  // New state for year filter
+  const [selectedYear, setSelectedYear] = useState('all');
+
   const fetchStats = async () => {
     setLoading(true);
     setError('');
@@ -186,18 +189,38 @@ const AdminStatsTab = () => {
 
       {stats.history && stats.history.length > 0 && (
         <>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#334155', marginBottom: '20px', letterSpacing: '-0.3px' }}>Crecimiento Mensual</h3>
-          <div style={{
-            backgroundColor: '#ffffff',
-            border: '1px solid #f1f5f9',
-            borderRadius: '20px',
-            padding: '24px',
-            marginBottom: '40px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02)',
-            height: '350px'
-          }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.history} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#334155', margin: 0, letterSpacing: '-0.3px' }}>Crecimiento Mensual</h3>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+            >
+              <option value="all">Todos los años</option>
+              {Array.from(new Set(stats.history.map(h => h.year))).sort((a, b) => b - a).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          {(() => {
+            const filteredHistory = selectedYear === 'all' 
+              ? stats.history 
+              : stats.history.filter(h => h.year.toString() === selectedYear);
+
+            return (
+              <>
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #f1f5f9',
+                  borderRadius: '20px',
+                  padding: '24px',
+                  marginBottom: '40px',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02)',
+                  height: '350px'
+                }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={filteredHistory} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13 }} dx={-10} />
@@ -224,87 +247,92 @@ const AdminStatsTab = () => {
                   dot={{ r: 4, strokeWidth: 2 }} 
                   activeDot={{ r: 6 }} 
                 />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+                  </LineChart>
+                  </ResponsiveContainer>
+                </div>
 
-          {/* Comparativa Mensual */}
-          <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#334155', marginBottom: '20px', letterSpacing: '-0.3px' }}>Comparativa Mensual</h3>
-          <div style={{
-            backgroundColor: '#ffffff',
-            border: '1px solid #f1f5f9',
-            borderRadius: '20px',
-            padding: '24px',
-            marginBottom: '40px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
-          }}>
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 1</label>
-                <select 
-                  value={compareMonth1} 
-                  onChange={e => setCompareMonth1(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                >
-                  <option value="">Seleccionar Mes</option>
-                  {stats.history.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 2</label>
-                <select 
-                  value={compareMonth2} 
-                  onChange={e => setCompareMonth2(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                >
-                  <option value="">Seleccionar Mes</option>
-                  {stats.history.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
-                </select>
-              </div>
-            </div>
+                {/* Comparativa Mensual */}
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#334155', marginBottom: '20px', letterSpacing: '-0.3px' }}>Comparativa Mensual</h3>
+                <div style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #f1f5f9',
+                  borderRadius: '20px',
+                  padding: '24px',
+                  marginBottom: '40px',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
+                }}>
+                  <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 1</label>
+                      <select 
+                        value={compareMonth1} 
+                        onChange={e => setCompareMonth1(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      >
+                        <option value="">Seleccionar Mes</option>
+                        {filteredHistory.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>Mes 2</label>
+                      <select 
+                        value={compareMonth2} 
+                        onChange={e => setCompareMonth2(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      >
+                        <option value="">Seleccionar Mes</option>
+                        {filteredHistory.map((h, i) => <option key={i} value={h.name}>{h.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
 
-            {compareMonth1 && compareMonth2 && (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Métrica</th>
-                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth1}</th>
-                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth2}</th>
-                      <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Diferencia</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const m1 = stats.history.find(h => h.name === compareMonth1) || {};
-                      const m2 = stats.history.find(h => h.name === compareMonth2) || {};
-                      const metrics = [
-                        { label: 'Nuevos Alumnos', key: 'NuevosAlumnos', prefix: '' },
-                        { label: 'Nuevos Premium', key: 'NuevosPremium', prefix: '' },
-                        { label: 'Ingresos', key: 'Ingresos', prefix: '$' }
-                      ];
-                      return metrics.map((m, i) => {
-                        const val1 = m1[m.key] || 0;
-                        const val2 = m2[m.key] || 0;
-                        const diff = val2 - val1;
-                        const diffColor = diff > 0 ? '#10b981' : diff < 0 ? '#ef4444' : '#64748b';
-                        return (
-                          <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '12px', fontWeight: '600', color: '#0f172a' }}>{m.label}</td>
-                            <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val1}</td>
-                            <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val2}</td>
-                            <td style={{ padding: '12px', color: diffColor, fontWeight: '700' }}>
-                              {diff > 0 ? '+' : ''}{m.prefix}{diff}
-                            </td>
+                  {compareMonth1 && compareMonth2 && (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Métrica</th>
+                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth1}</th>
+                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>{compareMonth2}</th>
+                            <th style={{ padding: '12px', textAlign: 'left', color: '#475569' }}>Diferencia</th>
                           </tr>
-                        );
-                      });
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const m1 = stats.history.find(h => h.name === compareMonth1) || {};
+                            const m2 = stats.history.find(h => h.name === compareMonth2) || {};
+                            const metrics = [
+                              { label: 'Nuevos Alumnos', key: 'NuevosAlumnos', prefix: '' },
+                              { label: 'Nuevos Premium', key: 'NuevosPremium', prefix: '' },
+                              { label: 'Ingresos Totales', key: 'Ingresos', prefix: '$' },
+                              { label: 'Ingresos Membresía', key: 'IngresosMembresia', prefix: '$' },
+                              { label: 'Ingresos Pago Único', key: 'IngresosPagoUnico', prefix: '$' }
+                            ];
+                            return metrics.map((m, i) => {
+                              const val1 = m1[m.key] || 0;
+                              const val2 = m2[m.key] || 0;
+                              const diff = val2 - val1;
+                              const diffColor = diff > 0 ? '#10b981' : diff < 0 ? '#ef4444' : '#64748b';
+                              return (
+                                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '12px', fontWeight: '600', color: '#0f172a' }}>{m.label}</td>
+                                  <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val1}</td>
+                                  <td style={{ padding: '12px', color: '#334155' }}>{m.prefix}{val2}</td>
+                                  <td style={{ padding: '12px', color: diffColor, fontWeight: '700' }}>
+                                    {diff > 0 ? '+' : ''}{m.prefix}{diff}
+                                  </td>
+                                </tr>
+                              );
+                            });
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </>
       )}
 
