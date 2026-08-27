@@ -93,7 +93,7 @@ export const createZoomEvent = async (req, res, next) => {
         message: isNews
           ? `${description ? description.slice(0, 150) : '¡Nueva publicación y novedades en el Muro de Noticias!'}`
           : `Programada para el ${formattedDate} hs. ${description ? description.slice(0, 100) : '¡Entra al calendario para ver detalles y unirte!'}`,
-        link: '/charlas-zoom',
+        link: isNews ? '/noticias' : '/charlas-zoom',
         read: false,
         createdAt: new Date()
       };
