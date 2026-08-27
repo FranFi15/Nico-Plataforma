@@ -580,7 +580,7 @@ const CharlasZoom = () => {
                   </div>
 
                   {ev.description && (
-                    <p style={{ fontSize: '15px', color: 'var(--gray-300)', lineHeight: '1.6', margin: '0 0 24px 0', backgroundColor: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '14px', border: '1px solid var(--border)' }}>
+                    <p style={{ fontSize: '15px', color: '#ffffff', lineHeight: '1.6', margin: '0 0 24px 0', backgroundColor: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '14px', border: '1px solid var(--border)' }}>
                       {ev.description}
                     </p>
                   )}
