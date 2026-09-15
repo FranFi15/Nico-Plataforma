@@ -15,6 +15,7 @@ const MiPerfil = () => {
   const [editPassword, setEditPassword] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [showCancelAlert, setShowCancelAlert] = useState(false);
 
   const [benefits, setBenefits] = useState([]);
   const [loadingBenefits, setLoadingBenefits] = useState(true);
@@ -435,8 +436,41 @@ const MiPerfil = () => {
                     }}>
                       {membershipText}
                     </span>
+                    {hasMembership && (
+                      <button
+                        onClick={() => setShowCancelAlert(!showCancelAlert)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Cancelar Membresía
+                      </button>
+                    )}
                   </div>
                 </div>
+
+                {showCancelAlert && hasMembership && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'center' }}>
+                    <span></span>
+                    <div style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '10px',
+                      color: '#b91c1c',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}>
+                      Para cancelar tu membresía, por favor hazlo directamente desde tu cuenta de Mercado Pago o PayPal. Al hacerlo, la cancelación se procesará automáticamente en nuestra plataforma.
+                    </div>
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'baseline' }}>
                   <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>

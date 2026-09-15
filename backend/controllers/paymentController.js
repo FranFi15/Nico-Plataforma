@@ -249,7 +249,7 @@ export const webhookMercadoPago = async (req, res, next) => {
             if (!user.purchasedItems.includes(metadata.contentId)) {
               user.purchasedItems.push(metadata.contentId);
               await user.save();
-              
+
               // Record Transaction
               try {
                 await Transaction.create({
@@ -323,13 +323,13 @@ export const webhookMercadoPago = async (req, res, next) => {
             // Si renueva o activa, quitamos cualquier fecha límite previa de expiración
             user.membershipExpiresAt = null;
             await user.save();
-            
+
             // Record Transaction
             try {
               // Extract payment info from authorized preapproval
               const amount = preApprovalData.auto_recurring?.transaction_amount || 0;
               const currency = preApprovalData.auto_recurring?.currency_id || 'ARS';
-              
+
               await Transaction.create({
                 user: user._id,
                 amount,
@@ -347,11 +347,11 @@ export const webhookMercadoPago = async (req, res, next) => {
             );
 
             // Notify admin
-            const adminSubject = `Suscripción Premium Activada: ${user.name}`;
+            const adminSubject = `Suscripción Activada: ${user.name}`;
             const adminHtml = `
               <div style="font-family: sans-serif; color: #334155; padding: 20px;">
                 <h2 style="color: #10b981;">Nueva Membresía (Mercado Pago)</h2>
-                <p>El siguiente usuario ha pagado/activado su membresía premium.</p>
+                <p>El siguiente usuario ha pagado/activado su membresía.</p>
                 <ul>
                   <li><strong>Nombre:</strong> ${user.name}</li>
                   <li><strong>Email:</strong> ${user.email}</li>
