@@ -44,7 +44,22 @@ export const getContents = async (req, res, next) => {
       query = query.select('-body -modules -attachments');
     }
 
-    const contents = await query;
+    let contents = await query;
+
+    if (!isPrivileged && req.query.minimal !== 'true') {
+      contents = contents.map(c => {
+        const contentObj = c.toObject ? c.toObject() : c;
+        if (contentObj.modules && contentObj.modules.length > 0) {
+          contentObj.modules = contentObj.modules.filter(mod => mod.isPublished !== false);
+          contentObj.modules.forEach(mod => {
+            if (mod.lessons && mod.lessons.length > 0) {
+              mod.lessons = mod.lessons.filter(lesson => lesson.isPublished !== false);
+            }
+          });
+        }
+        return contentObj;
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -148,9 +163,23 @@ export const getContentById = async (req, res, next) => {
       throw new Error('Contenido no encontrado');
     }
 
+    const contentObj = content.toObject();
+    const isPrivileged = req.user && ['admin', 'professor', 'profe', 'instructor'].includes(req.user.role);
+
+    if (!isPrivileged) {
+      if (contentObj.modules && contentObj.modules.length > 0) {
+        contentObj.modules = contentObj.modules.filter(mod => mod.isPublished !== false);
+        contentObj.modules.forEach(mod => {
+          if (mod.lessons && mod.lessons.length > 0) {
+            mod.lessons = mod.lessons.filter(lesson => lesson.isPublished !== false);
+          }
+        });
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: content,
+      data: contentObj,
     });
   } catch (error) {
     next(error);
@@ -173,6 +202,19 @@ export const getContentPreview = async (req, res, next) => {
 
     // Convert to object so we can modify it
     const contentObj = content.toObject();
+
+    const isPrivileged = req.user && ['admin', 'professor', 'profe', 'instructor'].includes(req.user.role);
+
+    if (!isPrivileged) {
+      if (contentObj.modules && contentObj.modules.length > 0) {
+        contentObj.modules = contentObj.modules.filter(mod => mod.isPublished !== false);
+        contentObj.modules.forEach(mod => {
+          if (mod.lessons && mod.lessons.length > 0) {
+            mod.lessons = mod.lessons.filter(lesson => lesson.isPublished !== false);
+          }
+        });
+      }
+    }
 
     // Strip out sensitive video links from modules and lessons
     if (contentObj.modules && contentObj.modules.length > 0) {

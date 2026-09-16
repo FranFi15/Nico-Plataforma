@@ -1508,14 +1508,25 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                                 style={{ fontWeight: '800', fontSize: '14px', height: '36px', flex: 1 }}
                                 placeholder="Nombre del Módulo"
                               />
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteModule(mod.id)}
-                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center' }}
-                                title="Eliminar módulo"
-                              >
-                                <IoTrashOutline size={18} />
-                              </button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', color: mod.isPublished !== false ? '#059669' : '#d97706' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={mod.isPublished !== false}
+                                    onChange={(e) => handleUpdateModule(mod.id, { isPublished: e.target.checked })}
+                                    style={{ accentColor: '#1f75f5ff' }}
+                                  />
+                                  Visible
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteModule(mod.id)}
+                                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                  title="Eliminar módulo"
+                                >
+                                  <IoTrashOutline size={18} />
+                                </button>
+                              </div>
                             </div>
 
                             <div style={{ marginBottom: '12px' }}>
@@ -1609,6 +1620,15 @@ const AdminWorkshopsTab = ({ formMessage, setFormMessage }) => {
                                     {les.type === 'quiz' ? <><IoDocumentTextOutline size={20} color="#d97706" /> Evaluación</> : <><IoPlayCircleOutline size={20} color="#1f75f5ff" /> Lección</>}
                                   </span> • <span style={{ color: '#1f75f5ff' }}>{les.title || 'Sin título'}</span>
                                 </h4>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: les.isPublished !== false ? '#059669' : '#d97706', marginTop: '10px' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={les.isPublished !== false}
+                                    onChange={(e) => handleUpdateLesson(mod.id, les.id, { isPublished: e.target.checked })}
+                                    style={{ accentColor: '#1f75f5ff' }}
+                                  />
+                                  Ítem Visible para Alumnos
+                                </label>
                               </div>
 
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '20px' }}>

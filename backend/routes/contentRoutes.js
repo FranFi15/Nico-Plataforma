@@ -44,7 +44,7 @@ router.route('/:id/reviews')
 
 // Route to get specific content details for preview (public, stripped of sensitive data)
 router.route('/:id/preview')
-  .get(getContentPreview);
+  .get(optionalProtect, getContentPreview);
 
 // Route to get specific content details (protected by access checks)
 router.route('/:id')

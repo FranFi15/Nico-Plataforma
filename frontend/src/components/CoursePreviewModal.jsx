@@ -767,8 +767,11 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                                       {modIdx + 1}
                                     </div>
                                     <div>
-                                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
+                                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         {mod.title || `Módulo ${modIdx + 1}`}
+                                        {mod.isPublished === false && isPrivileged && (
+                                          <span style={{ fontSize: '10px', backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', border: '1px solid #fde68a' }}>Oculto</span>
+                                        )}
                                       </h4>
                                       <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
                                         {modLessons.length} {modLessons.length === 1 ? 'lección' : 'lecciones'} {modMinutes > 0 && `· ${modMinutes} min`}
@@ -789,7 +792,12 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
                                           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                               <IoPlayCircleOutline size={16} color="#1f75f5ff" />
-                                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>{lesson.title || `Lección ${idx + 1}`}</span>
+                                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {lesson.title || `Lección ${idx + 1}`}
+                                                {lesson.isPublished === false && isPrivileged && (
+                                                  <span style={{ fontSize: '10px', backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', border: '1px solid #fde68a' }}>Oculto</span>
+                                                )}
+                                              </span>
                                             </div>
                                           </div>
                                         ))}

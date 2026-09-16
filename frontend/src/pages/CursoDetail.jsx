@@ -728,7 +728,12 @@ const CursoDetail = () => {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '12px', color: isActiveMod ? '#38bdf8' : '#64748b' }}>#{modIndex + 1}</span>
-                          <span>{mod.title}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {mod.title}
+                            {mod.isPublished === false && isPrivileged && (
+                              <span style={{ fontSize: '9px', backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', border: '1px solid #fde68a' }}>Oculto</span>
+                            )}
+                          </span>
                         </div>
                         {isActiveMod ? <IoChevronUp size={16} color="#38bdf8" /> : <IoChevronDown size={16} color="#64748b" />}
                       </button>
@@ -1013,7 +1018,12 @@ const CursoDetail = () => {
                                     <IoDownloadOutline size={22} />
                                   </div>
                                   <div style={{ overflow: 'hidden' }}>
-                                    <div style={{ fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.title}</div>
+                                      <span style={{ fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {item.title}
+                                        {item.isPublished === false && isPrivileged && (
+                                          <span style={{ fontSize: '9px', backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 4px', borderRadius: '4px', fontWeight: '800', border: '1px solid #fde68a' }}>Oculto</span>
+                                        )}
+                                      </span>
                                     <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>Descargar archivo / Abrir enlace</div>
                                   </div>
                                 </a>

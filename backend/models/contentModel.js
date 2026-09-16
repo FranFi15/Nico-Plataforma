@@ -31,6 +31,7 @@ const moduleSchema = new mongoose.Schema({
   id: { type: String, required: true },
   title: { type: String, required: true },
   description: { type: String, default: '' },
+  isPublished: { type: Boolean, default: true },
   lessons: [lessonSchema]
 });
 
