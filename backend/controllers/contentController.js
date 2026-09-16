@@ -157,6 +157,46 @@ export const getContentById = async (req, res, next) => {
   }
 };
 
+// @desc    Get content by ID for preview (strips sensitive video links)
+// @route   GET /api/content/:id/preview
+// @access  Public
+export const getContentPreview = async (req, res, next) => {
+  try {
+    const content = await Content.findById(req.params.id)
+      .populate('category')
+      .populate('categories');
+
+    if (!content) {
+      res.status(404);
+      throw new Error('Contenido no encontrado');
+    }
+
+    // Convert to object so we can modify it
+    const contentObj = content.toObject();
+
+    // Strip out sensitive video links from modules and lessons
+    if (contentObj.modules && contentObj.modules.length > 0) {
+      contentObj.modules = contentObj.modules.map(mod => {
+        delete mod.videoLink; 
+        if (mod.lessons && mod.lessons.length > 0) {
+          mod.lessons = mod.lessons.map(lesson => {
+            delete lesson.videoLink;
+            return lesson;
+          });
+        }
+        return mod;
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: contentObj,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Simulate checkout / purchase of content
 // @route   POST /api/content/:id/checkout
 // @access  Private (Secured with protect)

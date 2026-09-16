@@ -3,6 +3,7 @@ import {
   getContents,
   createContent,
   getContentById,
+  getContentPreview,
   checkoutContent,
   updateContent,
   deleteContent,
@@ -40,6 +41,10 @@ router.post('/:id/kinvent-certify', protect, certifyKinvent);
 // Route to create a review on content
 router.route('/:id/reviews')
   .post(protect, createContentReview);
+
+// Route to get specific content details for preview (public, stripped of sensitive data)
+router.route('/:id/preview')
+  .get(getContentPreview);
 
 // Route to get specific content details (protected by access checks)
 router.route('/:id')

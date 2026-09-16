@@ -20,7 +20,7 @@ const CoursePreviewModal = ({ isOpen, onClose, content, onContinue, hasAccess, u
       const fetchFullContent = async () => {
         setLoadingContent(true);
         try {
-          const res = await api.get(`/content/${content._id}`);
+          const res = await api.get(`/content/${content._id}/preview`);
           if (res.data && res.data.data) {
             setFullContent(res.data.data);
           } else {
