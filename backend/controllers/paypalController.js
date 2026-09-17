@@ -267,6 +267,102 @@ export const checkoutPayPal = async (req, res, next) => {
   }
 };
 
+// @desc    Capture PayPal Order Checkout (One-time Purchase)
+// @route   POST /api/payments/paypal/capture
+// @access  Private
+export const capturePayPalOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.body;
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Falta orderId' });
+    }
+
+    const accessToken = await getPayPalAccessToken();
+    const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
+
+    // Call PayPal API to capture the order
+    const captureRes = await axios.post(
+      `${baseUrl}/v2/checkout/orders/${orderId}/capture`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    const captureData = captureRes.data;
+
+    if (captureData.status === 'COMPLETED') {
+      // Find custom_id from the first purchase unit
+      const purchaseUnit = captureData.purchase_units && captureData.purchase_units[0];
+      const customIdStr = purchaseUnit?.payments?.captures?.[0]?.custom_id || purchaseUnit?.custom_id;
+
+      if (customIdStr) {
+        let metadata = null;
+        try {
+          metadata = JSON.parse(customIdStr);
+        } catch (e) {
+          // ignore
+        }
+
+        if (metadata && metadata.paymentType === 'one-time-purchase' && metadata.userId === req.user._id.toString()) {
+          const user = await User.findById(metadata.userId);
+          if (user && !user.purchasedItems.includes(metadata.contentId)) {
+            user.purchasedItems.push(metadata.contentId);
+            await user.save();
+
+            // Record Transaction
+            try {
+              const amount = purchaseUnit.payments.captures[0].amount?.value || 0;
+              const currency = purchaseUnit.payments.captures[0].amount?.currency_code || 'USD';
+              await Transaction.create({
+                user: user._id,
+                amount: Number(amount),
+                currency,
+                platform: 'paypal',
+                type: 'one-time-purchase',
+                content: metadata.contentId,
+                externalId: captureData.id
+              });
+            } catch (txErr) {
+              console.error('[Capture PayPal] Error al registrar Transaction:', txErr.message);
+            }
+
+            console.log(`[Capture PayPal] Compra con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
+
+            // Notify admin
+            const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
+            const adminHtml = `
+              <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+                <h2 style="color: #3b82f6;">Nueva Compra (PayPal)</h2>
+                <p>El siguiente usuario ha comprado un contenido de pago único.</p>
+                <ul>
+                  <li><strong>Nombre:</strong> ${user.name}</li>
+                  <li><strong>Email:</strong> ${user.email}</li>
+                  <li><strong>ID Contenido:</strong> ${metadata.contentId}</li>
+                  <li><strong>Order ID:</strong> ${orderId}</li>
+                </ul>
+              </div>
+            `;
+            import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+              sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+            });
+          }
+        }
+      }
+      return res.status(200).json({ success: true, message: 'Pago capturado con éxito' });
+    } else {
+      return res.status(400).json({ success: false, message: `El estado de la orden es ${captureData.status}` });
+    }
+  } catch (error) {
+    console.error('[Capture PayPal] Error:', error.response?.data || error.message);
+    const errMsg = error.response?.data?.message || error.message;
+    return res.status(500).json({ success: false, message: `Error al capturar orden: ${errMsg}` });
+  }
+};
+
 // @desc    PayPal Asynchronous Webhook Notification Handler
 // @route   POST /api/payments/paypal/webhook
 // @access  Public

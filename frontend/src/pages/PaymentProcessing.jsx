@@ -1,14 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 import nsLogo from '../assets/ns.png';
 
+import nsLogo from '../assets/ns.png';
+import api from '../services/api';
+
 const PaymentProcessing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, refreshUser } = useAuth();
   const [dots, setDots] = useState('');
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const captureAttempted = useRef(false);
+
+  // Intentar capturar la orden de PayPal si venimos con un 'token'
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const token = searchParams.get('token');
+
+    if (token && !captureAttempted.current) {
+      captureAttempted.current = true;
+      api.post('/payments/paypal/capture', { orderId: token })
+        .then(() => {
+          refreshUser().then(() => navigate('/mi-perfil', { replace: true }));
+        })
+        .catch((err) => {
+          console.error('Error capturando la orden de PayPal:', err);
+        });
+    }
+  }, [location.search, navigate, refreshUser]);
 
   // Animar los puntos suspensivos
   useEffect(() => {

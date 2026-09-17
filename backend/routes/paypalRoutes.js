@@ -4,6 +4,7 @@ import {
   checkoutPayPal,
   webhookPayPal,
   verifyPayPal,
+  capturePayPalOrder,
 } from '../controllers/paypalController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -14,6 +15,9 @@ router.post('/subscribe', protect, subscribePayPal);
 
 // Route to create checkout link for one-time purchases
 router.post('/checkout', protect, checkoutPayPal);
+
+// Route to capture PayPal order
+router.post('/capture', protect, capturePayPalOrder);
 
 // Route to instantly verify subscription preapproval
 router.post('/verify', protect, verifyPayPal);
