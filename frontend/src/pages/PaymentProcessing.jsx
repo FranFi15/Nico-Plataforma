@@ -13,7 +13,11 @@ const PaymentProcessing = () => {
   const { user, refreshUser } = useAuth();
   const [dots, setDots] = useState('');
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const [errorMsg, setErrorMsg] = useState(null);
   const captureAttempted = useRef(false);
+  
+  // Guardamos cuántos items tenía al llegar a la página para saber si compró uno nuevo
+  const [initialItemsCount] = useState(user?.purchasedItems?.length || 0);
 
   // Intentar capturar la orden de PayPal si venimos con un 'token'
   useEffect(() => {
@@ -28,6 +32,7 @@ const PaymentProcessing = () => {
         })
         .catch((err) => {
           console.error('Error capturando la orden de PayPal:', err);
+          setErrorMsg(err.response?.data?.message || 'Error al conectar con PayPal o el pago no fue aprobado.');
         });
     }
   }, [location.search, navigate, refreshUser]);
@@ -40,12 +45,13 @@ const PaymentProcessing = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Polling para revisar si la membresía se activó (cada 3 segundos)
+  // Polling para revisar si la membresía se activó o compró un curso (cada 3 segundos)
   useEffect(() => {
     if (!user) return;
 
-    // Si ya está activo, lo mandamos al perfil al instante
-    if (user.membership === 'premium' || user.isSubscribed) {
+    // Si ya está activo como premium, o si tiene un ítem comprado nuevo, lo mandamos al perfil al instante
+    const hasNewItem = (user.purchasedItems?.length || 0) > initialItemsCount;
+    if (user.membership === 'premium' || user.isSubscribed || hasNewItem) {
       navigate('/mi-perfil', { replace: true });
       return;
     }
@@ -86,40 +92,57 @@ const PaymentProcessing = () => {
           Procesando Pago{dots}
         </h2>
         
-        <p style={{ fontSize: '16px', color: 'var(--gray-500)', lineHeight: '1.6', marginBottom: '30px' }}>
-          ¡Gracias por tu compra! Estamos esperando la confirmación de la pasarela. A la brevedad se activará tu acceso.
-        </p>
-
-        {/* Spinner animado usando CSS en línea */}
-        <div style={{ margin: '0 auto 30px auto', position: 'relative', width: '60px', height: '60px' }}>
-          <style>
-            {`
-              @keyframes spin { 100% { transform: rotate(360deg); } }
-            `}
-          </style>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            border: '4px solid #e2e8f0',
-            borderTopColor: 'var(--primary)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-        </div>
-
-        {timeElapsed > 15 && (
-          <div style={{ marginTop: '20px', animation: 'fadeIn 0.5s ease' }}>
-            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
-              Si está tardando más de lo esperado, no te preocupes, el pago se acreditará pronto.
+        {errorMsg ? (
+          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+            <p style={{ fontSize: '16px', color: '#ef4444', marginBottom: '20px', fontWeight: '500' }}>
+              Oops! Hubo un problema: {errorMsg}
             </p>
             <button
               onClick={() => navigate('/mi-perfil', { replace: true })}
               className="btn-primary"
               style={{ padding: '12px 24px', fontSize: '15px', borderRadius: '12px' }}
             >
-              Ir a mi perfil
+              Volver a mi perfil
             </button>
           </div>
+        ) : (
+          <>
+            <p style={{ fontSize: '16px', color: 'var(--gray-500)', lineHeight: '1.6', marginBottom: '30px' }}>
+              ¡Gracias por tu compra! Estamos esperando la confirmación de la pasarela. A la brevedad se activará tu acceso.
+            </p>
+
+            {/* Spinner animado usando CSS en línea */}
+            <div style={{ margin: '0 auto 30px auto', position: 'relative', width: '60px', height: '60px' }}>
+              <style>
+                {`
+                  @keyframes spin { 100% { transform: rotate(360deg); } }
+                `}
+              </style>
+              <div style={{
+                width: '100%',
+                height: '100%',
+                border: '4px solid #e2e8f0',
+                borderTopColor: 'var(--primary)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            </div>
+
+            {timeElapsed > 15 && (
+              <div style={{ marginTop: '20px', animation: 'fadeIn 0.5s ease' }}>
+                <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
+                  Si está tardando más de lo esperado, no te preocupes, el pago se acreditará pronto.
+                </p>
+                <button
+                  onClick={() => navigate('/mi-perfil', { replace: true })}
+                  className="btn-primary"
+                  style={{ padding: '12px 24px', fontSize: '15px', borderRadius: '12px' }}
+                >
+                  Ir a mi perfil
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -358,7 +358,15 @@ export const capturePayPalOrder = async (req, res, next) => {
     }
   } catch (error) {
     console.error('[Capture PayPal] Error:', error.response?.data || error.message);
-    const errMsg = error.response?.data?.message || error.message;
+    
+    // Check if it's already captured
+    const isAlreadyCaptured = error.response?.data?.details?.some(d => d.issue === 'ORDER_ALREADY_CAPTURED');
+    if (isAlreadyCaptured) {
+       console.log('[Capture PayPal] Orden ya capturada previamente. Devolviendo éxito al frontend.');
+       return res.status(200).json({ success: true, message: 'La orden ya estaba capturada.' });
+    }
+
+    const errMsg = error.response?.data?.message || error.response?.data?.details?.[0]?.issue || error.message;
     return res.status(500).json({ success: false, message: `Error al capturar orden: ${errMsg}` });
   }
 };
