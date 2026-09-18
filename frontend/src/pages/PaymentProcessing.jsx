@@ -3,8 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 import nsLogo from '../assets/ns.png';
-
-import nsLogo from '../assets/ns.png';
 import api from '../services/api';
 
 const PaymentProcessing = () => {
