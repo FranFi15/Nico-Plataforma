@@ -1019,8 +1019,8 @@ const CursoDetail = () => {
                                   </div>
                                   <div style={{ overflow: 'hidden' }}>
                                       <span style={{ fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        {item.title}
-                                        {item.isPublished === false && isPrivileged && (
+                                        {att.title || att.name || 'Archivo Adjunto'}
+                                        {att.isPublished === false && isPrivileged && (
                                           <span style={{ fontSize: '9px', backgroundColor: '#fef3c7', color: '#d97706', padding: '2px 4px', borderRadius: '4px', fontWeight: '800', border: '1px solid #fde68a' }}>Oculto</span>
                                         )}
                                       </span>
