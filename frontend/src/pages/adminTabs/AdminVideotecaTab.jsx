@@ -83,9 +83,6 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCVideoFolder('');
     setCCategories([]);
     setCVideoLink('');
-    if (editorRef.current) {
-      editorRef.current.innerHTML = '';
-    }
     setShowContentForm(false);
   };
 
@@ -101,9 +98,6 @@ const AdminVideotecaTab = ({ formMessage, setFormMessage }) => {
     setCVideoFolder(item.videoFolder?._id || item.videoFolder || '');
     setCCategories(item.categories?.map(c => c._id || c) || (item.category ? [item.category._id || item.category] : []));
     setCVideoLink(item.videoLink || '');
-    if (editorRef.current) {
-      editorRef.current.innerHTML = item.body || item.description || '';
-    }
     setShowContentForm(true);
     window.scrollTo({ top: 200, behavior: 'smooth' });
   };
