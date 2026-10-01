@@ -161,28 +161,45 @@ export const sendNewContentEmail = async (users, content, url) => {
   }
 };
 
-export const sendNewsEmail = async (users, news) => {
+export const sendEventEmail = async (users, event) => {
   if (!process.env.RESEND_API_KEY || users.length === 0) return;
 
   const bccEmails = users.map(u => u.email).filter(e => e);
 
   if (bccEmails.length === 0) return;
 
+  const isNews = event.type === 'news';
+  const tagColor = isNews ? '#10b981' : '#3b82f6';
+  const tagText = isNews ? 'Novedades del Muro' : 'Nueva Charla Zoom';
+  const subjectText = isNews ? `Noticia en el Muro: ${event.title}` : `Invitación a Charla Zoom: ${event.title}`;
+  
+  const formattedDate = event.eventDate ? new Date(event.eventDate).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : '';
+
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: 'noreply@nsentrenamiento.com',
       bcc: bccEmails,
-      subject: `Noticia en el Muro: ${news.title}`,
+      subject: subjectText,
       html: `
         <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
-            <span style="color: #10b981; font-weight: bold; font-size: 12px; text-transform: uppercase;">Novedades del Muro</span>
+            <span style="color: ${tagColor}; font-weight: bold; font-size: 12px; text-transform: uppercase;">${tagText}</span>
           </div>
-          <h1 style="color: #0f172a; margin-top: 0;">${news.title}</h1>
-          ${news.description ? `<p style="color: #334155; font-size: 16px; line-height: 1.5;">${news.description}</p>` : ''}
+          <h1 style="color: #0f172a; margin-top: 0;">${event.title}</h1>
+          ${!isNews && event.eventDate ? `<p style="font-size: 15px; font-weight: bold;">📅 Cuándo: ${formattedDate} hs</p>` : ''}
+          ${event.description ? `<p style="color: #334155; font-size: 16px; line-height: 1.5;">${event.description}</p>` : ''}
           <div style="margin-top: 30px;">
-            <a href="${process.env.FRONTEND_URL || 'https://nico-plataforma-frontend.vercel.app'}/charlas-zoom" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en la plataforma</a>
+            ${!isNews && event.zoomUrl ? 
+              `<a href="${event.zoomUrl}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 10px;">Unirse a la Charla</a>`
+            : ''}
+            <a href="${process.env.FRONTEND_URL || 'https://nico-plataforma-frontend.vercel.app'}/charlas-zoom" style="background-color: ${isNews ? '#1f75f5' : '#64748b'}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en la plataforma</a>
           </div>
           <br/><br/>
           <p>Un saludo,</p>
@@ -190,9 +207,9 @@ export const sendNewsEmail = async (users, news) => {
         </div>
       `,
     });
-    console.log(`News email sent to ${bccEmails.length} users`);
+    console.log(`Event email sent to ${bccEmails.length} users`);
   } catch (error) {
-    console.error('Error sending news email:', error);
+    console.error('Error sending event email:', error);
   }
 };
 

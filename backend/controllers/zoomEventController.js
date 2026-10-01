@@ -1,6 +1,6 @@
 import ZoomEvent from '../models/zoomEventModel.js';
 import User from '../models/userModel.js';
-import { sendNewsEmail } from '../utils/emailService.js';
+import { sendEventEmail } from '../utils/emailService.js';
 
 // @route   GET /api/zoomevents
 // @access  Public / Private
@@ -108,9 +108,9 @@ export const createZoomEvent = async (req, res, next) => {
       zoomEvent.notifiedCount = notifiedCount;
       await zoomEvent.save();
 
-      // Send email if requested and it's a news post
-      if (isNews && sendEmailNotification) {
-        sendNewsEmail(targetUsers, zoomEvent).catch(console.error);
+      // Send email if requested
+      if (sendEmailNotification) {
+        sendEventEmail(targetUsers, zoomEvent).catch(console.error);
       }
     }
 
