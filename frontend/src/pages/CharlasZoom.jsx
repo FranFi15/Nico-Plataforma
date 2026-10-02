@@ -59,7 +59,7 @@ const CharlasZoom = () => {
 
     if (ev.targetAudience === 'specific_course') {
       const courseId = ev.targetCourseId?._id || ev.targetCourseId;
-      const ownsSpecific = user && user.purchasedItems && user.purchasedItems.some(item => (item._id || item) === courseId);
+      const ownsSpecific = user && user.purchasedItems && user.purchasedItems.some(item => (item?._id || item) === courseId);
       return ownsSpecific;
     }
 

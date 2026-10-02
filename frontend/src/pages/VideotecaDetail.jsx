@@ -68,7 +68,7 @@ const VideotecaDetail = () => {
   const isFree = content.accessType === 'free';
   const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
   const isOwned = user && user.purchasedItems && user.purchasedItems.some(
-    (item) => (item._id || item) === content._id
+    (item) => (item?._id || item) === content._id
   );
   const hasAccess = isPrivileged || isFree || (content.accessType === 'subscription' && isSubscribed) || (content.accessType === 'one-time-purchase' && (isOwned || (content.allowPremiumAccess && isSubscribed)));
 

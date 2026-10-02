@@ -129,7 +129,7 @@ const MisAlumnos = () => {
     const isPrivileged = student && ['admin', 'professor', 'profe', 'instructor'].includes(student.role);
     const isPremium = (student.membership === 'premium' || student.isSubscribed === true) &&
       (!student.membershipExpiresAt || new Date(student.membershipExpiresAt) > new Date());
-    const ownedIds = student.purchasedItems ? student.purchasedItems.map(item => (item._id || item).toString()) : [];
+    const ownedIds = student.purchasedItems ? student.purchasedItems.map(item => (item?._id || item).toString()) : [];
 
     const accessedCourses = [];
     const accessedWorkshops = [];

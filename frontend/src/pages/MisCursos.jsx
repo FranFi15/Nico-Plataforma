@@ -29,7 +29,7 @@ const MisCursos = () => {
         // Filter contents to only those the user has access to
         const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
         const isPremium = user && (user.membership === 'premium' || user.isSubscribed === true);
-        const ownedIds = user && user.purchasedItems ? user.purchasedItems.map(item => item._id || item) : [];
+        const ownedIds = user && user.purchasedItems ? user.purchasedItems.map(item => item?._id || item) : [];
 
         const filtered = allContent.filter(item => {
           if (isPrivileged) return true;

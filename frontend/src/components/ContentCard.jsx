@@ -47,7 +47,7 @@ const ContentCard = ({ content }) => {
 
   // Check if user already owns this content
   const isOwned = user && user.purchasedItems && user.purchasedItems.some(
-    (item) => (item._id || item) === content._id
+    (item) => (item?._id || item) === content._id
   );
 
   const isPremiumAccessGranted = content.accessType === 'one-time-purchase' && content.allowPremiumAccess && isSubscribed;
