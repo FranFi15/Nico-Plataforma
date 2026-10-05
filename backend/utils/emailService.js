@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
-const FROM_EMAIL = 'NSEntrenamiento <hola@nsentrenamiento.com>'; // Ajustar según preferencia del usuario
+const FROM_EMAIL = 'NSEntrenamiento <hola@nsentrenamiento.com>';
 const ADMIN_EMAIL = 'nicosesmaplay6@gmail.com';
 
 const chunkArray = (arr, size) => {
@@ -142,7 +142,7 @@ export const sendNewContentEmail = async (users, content, url) => {
 
   try {
     const emailChunks = chunkArray(bccEmails, 49); // Max 50 recipients per request (1 to + 49 bcc)
-    
+
     for (const chunk of emailChunks) {
       const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,
@@ -166,7 +166,7 @@ export const sendNewContentEmail = async (users, content, url) => {
           </div>
         `,
       });
-      
+
       if (error) {
         console.error('Resend API Error (New Content):', error);
       }
@@ -188,7 +188,7 @@ export const sendEventEmail = async (users, event) => {
   const tagColor = isNews ? '#10b981' : '#3b82f6';
   const tagText = isNews ? 'Novedades del Muro' : 'Nueva Charla Zoom';
   const subjectText = isNews ? `Noticia en el Muro: ${event.title}` : `Invitación a Charla Zoom: ${event.title}`;
-  
+
   const formattedDate = event.eventDate ? new Date(event.eventDate).toLocaleDateString('es-ES', {
     weekday: 'long',
     day: 'numeric',
@@ -199,7 +199,7 @@ export const sendEventEmail = async (users, event) => {
 
   try {
     const emailChunks = chunkArray(bccEmails, 49); // Max 50 recipients per request
-    
+
     for (const chunk of emailChunks) {
       const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,
@@ -215,9 +215,9 @@ export const sendEventEmail = async (users, event) => {
             ${!isNews && event.eventDate ? `<p style="font-size: 15px; font-weight: bold;">📅 Cuándo: ${formattedDate} hs</p>` : ''}
             ${event.description ? `<p style="color: #334155; font-size: 16px; line-height: 1.5;">${event.description}</p>` : ''}
             <div style="margin-top: 30px;">
-              ${!isNews && event.zoomUrl ? 
-                `<a href="${event.zoomUrl}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 10px;">Unirse a la Charla</a>`
-              : ''}
+              ${!isNews && event.zoomUrl ?
+            `<a href="${event.zoomUrl}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 10px;">Unirse a la Charla</a>`
+            : ''}
               <a href="${process.env.FRONTEND_URL || 'https://nico-plataforma-frontend.vercel.app'}/charlas-zoom" style="background-color: ${isNews ? '#1f75f5' : '#64748b'}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en la plataforma</a>
             </div>
             <br/><br/>
@@ -226,7 +226,7 @@ export const sendEventEmail = async (users, event) => {
           </div>
         `,
       });
-      
+
       if (error) {
         console.error('Resend API Error (Event):', error);
       }
