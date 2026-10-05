@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
-const FROM_EMAIL = 'Nico <hola@nsentrenamiento.com>'; // Ajustar según preferencia del usuario
+const FROM_EMAIL = 'NSEntrenamiento <hola@nsentrenamiento.com>'; // Ajustar según preferencia del usuario
 const ADMIN_EMAIL = 'nicosesmaplay6@gmail.com';
 
 const chunkArray = (arr, size) => {
