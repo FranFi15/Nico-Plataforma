@@ -6,6 +6,14 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 const FROM_EMAIL = 'Nico <hola@nsentrenamiento.com>'; // Ajustar según preferencia del usuario
 const ADMIN_EMAIL = 'nicosesmaplay6@gmail.com';
 
+const chunkArray = (arr, size) => {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
+
 export const sendAdminNotification = async (subject, htmlContent) => {
   if (!process.env.RESEND_API_KEY) return;
   try {
@@ -133,29 +141,37 @@ export const sendNewContentEmail = async (users, content, url) => {
         content.contentType === 'blog' ? 'Nuevo Artículo' : 'Nuevo Contenido';
 
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: 'noreply@nsentrenamiento.com', // El TO principal no importa mucho si usamos BCC
-      bcc: bccEmails,
-      subject: `Novedad en NS Entrenamiento: ${content.title}`,
-      html: `
-        <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
-            <span style="color: #3b82f6; font-weight: bold; font-size: 12px; text-transform: uppercase;">${contentTypeName}</span>
+    const emailChunks = chunkArray(bccEmails, 49); // Max 50 recipients per request (1 to + 49 bcc)
+    
+    for (const chunk of emailChunks) {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: 'noreply@nsentrenamiento.com',
+        bcc: chunk,
+        subject: `Novedad en NS Entrenamiento: ${content.title}`,
+        html: `
+          <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
+              <span style="color: #3b82f6; font-weight: bold; font-size: 12px; text-transform: uppercase;">${contentTypeName}</span>
+            </div>
+            <h1 style="color: #0f172a; margin-top: 0;">${content.title}</h1>
+            <p>Acabamos de publicar nuevo contenido que podría interesarte.</p>
+            ${content.description ? `<p style="color: #64748b;">${content.description}</p>` : ''}
+            <div style="margin-top: 30px;">
+              <a href="${url}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver contenido</a>
+            </div>
+            <br/><br/>
+            <p>Un saludo,</p>
+            <p><strong>El equipo de NS Entrenamiento</strong></p>
           </div>
-          <h1 style="color: #0f172a; margin-top: 0;">${content.title}</h1>
-          <p>Acabamos de publicar nuevo contenido que podría interesarte.</p>
-          ${content.description ? `<p style="color: #64748b;">${content.description}</p>` : ''}
-          <div style="margin-top: 30px;">
-            <a href="${url}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver contenido</a>
-          </div>
-          <br/><br/>
-          <p>Un saludo,</p>
-          <p><strong>El equipo de NS Entrenamiento</strong></p>
-        </div>
-      `,
-    });
-    console.log(`New content email sent to ${bccEmails.length} users`);
+        `,
+      });
+      
+      if (error) {
+        console.error('Resend API Error (New Content):', error);
+      }
+    }
+    console.log(`New content email sent to ${bccEmails.length} users (in ${emailChunks.length} batches)`);
   } catch (error) {
     console.error('Error sending new content email:', error);
   }
@@ -182,32 +198,40 @@ export const sendEventEmail = async (users, event) => {
   }) : '';
 
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: 'noreply@nsentrenamiento.com',
-      bcc: bccEmails,
-      subject: subjectText,
-      html: `
-        <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
-            <span style="color: ${tagColor}; font-weight: bold; font-size: 12px; text-transform: uppercase;">${tagText}</span>
+    const emailChunks = chunkArray(bccEmails, 49); // Max 50 recipients per request
+    
+    for (const chunk of emailChunks) {
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: 'noreply@nsentrenamiento.com',
+        bcc: chunk,
+        subject: subjectText,
+        html: `
+          <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
+              <span style="color: ${tagColor}; font-weight: bold; font-size: 12px; text-transform: uppercase;">${tagText}</span>
+            </div>
+            <h1 style="color: #0f172a; margin-top: 0;">${event.title}</h1>
+            ${!isNews && event.eventDate ? `<p style="font-size: 15px; font-weight: bold;">📅 Cuándo: ${formattedDate} hs</p>` : ''}
+            ${event.description ? `<p style="color: #334155; font-size: 16px; line-height: 1.5;">${event.description}</p>` : ''}
+            <div style="margin-top: 30px;">
+              ${!isNews && event.zoomUrl ? 
+                `<a href="${event.zoomUrl}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 10px;">Unirse a la Charla</a>`
+              : ''}
+              <a href="${process.env.FRONTEND_URL || 'https://nico-plataforma-frontend.vercel.app'}/charlas-zoom" style="background-color: ${isNews ? '#1f75f5' : '#64748b'}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en la plataforma</a>
+            </div>
+            <br/><br/>
+            <p>Un saludo,</p>
+            <p><strong>El equipo de NS Entrenamiento</strong></p>
           </div>
-          <h1 style="color: #0f172a; margin-top: 0;">${event.title}</h1>
-          ${!isNews && event.eventDate ? `<p style="font-size: 15px; font-weight: bold;">📅 Cuándo: ${formattedDate} hs</p>` : ''}
-          ${event.description ? `<p style="color: #334155; font-size: 16px; line-height: 1.5;">${event.description}</p>` : ''}
-          <div style="margin-top: 30px;">
-            ${!isNews && event.zoomUrl ? 
-              `<a href="${event.zoomUrl}" style="background-color: #1f75f5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 10px;">Unirse a la Charla</a>`
-            : ''}
-            <a href="${process.env.FRONTEND_URL || 'https://nico-plataforma-frontend.vercel.app'}/charlas-zoom" style="background-color: ${isNews ? '#1f75f5' : '#64748b'}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver en la plataforma</a>
-          </div>
-          <br/><br/>
-          <p>Un saludo,</p>
-          <p><strong>El equipo de NS Entrenamiento</strong></p>
-        </div>
-      `,
-    });
-    console.log(`Event email sent to ${bccEmails.length} users`);
+        `,
+      });
+      
+      if (error) {
+        console.error('Resend API Error (Event):', error);
+      }
+    }
+    console.log(`Event email sent to ${bccEmails.length} users (in ${emailChunks.length} batches)`);
   } catch (error) {
     console.error('Error sending event email:', error);
   }
