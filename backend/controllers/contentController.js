@@ -1,7 +1,7 @@
 import Content from '../models/contentModel.js';
 import User from '../models/userModel.js';
 import { sendNewContentEmail } from '../utils/emailService.js';
-import { calculatePrice } from '../utils/pricingHelper.js';
+import { userHasContentAccess, userOwnsContent } from '../utils/accessHelper.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -243,64 +243,8 @@ export const getContentPreview = async (req, res, next) => {
 // @route   POST /api/content/:id/checkout
 // @access  Private (Secured with protect)
 export const checkoutContent = async (req, res, next) => {
-  try {
-    const content = await Content.findById(req.params.id);
-
-    if (!content) {
-      res.status(404);
-      throw new Error('Contenido no encontrado');
-    }
-
-    // Verify it is a one-time purchase content
-    if (content.accessType !== 'one-time-purchase') {
-      res.status(400);
-      throw new Error('Este contenido no requiere una compra de pago único.');
-    }
-
-    // Load full user document from DB to check and edit purchasedItems
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      res.status(404);
-      throw new Error('Usuario no encontrado');
-    }
-
-    // Check if already purchased
-    if (user.purchasedItems.includes(content._id)) {
-      res.status(400);
-      throw new Error('Ya has comprado este contenido.');
-    }
-
-    // Calculate final price with dynamic discount helper
-    const basePrice = content.price || 0;
-    const finalPrice = calculatePrice(user, content);
-    const discountApplied = basePrice - finalPrice;
-
-    // Simulate payment transaction
-    console.log(
-      `[Simulación de Pago] Procesando pago para usuario: ${user.email}. Monto base: $${basePrice}, Descuento: $${discountApplied}, Total Pagado: $${finalPrice}`
-    );
-
-    // Save purchase
-    user.purchasedItems.push(content._id);
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Compra simulada y procesada con éxito.',
-      transaction: {
-        contentId: content._id,
-        title: content.title,
-        basePrice,
-        discountApplied,
-        finalPricePaid: finalPrice,
-        status: 'completed',
-        timestamp: new Date(),
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.status(400);
+  next(new Error('La compra se confirma por Mercado Pago o PayPal.'));
 };
 
 // @desc    Update content
@@ -764,13 +708,16 @@ export const enrollInContent = async (req, res, next) => {
       throw new Error('Usuario no encontrado');
     }
 
+    if (!userHasContentAccess(user, content)) {
+      res.status(403);
+      throw new Error('No podés inscribirte en este contenido sin acceso.');
+    }
+
     if (!user.purchasedItems) {
       user.purchasedItems = [];
     }
 
-    const alreadyEnrolled = user.purchasedItems.some(
-      (item) => (item._id || item).toString() === content._id.toString()
-    );
+    const alreadyEnrolled = userOwnsContent(user, content._id);
 
     if (!alreadyEnrolled) {
       user.purchasedItems.push(content._id);

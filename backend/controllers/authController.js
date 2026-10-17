@@ -14,7 +14,7 @@ const generateToken = (id) => {
 // @access  Public
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, membership } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       res.status(400);
@@ -34,9 +34,9 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password,
-      role: role || 'student',
+      role: 'student',
       profession: req.body.profession || '',
-      membership: membership || 'free',
+      membership: 'free',
     });
 
     if (user) {

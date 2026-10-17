@@ -5,6 +5,7 @@ import Coupon from '../models/couponModel.js';
 import SubscriptionPlan from '../models/subscriptionPlanModel.js';
 import Transaction from '../models/transactionModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
+import { userOwnsContent } from '../utils/accessHelper.js';
 
 // Get Mercado Pago config using ACCESS_TOKEN from env dynamically
 const getMPClient = () => {
@@ -246,7 +247,7 @@ export const webhookMercadoPago = async (req, res, next) => {
         if (metadata && metadata.paymentType === 'one-time-purchase') {
           const user = await User.findById(metadata.userId);
           if (user) {
-            if (!user.purchasedItems.includes(metadata.contentId)) {
+            if (!userOwnsContent(user, metadata.contentId)) {
               user.purchasedItems.push(metadata.contentId);
               await user.save();
 

@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
+import { isActivePremium, isStaff, userOwnsContent } from '../utils/accessHelper.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -57,8 +58,7 @@ export const checkAccess = async (req, res, next) => {
       return next(new Error('Contenido no encontrado'));
     }
 
-    // Admins and Professors bypass all access rules
-    if (req.user && ['admin', 'professor', 'profe', 'instructor'].includes(req.user.role)) {
+    if (isStaff(req.user)) {
       return next();
     }
 
@@ -81,30 +81,20 @@ export const checkAccess = async (req, res, next) => {
       return next();
     }
 
-    // Access rule: Subscription requires premium membership
     if (content.accessType === 'subscription') {
-      const isPremiumUser = req.user && (req.user.membership === 'premium' || req.user.isSubscribed === true);
-      const isExpired = req.user && req.user.membershipExpiresAt && new Date(req.user.membershipExpiresAt) < new Date();
-      if (isPremiumUser && !isExpired) {
+      if (isActivePremium(req.user)) {
         return next();
-      } else {
-        res.status(403);
-        return next(new Error('Acceso denegado. Este contenido requiere una suscripción o membresía activa no expirada.'));
       }
+      res.status(403);
+      return next(new Error('Acceso denegado. Este contenido requiere una suscripción o membresía activa no expirada.'));
     }
 
-    // Access rule: One-time-purchase requires content ID in purchasedItems
     if (content.accessType === 'one-time-purchase') {
-      if (
-        req.user &&
-        req.user.purchasedItems &&
-        req.user.purchasedItems.includes(content._id)
-      ) {
+      if (userOwnsContent(req.user, content._id) || (content.allowPremiumAccess === true && isActivePremium(req.user))) {
         return next();
-      } else {
-        res.status(403);
-        return next(new Error('Acceso denegado. Este contenido requiere ser comprado previamente.'));
       }
+      res.status(403);
+      return next(new Error('Acceso denegado. Este contenido requiere ser comprado previamente.'));
     }
 
     res.status(400);

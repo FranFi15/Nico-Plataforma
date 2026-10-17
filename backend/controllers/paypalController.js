@@ -2,6 +2,7 @@ import axios from 'axios';
 import User from '../models/userModel.js';
 import Content from '../models/contentModel.js';
 import { calculatePrice } from '../utils/pricingHelper.js';
+import { userOwnsContent } from '../utils/accessHelper.js';
 import Coupon from '../models/couponModel.js';
 import SubscriptionPlan from '../models/subscriptionPlanModel.js';
 import Transaction from '../models/transactionModel.js';
@@ -309,7 +310,7 @@ export const capturePayPalOrder = async (req, res, next) => {
 
         if (metadata && metadata.paymentType === 'one-time-purchase' && metadata.userId === req.user._id.toString()) {
           const user = await User.findById(metadata.userId);
-          if (user && !user.purchasedItems.includes(metadata.contentId)) {
+          if (user && !userOwnsContent(user, metadata.contentId)) {
             user.purchasedItems.push(metadata.contentId);
             await user.save();
 
@@ -427,11 +428,6 @@ export const webhookPayPal = async (req, res) => {
             }
           } catch (err) {
             console.error(`[Webhook PayPal] Error verificando suscripción ${subscriptionId} en API:`, err.message);
-            // Fallback: trust the webhook payload if the API verification fails
-            if (resource.status === 'ACTIVE' || resource.status === 'APPROVED' || event_type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
-              console.log(`[Webhook PayPal] Usando fallback payload para activar suscripción.`);
-              isActive = true;
-            }
           }
 
           if (isActive) {
@@ -548,7 +544,7 @@ export const webhookPayPal = async (req, res) => {
                 headers: { Authorization: `Bearer ${accessToken}` }
               });
               if (orderRes.data && orderRes.data.status === 'COMPLETED') {
-                if (!user.purchasedItems.includes(metadata.contentId)) {
+                if (!userOwnsContent(user, metadata.contentId)) {
                   user.purchasedItems.push(metadata.contentId);
                   await user.save();
                   
