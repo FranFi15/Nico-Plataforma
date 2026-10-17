@@ -21,7 +21,7 @@ const ReviewModal = ({ isOpen, onClose, onSubmitReview, user, contentTitle, cert
 
   useEffect(() => {
     if (isOpen) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [isOpen]);
 

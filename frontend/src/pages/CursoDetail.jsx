@@ -7,6 +7,58 @@ import AddToFolderModal from '../components/AddToFolderModal';
 import ReviewModal from '../components/ReviewModal';
 import { IoArrowBack, IoFolderOpen, IoLockClosed, IoCheckmarkCircle, IoPlay, IoDocumentText, IoSchool, IoTime, IoChevronDown, IoChevronUp, IoCheckmarkDone, IoDownloadOutline, IoHelpCircleOutline, IoStar, IoSchoolOutline, IoMegaphoneOutline, IoDocumentTextOutline, IoInformationCircleOutline, IoTrophyOutline, IoCloseCircleOutline, IoRefreshOutline, IoChatbubbleOutline, IoVideocamOutline } from 'react-icons/io5';
 
+const readCompletedItems = (contentId) => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(`skool_completed_${contentId}`) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const hasLessonNotes = (body) =>
+  typeof body === 'string' && body.trim() !== '' && body.trim() !== '<p></p>';
+
+const lessonList = (lessons) => (Array.isArray(lessons) ? lessons : []);
+
+const starCount = (rating) => {
+  const value = Math.round(Number(rating));
+  if (!Number.isFinite(value)) return 5;
+  return Math.max(0, Math.min(5, value));
+};
+
+class CourseErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ maxWidth: '720px', margin: '80px auto', padding: '0 20px', textAlign: 'center', fontFamily: 'var(--font-sans)' }}>
+          <div style={{ padding: '40px', border: '1px solid var(--border)', borderRadius: '24px', backgroundColor: '#ffffff' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', marginBottom: '12px' }}>
+              No se pudo mostrar esta formación
+            </h2>
+            <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: 1.6 }}>
+              Tu acceso está bien. Esta página falló al dibujarse en este navegador. Recargala para volver a intentar.
+            </p>
+            <button onClick={() => window.location.reload()} className="btn-primary">
+              Recargar
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const getEmbedUrl = (url) => {
   if (!url) return '';
   try {
@@ -64,13 +116,7 @@ const CursoDetail = () => {
   // Skool Player Navigation State
   const [activeModuleIdx, setActiveModuleIdx] = useState(0);
   const [activeLessonIdx, setActiveLessonIdx] = useState(0);
-  const [completedItems, setCompletedItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(`skool_completed_${id}`) || '[]');
-    } catch (e) {
-      return [];
-    }
-  });
+  const [completedItems, setCompletedItems] = useState(() => readCompletedItems(id));
 
   // Skool Lesson View Tab ('notes' vs 'attachments')
   const [lessonTab, setLessonTab] = useState('notes');
@@ -88,6 +134,10 @@ const CursoDetail = () => {
       return false;
     }
   });
+
+  useEffect(() => {
+    setCompletedItems(readCompletedItems(id));
+  }, [id]);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -119,9 +169,10 @@ const CursoDetail = () => {
   // Save completed items to local storage
   const toggleItemCompleted = (itemId) => {
     setCompletedItems((prev) => {
-      const updated = prev.includes(itemId)
-        ? prev.filter((i) => i !== itemId)
-        : [...prev, itemId];
+      const list = Array.isArray(prev) ? prev : [];
+      const updated = list.includes(itemId)
+        ? list.filter((i) => i !== itemId)
+        : [...list, itemId];
       localStorage.setItem(`skool_completed_${id}`, JSON.stringify(updated));
       localStorage.setItem(`nico_completed_${id}`, JSON.stringify(updated));
       return updated;
@@ -131,14 +182,15 @@ const CursoDetail = () => {
   // Calculate overall progress and current item safely at top level for hook rules
   const hasModules = content?.modules && content.modules.length > 0;
   const currentModule = hasModules ? content.modules[activeModuleIdx] : null;
-  const currentItem = currentModule && currentModule.lessons ? currentModule.lessons[activeLessonIdx] : null;
+  const currentItem = currentModule ? lessonList(currentModule.lessons)[activeLessonIdx] : null;
 
   const totalItemsCount = hasModules
     ? content.modules.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0)
     : 1;
+  const doneIds = Array.isArray(completedItems) ? completedItems : [];
   const completedCount = hasModules
     ? content.modules.reduce(
-      (acc, mod) => acc + (mod.lessons || []).filter((l) => completedItems.includes(l.id)).length,
+      (acc, mod) => acc + lessonList(mod?.lessons).filter((l) => l && doneIds.includes(l.id)).length,
       0
     )
     : 0;
@@ -163,7 +215,7 @@ const CursoDetail = () => {
       const alreadyReviewedBackend = content.reviews?.some((r) => r.user === user._id || r.user?._id === user._id);
       if (!alreadyReviewedLocal && !alreadyReviewedBackend) {
         const timer = setTimeout(() => {
-          window.scrollTo({ top: 0, behavior: 'instant' });
+          window.scrollTo({ top: 0, behavior: 'auto' });
           setShowReviewModal(true);
         }, 500);
         return () => clearTimeout(timer);
@@ -400,7 +452,7 @@ const CursoDetail = () => {
     const score = Math.round((correct / currentItem.questions.length) * 100);
     setQuizScore(score);
     setQuizSubmitted(true);
-    if (score >= (currentItem.passingScore || 70) && !completedItems.includes(currentItem.id)) {
+    if (score >= (currentItem.passingScore || 70) && !doneIds.includes(currentItem.id)) {
       toggleItemCompleted(currentItem.id);
     }
   };
@@ -419,67 +471,76 @@ const CursoDetail = () => {
   };
 
   return (
-    <div className="animate-fade-in px-16-mobile" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
+    <div className="px-16-mobile" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
       <style>{`
         @keyframes headerFadeSlideIn {
-          0% { opacity: 0; transform: translateY(-30px) scale(0.98); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { transform: translateY(-12px); }
+          100% { transform: translateY(0); }
         }
         @keyframes coverPulse {
           0% { transform: scale(1); }
           100% { transform: scale(1.08); }
         }
         @keyframes sidebarPopIn {
-          0% { opacity: 0; transform: translateX(-25px); }
-          100% { opacity: 1; transform: translateX(0); }
+          0% { transform: translateX(-12px); }
+          100% { transform: translateX(0); }
         }
         @keyframes accordionExpand {
-          0% { opacity: 0; transform: translateY(-10px); max-height: 0; }
-          100% { opacity: 1; transform: translateY(0); max-height: 2000px; }
+          0% { transform: translateY(-6px); }
+          100% { transform: translateY(0); }
         }
         @keyframes lessonContentPop {
-          0% { opacity: 0; transform: translateY(20px) scale(0.99); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { transform: translateY(10px); }
+          100% { transform: translateY(0); }
         }
         @keyframes attachmentCardPop {
-          0% { opacity: 0; transform: translateY(15px) scale(0.96); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { transform: translateY(8px); }
+          100% { transform: translateY(0); }
         }
         @keyframes reviewCardEntry {
-          0% { opacity: 0; transform: translateY(30px) scale(0.97); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { transform: translateY(10px); }
+          100% { transform: translateY(0); }
         }
         @keyframes starPulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
           50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
         }
         @keyframes floatInBottom {
-          0% { opacity: 0; transform: translateY(40px) scale(0.85); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { transform: translateY(16px); }
+          100% { transform: translateY(0); }
         }
         .animated-course-header {
-          animation: headerFadeSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: headerFadeSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .animated-cover-img {
           animation: coverPulse 12s infinite alternate ease-in-out;
         }
         .animated-sidebar {
-          animation: sidebarPopIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
-          opacity: 0;
+          animation: sidebarPopIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
         }
         .animated-accordion-body {
-          animation: accordionExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: accordionExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .animated-lesson-container {
-          animation: lessonContentPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: lessonContentPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .animated-attachment-card {
-          animation: attachmentCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          opacity: 0;
+          animation: attachmentCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .animated-review-card {
-          animation: reviewCardEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          opacity: 0;
+          animation: reviewCardEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animated-course-header,
+          .animated-cover-img,
+          .animated-sidebar,
+          .animated-accordion-body,
+          .animated-lesson-container,
+          .animated-attachment-card,
+          .animated-review-card,
+          .animated-star-btn {
+            animation: none;
+          }
         }
         .animated-star-btn {
           animation: starPulse 2.5s infinite;
@@ -527,7 +588,7 @@ const CursoDetail = () => {
         {user && (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
-              onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setShowReviewModal(true); }}
+              onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowReviewModal(true); }}
               className="animated-star-btn"
               style={{
                 display: 'inline-flex',
@@ -741,9 +802,9 @@ const CursoDetail = () => {
                       {/* Lessons inside Module */}
                       {isActiveMod && (
                         <div className="animated-accordion-body" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
-                          {(mod.lessons || []).map((item, itemIndex) => {
+                          {lessonList(mod.lessons).map((item, itemIndex) => {
                             const isSelected = activeModuleIdx === modIndex && activeLessonIdx === itemIndex;
-                            const isDone = completedItems.includes(item.id);
+                            const isDone = doneIds.includes(item.id);
                             const isQuiz = item.type === 'quiz';
 
                             return (
@@ -877,17 +938,17 @@ const CursoDetail = () => {
                           gap: '6px',
                           padding: '8px 16px',
                           borderRadius: '10px',
-                          border: `2px solid ${completedItems.includes(currentItem.id) ? '#10b981' : '#cbd5e1'}`,
-                          backgroundColor: completedItems.includes(currentItem.id) ? '#ecfdf5' : '#ffffff',
-                          color: completedItems.includes(currentItem.id) ? '#059669' : '#475569',
+                          border: `2px solid ${doneIds.includes(currentItem.id) ? '#10b981' : '#cbd5e1'}`,
+                          backgroundColor: doneIds.includes(currentItem.id) ? '#ecfdf5' : '#ffffff',
+                          color: doneIds.includes(currentItem.id) ? '#059669' : '#475569',
                           fontWeight: '800',
                           fontSize: '13px',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease'
                         }}
                       >
-                        <IoCheckmarkCircle size={18} color={completedItems.includes(currentItem.id) ? '#10b981' : '#94a3b8'} />
-                        {completedItems.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
+                        <IoCheckmarkCircle size={18} color={doneIds.includes(currentItem.id) ? '#10b981' : '#94a3b8'} />
+                        {doneIds.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
                       </button>
                     </div>
                   </div>
@@ -935,7 +996,7 @@ const CursoDetail = () => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <IoDocumentTextOutline size={18} /> Notas - Artículos ({(currentItem.body && currentItem.body.trim() !== '<p></p>' && currentItem.body.trim() !== '') ? 1 : 0})
+                          <IoDocumentTextOutline size={18} /> Notas - Artículos ({hasLessonNotes(currentItem.body) ? 1 : 0})
                         </button>
                         <button
                           onClick={() => setLessonTab('attachments')}
@@ -953,13 +1014,13 @@ const CursoDetail = () => {
                             gap: '6px'
                           }}
                         >
-                          <IoFolderOpen size={18} /> Recursos Descargables ({((currentItem.attachments || []).length + (content.attachments || []).length)})
+                          <IoFolderOpen size={18} /> Recursos Descargables ({lessonList(currentItem.attachments).length + lessonList(content.attachments).length})
                         </button>
                       </div>
 
                       {/* Tab Content */}
                       {lessonTab === 'video' && currentItem.videoLink ? (
-                        <div style={{ marginBottom: '32px', animation: 'fadeIn 0.4s ease' }}>
+                        <div style={{ marginBottom: '32px' }}>
                           <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
                             <iframe
                               src={getEmbedUrl(currentItem.videoLink)}
@@ -971,8 +1032,8 @@ const CursoDetail = () => {
                           </div>
                         </div>
                       ) : lessonTab === 'notes' ? (
-                        <div className="blog-content" style={{ lineHeight: '1.8', fontSize: '16px', color: '#334155', animation: 'fadeIn 0.4s ease' }}>
-                          {currentItem.body ? (
+                        <div className="blog-content" style={{ lineHeight: '1.8', fontSize: '16px', color: '#334155' }}>
+                          {typeof currentItem.body === 'string' && currentItem.body ? (
                             <div dangerouslySetInnerHTML={{ __html: currentItem.body }} />
                           ) : (
                             <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>El instructor no agregó notas adicionales para esta lección.</p>
@@ -983,13 +1044,13 @@ const CursoDetail = () => {
                           <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#051020', marginBottom: '16px' }}>
                             Archivos y Enlaces Adjuntos (Recursos Descargables)
                           </h4>
-                          {((currentItem.attachments || []).length === 0 && (content.attachments || []).length === 0) ? (
+                          {(lessonList(currentItem.attachments).length === 0 && lessonList(content.attachments).length === 0) ? (
                             <p style={{ color: '#94a3b8', fontStyle: 'italic', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', textAlign: 'center' }}>
                               No hay archivos adjuntos disponibles en este momento.
                             </p>
                           ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                              {[...(currentItem.attachments || []), ...(content.attachments || [])].map((att, attIdx) => (
+                              {[...lessonList(currentItem.attachments), ...lessonList(content.attachments)].map((att, attIdx) => (
                                 <a
                                   key={attIdx}
                                   href={att.url}
@@ -1047,13 +1108,13 @@ const CursoDetail = () => {
                         </div>
                       </div>
 
-                      {(currentItem.questions || []).length === 0 ? (
+                      {lessonList(currentItem.questions).length === 0 ? (
                         <p style={{ color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '30px' }}>
                           Este examen aún no tiene preguntas configuradas por el instructor.
                         </p>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                          {currentItem.questions.map((q, qIndex) => {
+                          {lessonList(currentItem.questions).map((q, qIndex) => {
                             const selectedIndex = quizAnswers[q.id];
                             const isCorrect = selectedIndex === q.correctOptionIndex;
 
@@ -1064,7 +1125,7 @@ const CursoDetail = () => {
                                 </h4>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                  {(q.options || []).map((opt, optIdx) => {
+                                  {lessonList(q.options).map((opt, optIdx) => {
                                     const isThisSelected = selectedIndex === optIdx;
                                     const isThisCorrectOption = q.correctOptionIndex === optIdx;
 
@@ -1126,14 +1187,14 @@ const CursoDetail = () => {
                           {!quizSubmitted ? (
                             <button
                               onClick={handleQuizSubmit}
-                              disabled={Object.keys(quizAnswers).length < currentItem.questions.length}
+                              disabled={Object.keys(quizAnswers).length < lessonList(currentItem.questions).length}
                               className="btn-primary"
                               style={{
                                 padding: '14px 28px',
                                 fontSize: '15px',
                                 fontWeight: '900',
                                 alignSelf: 'flex-start',
-                                opacity: Object.keys(quizAnswers).length < currentItem.questions.length ? 0.6 : 1
+                                opacity: Object.keys(quizAnswers).length < lessonList(currentItem.questions).length ? 0.6 : 1
                               }}
                             >
                               Enviar Examen / Validar Respuestas
@@ -1167,11 +1228,11 @@ const CursoDetail = () => {
                   <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <button
                       onClick={() => toggleItemCompleted(currentItem.id)}
-                      className={completedItems.includes(currentItem.id) ? 'btn-translucent' : 'btn-primary'}
+                      className={doneIds.includes(currentItem.id) ? 'btn-translucent' : 'btn-primary'}
                       style={{ padding: '12px 24px', fontSize: '14px', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                     >
                       <IoCheckmarkCircle size={18} />
-                      {completedItems.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
+                      {doneIds.includes(currentItem.id) ? 'Completada' : 'Marcar como Completada'}
                     </button>
 
                     <button
@@ -1207,7 +1268,7 @@ const CursoDetail = () => {
                 <iframe src={getEmbedUrl(content.videoLink)} title={content.title} style={{ width: '100%', height: '550px', border: 'none' }} allowFullScreen />
               </div>
             )}
-            {content.body && (
+            {typeof content.body === 'string' && content.body && (
               <div className="premium-card" style={{ padding: '40px', borderRadius: '24px' }}>
                 <h3 style={{ fontSize: '22px', fontWeight: '900', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
                   Temario y Materiales
@@ -1239,7 +1300,7 @@ const CursoDetail = () => {
           </div>
           {user && (
             <button
-              onClick={() => { window.scrollTo({ top: 0, behavior: 'instant' }); setShowReviewModal(true); }}
+              onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowReviewModal(true); }}
               className="btn-primary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '14px' }}
             >
@@ -1286,8 +1347,8 @@ const CursoDetail = () => {
                     )}
                   </div>
                   <div style={{ color: '#f59e0b', fontSize: '16px', letterSpacing: '2px', fontWeight: '800', flexShrink: 0 }}>
-                    {'★'.repeat(r.rating || 5)}
-                    <span style={{ color: '#e2e8f0' }}>{'★'.repeat(Math.max(0, 5 - (r.rating || 5)))}</span>
+                    {'★'.repeat(starCount(r.rating))}
+                    <span style={{ color: '#e2e8f0' }}>{'★'.repeat(5 - starCount(r.rating))}</span>
                   </div>
                 </div>
 
@@ -1379,4 +1440,13 @@ const CursoDetail = () => {
   );
 };
 
-export default CursoDetail;
+const CursoDetailPage = () => {
+  const { id } = useParams();
+  return (
+    <CourseErrorBoundary key={id}>
+      <CursoDetail />
+    </CourseErrorBoundary>
+  );
+};
+
+export default CursoDetailPage;
