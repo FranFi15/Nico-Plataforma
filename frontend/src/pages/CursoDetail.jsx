@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,37 +27,12 @@ const starCount = (rating) => {
   return Math.max(0, Math.min(5, value));
 };
 
-class CourseErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ maxWidth: '720px', margin: '80px auto', padding: '0 20px', textAlign: 'center', fontFamily: 'var(--font-sans)' }}>
-          <div style={{ padding: '40px', border: '1px solid var(--border)', borderRadius: '24px', backgroundColor: '#ffffff' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', marginBottom: '12px' }}>
-              No se pudo mostrar esta formación
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: 1.6 }}>
-              Tu acceso está bien. Esta página falló al dibujarse en este navegador. Recargala para volver a intentar.
-            </p>
-            <button onClick={() => window.location.reload()} className="btn-primary">
-              Recargar
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+const ownedId = (item) => {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  const id = item._id ?? item.id;
+  return id == null ? '' : String(id);
+};
 
 const getEmbedUrl = (url) => {
   if (!url) return '';
@@ -180,17 +155,18 @@ const CursoDetail = () => {
   };
 
   // Calculate overall progress and current item safely at top level for hook rules
-  const hasModules = content?.modules && content.modules.length > 0;
-  const currentModule = hasModules ? content.modules[activeModuleIdx] : null;
-  const currentItem = currentModule ? lessonList(currentModule.lessons)[activeLessonIdx] : null;
+  const modules = Array.isArray(content?.modules) ? content.modules.filter((mod) => mod && typeof mod === 'object') : [];
+  const hasModules = modules.length > 0;
+  const currentModule = hasModules ? modules[activeModuleIdx] : null;
+  const currentItem = currentModule ? lessonList(currentModule.lessons).filter(Boolean)[activeLessonIdx] : null;
 
   const totalItemsCount = hasModules
-    ? content.modules.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0)
+    ? modules.reduce((acc, mod) => acc + lessonList(mod.lessons).filter(Boolean).length, 0)
     : 1;
   const doneIds = Array.isArray(completedItems) ? completedItems : [];
   const completedCount = hasModules
-    ? content.modules.reduce(
-      (acc, mod) => acc + lessonList(mod?.lessons).filter((l) => l && doneIds.includes(l.id)).length,
+    ? modules.reduce(
+      (acc, mod) => acc + lessonList(mod.lessons).filter((l) => l && doneIds.includes(l.id)).length,
       0
     )
     : 0;
@@ -212,7 +188,7 @@ const CursoDetail = () => {
   useEffect(() => {
     if (progressPercent === 100 && content && user) {
       const alreadyReviewedLocal = localStorage.getItem(`reviewed_course_${id}`);
-      const alreadyReviewedBackend = content.reviews?.some((r) => r.user === user._id || r.user?._id === user._id);
+      const alreadyReviewedBackend = lessonList(content.reviews).some((r) => r && (r.user === user._id || r.user?._id === user._id));
       if (!alreadyReviewedLocal && !alreadyReviewedBackend) {
         const timer = setTimeout(() => {
           window.scrollTo({ top: 0, behavior: 'auto' });
@@ -258,9 +234,8 @@ const CursoDetail = () => {
   const isPrivileged = user && ['admin', 'professor', 'profe', 'instructor'].includes(user.role);
   const isFree = content?.accessType === 'free';
   const isSubscribed = user && (user.membership === 'premium' || user.isSubscribed === true);
-  const isOwned = user && user.purchasedItems && content && user.purchasedItems.some(
-    (item) => (item?._id || item) === content._id
-  );
+  const purchasedIds = Array.isArray(user?.purchasedItems) ? user.purchasedItems.map(ownedId) : [];
+  const isOwned = Boolean(content && purchasedIds.includes(String(content._id)));
   const hasAccess = isPrivileged || isFree || (content?.accessType === 'subscription' && isSubscribed) || (content?.accessType === 'one-time-purchase' && (isOwned || (content?.allowPremiumAccess && isSubscribed)));
 
   useEffect(() => {
@@ -292,7 +267,7 @@ const CursoDetail = () => {
             Formación No Disponible
           </h2>
           <p style={{ color: 'var(--gray-500)', fontSize: '16px', marginBottom: '24px' }}>
-            {error || 'El curso o workshop que buscas no existe o ha sido retirado.'}
+            {typeof error === 'string' && error ? error : 'El curso o workshop que buscas no existe o ha sido retirado.'}
           </p>
           <button onClick={() => navigate('/cursos')} className="btn-primary">
             Explora Todos los Cursos
@@ -460,10 +435,10 @@ const CursoDetail = () => {
   // Next item navigation
   const goToNextItem = () => {
     if (!hasModules) return;
-    if (activeLessonIdx + 1 < (currentModule.lessons?.length || 0)) {
+    if (activeLessonIdx + 1 < lessonList(currentModule.lessons).filter(Boolean).length) {
       setActiveLessonIdx(activeLessonIdx + 1);
       window.scrollTo({ top: 350, behavior: 'smooth' });
-    } else if (activeModuleIdx + 1 < content.modules.length) {
+    } else if (activeModuleIdx + 1 < modules.length) {
       setActiveModuleIdx(activeModuleIdx + 1);
       setActiveLessonIdx(0);
       window.scrollTo({ top: 350, behavior: 'smooth' });
@@ -764,7 +739,7 @@ const CursoDetail = () => {
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {content.modules.map((mod, modIndex) => {
+                {modules.map((mod, modIndex) => {
                   const isActiveMod = activeModuleIdx === modIndex;
                   return (
                     <div key={mod.id} style={{ border: '1px solid #e2e8f0', borderRadius: '14px', overflow: 'hidden', backgroundColor: isActiveMod ? '#f8fafc' : '#ffffff' }}>
@@ -802,7 +777,7 @@ const CursoDetail = () => {
                       {/* Lessons inside Module */}
                       {isActiveMod && (
                         <div className="animated-accordion-body" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
-                          {lessonList(mod.lessons).map((item, itemIndex) => {
+                          {lessonList(mod.lessons).filter(Boolean).map((item, itemIndex) => {
                             const isSelected = activeModuleIdx === modIndex && activeLessonIdx === itemIndex;
                             const isDone = doneIds.includes(item.id);
                             const isQuiz = item.type === 'quiz';
@@ -1293,8 +1268,8 @@ const CursoDetail = () => {
               Reseñas y Experiencias de Alumnos
             </h3>
             <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
-              {content.reviews && content.reviews.length > 0
-                ? `Valoración media: ${(content.rating || 5).toFixed(1)} ★ (${content.reviews.length} ${content.reviews.length === 1 ? 'opinión' : 'opiniones'})`
+              {lessonList(content.reviews).length > 0
+                ? `Valoración media: ${(Number.isFinite(Number(content.rating)) ? Number(content.rating) : 5).toFixed(1)} ★ (${lessonList(content.reviews).length} ${lessonList(content.reviews).length === 1 ? 'opinión' : 'opiniones'})`
                 : 'Conoce las opiniones de quienes ya completaron esta formación.'}
             </p>
           </div>
@@ -1310,9 +1285,9 @@ const CursoDetail = () => {
           )}
         </div>
 
-        {content.reviews && content.reviews.length > 0 ? (
+        {lessonList(content.reviews).filter(Boolean).length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-            {content.reviews.map((r, idx) => (
+            {lessonList(content.reviews).filter(Boolean).map((r, idx) => (
               <div
                 key={idx}
                 className="animated-review-card"
@@ -1440,13 +1415,4 @@ const CursoDetail = () => {
   );
 };
 
-const CursoDetailPage = () => {
-  const { id } = useParams();
-  return (
-    <CourseErrorBoundary key={id}>
-      <CursoDetail />
-    </CourseErrorBoundary>
-  );
-};
-
-export default CursoDetailPage;
+export default CursoDetail;
