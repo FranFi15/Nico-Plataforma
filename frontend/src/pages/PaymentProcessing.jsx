@@ -17,22 +17,40 @@ const PaymentProcessing = () => {
   // Guardamos cuántos items tenía al llegar a la página para saber si compró uno nuevo
   const [initialItemsCount] = useState(user?.purchasedItems?.length || 0);
 
-  // Intentar capturar la orden de PayPal si venimos con un 'token'
+  // Confirm the return from PayPal or Mercado Pago once.
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
+    const subscriptionId = searchParams.get('subscription_id');
+    const preapprovalId = searchParams.get('preapproval_id');
+    const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id');
     const token = searchParams.get('token');
 
-    if (token && !captureAttempted.current) {
-      captureAttempted.current = true;
-      api.post('/payments/paypal/capture', { orderId: token })
-        .then(() => {
-          refreshUser().then(() => navigate('/mi-perfil', { replace: true }));
-        })
-        .catch((err) => {
-          console.error('Error capturando la orden de PayPal:', err);
+    if (captureAttempted.current) return;
+    if (!subscriptionId && !preapprovalId && !paymentId && !token) return;
+
+    captureAttempted.current = true;
+
+    // PayPal adds `token` to subscription returns too. That value is not an order id,
+    // so a subscription must be verified before any one-time capture.
+    const confirmation = subscriptionId
+      ? api.post('/payments/paypal/verify', { subscription_id: subscriptionId })
+      : preapprovalId
+        ? api.post('/payments/mercadopago/verify', { preapproval_id: preapprovalId })
+        : paymentId
+          ? api.post('/payments/mercadopago/confirm', { payment_id: paymentId })
+          : api.post('/payments/paypal/capture', { orderId: token });
+
+    confirmation
+      .then((res) => {
+        if (res.data?.isActive === false || res.data?.granted === false) return;
+        refreshUser().then(() => navigate('/mi-perfil', { replace: true }));
+      })
+      .catch((err) => {
+        console.error('Error confirmando el pago:', err);
+        if (!subscriptionId && !preapprovalId && !paymentId) {
           setErrorMsg(err.response?.data?.message || 'Error al conectar con PayPal o el pago no fue aprobado.');
-        });
-    }
+        }
+      });
   }, [location.search, navigate, refreshUser]);
 
   // Animar los puntos suspensivos

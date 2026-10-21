@@ -153,7 +153,7 @@ export const verifyPayPal = async (req, res, next) => {
         }
     }
 
-    if (subscriptionData.status === 'ACTIVE') {
+    if (subscriptionData.status === 'ACTIVE' || subscriptionData.status === 'APPROVED') {
       const user = await User.findById(req.user._id);
       if (user) {
         user.isSubscribed = true;
@@ -523,72 +523,69 @@ export const webhookPayPal = async (req, res) => {
         }
       }
     } else if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-      const customIdStr = resource.custom_id;
-
-      if (customIdStr) {
-        let metadata = null;
+      const captureId = resource.id;
+      if (captureId) {
         try {
-          metadata = JSON.parse(customIdStr);
-        } catch (e) {
-          // ignore
-        }
+          const accessToken = await getPayPalAccessToken();
+          const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
+          // resource.id is the capture, not the order. The order lookup used to 404.
+          const captureRes = await axios.get(`${baseUrl}/v2/payments/captures/${captureId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+          const capture = captureRes.data;
 
-        if (metadata && metadata.paymentType === 'one-time-purchase') {
-          const user = await User.findById(metadata.userId);
-          if (user) {
-            // Securizar: Verificar en API
+          if (capture && capture.status === 'COMPLETED' && capture.custom_id) {
+            let metadata = null;
             try {
-              const accessToken = await getPayPalAccessToken();
-              const baseUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com';
-              const orderRes = await axios.get(`${baseUrl}/v2/checkout/orders/${resource.id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-              });
-              if (orderRes.data && orderRes.data.status === 'COMPLETED') {
-                if (!userOwnsContent(user, metadata.contentId)) {
-                  user.purchasedItems.push(metadata.contentId);
-                  await user.save();
-                  
-                  // Record Transaction for One-Time Purchase
-                  try {
-                    const amount = resource.amount?.value || 0;
-                    const currency = resource.amount?.currency_code || 'USD';
-                    await Transaction.create({
-                      user: user._id,
-                      amount: Number(amount),
-                      currency,
-                      platform: 'paypal',
-                      type: 'one-time-purchase',
-                      content: metadata.contentId,
-                      externalId: resource.id
-                    });
-                  } catch (txErr) {
-                    console.error('[Webhook PayPal] Error al registrar Transaction:', txErr.message);
-                  }
+              metadata = JSON.parse(capture.custom_id);
+            } catch (e) {
+              // ignore
+            }
 
-                  console.log(`[Webhook PayPal] Compra (verificada) con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
-                  
-                  // Notify admin
-                  const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
-                  const adminHtml = `
-                    <div style="font-family: sans-serif; color: #334155; padding: 20px;">
-                      <h2 style="color: #3b82f6;">Nueva Compra (PayPal)</h2>
-                      <p>El siguiente usuario ha comprado un contenido de pago único.</p>
-                      <ul>
-                        <li><strong>Nombre:</strong> ${user.name}</li>
-                        <li><strong>Email:</strong> ${user.email}</li>
-                        <li><strong>ID Contenido:</strong> ${metadata.contentId}</li>
-                      </ul>
-                    </div>
-                  `;
-                  import('../utils/emailService.js').then(({ sendAdminNotification }) => {
-                    sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+            if (metadata && metadata.paymentType === 'one-time-purchase') {
+              const user = await User.findById(metadata.userId);
+              if (user && !userOwnsContent(user, metadata.contentId)) {
+                user.purchasedItems.push(metadata.contentId);
+                await user.save();
+
+                try {
+                  const amount = capture.amount?.value || 0;
+                  const currency = capture.amount?.currency_code || 'USD';
+                  await Transaction.create({
+                    user: user._id,
+                    amount: Number(amount),
+                    currency,
+                    platform: 'paypal',
+                    type: 'one-time-purchase',
+                    content: metadata.contentId,
+                    externalId: captureId
                   });
+                } catch (txErr) {
+                  console.error('[Webhook PayPal] Error al registrar Transaction:', txErr.message);
                 }
+
+                console.log(`[Webhook PayPal] Compra (verificada) con éxito para: ${user.email} | Contenido: ${metadata.contentId}`);
+
+                const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
+                const adminHtml = `
+                  <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+                    <h2 style="color: #3b82f6;">Nueva Compra (PayPal)</h2>
+                    <p>El siguiente usuario ha comprado un contenido de pago único.</p>
+                    <ul>
+                      <li><strong>Nombre:</strong> ${user.name}</li>
+                      <li><strong>Email:</strong> ${user.email}</li>
+                      <li><strong>ID Contenido:</strong> ${metadata.contentId}</li>
+                    </ul>
+                  </div>
+                `;
+                import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+                  sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+                });
               }
-            } catch (err) {
-              console.error(`[Webhook PayPal] Error verificando orden ${resource.id} en API:`, err.message);
             }
           }
+        } catch (err) {
+          console.error(`[Webhook PayPal] Error verificando captura ${captureId} en API:`, err.message);
         }
       }
     }

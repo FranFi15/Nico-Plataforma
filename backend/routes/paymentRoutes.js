@@ -4,6 +4,7 @@ import {
   checkoutMercadoPago,
   webhookMercadoPago,
   verifyMercadoPago,
+  confirmMercadoPagoPayment,
 } from '../controllers/paymentController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -17,6 +18,9 @@ router.post('/checkout', protect, checkoutMercadoPago);
 
 // Route to instantly verify subscription preapproval
 router.post('/verify', protect, verifyMercadoPago);
+
+// Route to confirm a one-time payment when the buyer returns
+router.post('/confirm', protect, confirmMercadoPagoPayment);
 
 // Asynchronous webhook for payment and subscription status notifications
 router.post('/webhook', webhookMercadoPago);

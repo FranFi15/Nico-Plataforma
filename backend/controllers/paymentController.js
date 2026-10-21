@@ -206,6 +206,107 @@ export const checkoutMercadoPago = async (req, res, next) => {
   }
 };
 
+const grantMercadoPagoPurchase = async (user, contentId, { amount, currency, externalId }) => {
+  if (userOwnsContent(user, contentId)) return false;
+
+  user.purchasedItems.push(contentId);
+  await user.save();
+
+  try {
+    await Transaction.create({
+      user: user._id,
+      amount: amount || 0,
+      currency: currency || 'ARS',
+      platform: 'mercadopago',
+      type: 'one-time-purchase',
+      content: contentId,
+      externalId,
+    });
+  } catch (txErr) {
+    console.error('[Webhook MP] Error al registrar Transaction:', txErr.message);
+  }
+
+  console.log(
+    `[Webhook] Compra registrada con éxito para usuario: ${user.email} | Contenido: ${contentId}`
+  );
+
+  const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
+  const adminHtml = `
+    <div style="font-family: sans-serif; color: #334155; padding: 20px;">
+      <h2 style="color: #3b82f6;">Nueva Compra (Mercado Pago)</h2>
+      <p>El siguiente usuario ha comprado un contenido de pago único.</p>
+      <ul>
+        <li><strong>Nombre:</strong> ${user.name}</li>
+        <li><strong>Email:</strong> ${user.email}</li>
+        <li><strong>ID Contenido:</strong> ${contentId}</li>
+      </ul>
+    </div>
+  `;
+  import('../utils/emailService.js').then(({ sendAdminNotification }) => {
+    sendAdminNotification(adminSubject, adminHtml).catch(console.error);
+  });
+
+  return true;
+};
+
+const readPurchaseMetadata = (externalReference) => {
+  if (!externalReference) return null;
+  try {
+    const metadata = JSON.parse(externalReference);
+    if (metadata?.paymentType !== 'one-time-purchase' || !metadata.userId || !metadata.contentId) {
+      return null;
+    }
+    return metadata;
+  } catch (e) {
+    return null;
+  }
+};
+
+// @desc    Confirm a one-time Mercado Pago payment when the buyer returns
+// @route   POST /api/payments/mercadopago/confirm
+// @access  Private
+export const confirmMercadoPagoPayment = async (req, res) => {
+  try {
+    const paymentId = req.body.payment_id;
+    if (!paymentId) {
+      return res.status(400).json({ success: false, message: 'Falta payment_id' });
+    }
+
+    const client = getMPClient();
+    const payment = new Payment(client);
+    const paymentData = await payment.get({ id: paymentId });
+
+    if (paymentData.status !== 'approved') {
+      return res.status(200).json({ success: true, granted: false, status: paymentData.status });
+    }
+
+    const metadata = readPurchaseMetadata(paymentData.external_reference);
+    if (!metadata) {
+      return res.status(200).json({ success: true, granted: false, status: paymentData.status });
+    }
+
+    if (metadata.userId !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'El pago no corresponde a este usuario' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    await grantMercadoPagoPurchase(user, metadata.contentId, {
+      amount: paymentData.transaction_amount || 0,
+      currency: paymentData.currency_id || 'ARS',
+      externalId: String(paymentId),
+    });
+
+    return res.status(200).json({ success: true, granted: true });
+  } catch (error) {
+    console.error('Error confirmando pago de Mercado Pago:', error.message);
+    return res.status(500).json({ success: false, message: 'Error confirmando el pago' });
+  }
+};
+
 // @desc    Mercado Pago Async Webhook Notification Handler
 // @route   POST /api/payments/mercadopago/webhook
 // @access  Public
@@ -225,6 +326,43 @@ export const webhookMercadoPago = async (req, res, next) => {
     }
 
     const resourceId = data.id;
+    let subscriptionId = resourceId;
+
+    if (notificationType === 'subscription_authorized_payment') {
+      // This id is an authorized payment, not a preapproval. Looking it up as a
+      // subscription makes Mercado Pago answer "Preapproval not found".
+      const { default: axios } = await import('axios');
+      const authorizedRes = await axios.get(
+        `https://api.mercadopago.com/authorized_payments/${resourceId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN.trim()}`,
+          },
+        }
+      );
+      const authorized = authorizedRes.data;
+      const chargeStatus = authorized?.payment?.status;
+      console.log(
+        `[Webhook MP] Pago autorizado ${resourceId}: status=${authorized?.status}, payment=${chargeStatus || 'sin dato'}, preapproval=${authorized?.preapproval_id || 'sin dato'}`
+      );
+
+      if (chargeStatus && chargeStatus !== 'approved') {
+        return res.status(200).json({
+          success: true,
+          message: 'Cobro de suscripción todavía no aprobado',
+        });
+      }
+
+      if (!authorized?.preapproval_id) {
+        console.error(`[Webhook MP] Pago autorizado ${resourceId} sin preapproval_id`);
+        return res.status(200).json({
+          success: true,
+          message: 'Pago autorizado sin suscripción asociada',
+        });
+      }
+
+      subscriptionId = authorized.preapproval_id;
+    }
 
     if (notificationType === 'payment') {
       // One-time payment notification
@@ -233,60 +371,17 @@ export const webhookMercadoPago = async (req, res, next) => {
       const paymentData = await payment.get({ id: resourceId });
 
       if (paymentData.status === 'approved') {
-        let metadata = null;
-        try {
-          if (paymentData.external_reference) {
-            metadata = JSON.parse(paymentData.external_reference);
-          }
-        } catch (e) {
-          // If it's a plain string, it's likely a subscription payment inheriting the user ID.
-          // We can ignore it here because subscription logic handles its own updates.
-          console.log(`[Webhook MP] Ignorando payment con external_reference no JSON: ${paymentData.external_reference}`);
-        }
-
-        if (metadata && metadata.paymentType === 'one-time-purchase') {
+        const metadata = readPurchaseMetadata(paymentData.external_reference);
+        if (!metadata) {
+          console.log(`[Webhook MP] Ignorando payment sin compra única: ${paymentData.external_reference}`);
+        } else {
           const user = await User.findById(metadata.userId);
           if (user) {
-            if (!userOwnsContent(user, metadata.contentId)) {
-              user.purchasedItems.push(metadata.contentId);
-              await user.save();
-
-              // Record Transaction
-              try {
-                await Transaction.create({
-                  user: user._id,
-                  amount: paymentData.transaction_amount || 0,
-                  currency: paymentData.currency_id || 'ARS',
-                  platform: 'mercadopago',
-                  type: 'one-time-purchase',
-                  content: metadata.contentId,
-                  externalId: resourceId
-                });
-              } catch (txErr) {
-                console.error('[Webhook MP] Error al registrar Transaction:', txErr.message);
-              }
-
-              console.log(
-                `[Webhook] Compra registrada con éxito para usuario: ${user.email} | Contenido: ${metadata.contentId}`
-              );
-
-              // Notify admin
-              const adminSubject = `Nueva Compra de Contenido: ${user.name}`;
-              const adminHtml = `
-                <div style="font-family: sans-serif; color: #334155; padding: 20px;">
-                  <h2 style="color: #3b82f6;">Nueva Compra (Mercado Pago)</h2>
-                  <p>El siguiente usuario ha comprado un contenido de pago único.</p>
-                  <ul>
-                    <li><strong>Nombre:</strong> ${user.name}</li>
-                    <li><strong>Email:</strong> ${user.email}</li>
-                    <li><strong>ID Contenido:</strong> ${metadata.contentId}</li>
-                  </ul>
-                </div>
-              `;
-              import('../utils/emailService.js').then(({ sendAdminNotification }) => {
-                sendAdminNotification(adminSubject, adminHtml).catch(console.error);
-              });
-            }
+            await grantMercadoPagoPurchase(user, metadata.contentId, {
+              amount: paymentData.transaction_amount || 0,
+              currency: paymentData.currency_id || 'ARS',
+              externalId: String(resourceId),
+            });
           }
         }
       }
@@ -299,7 +394,7 @@ export const webhookMercadoPago = async (req, res, next) => {
       // Recurring subscription notification
       const client = getMPClient();
       const preApproval = new PreApproval(client);
-      const preApprovalData = await preApproval.get({ id: resourceId });
+      const preApprovalData = await preApproval.get({ id: subscriptionId });
 
       if (preApprovalData.status === 'authorized' || preApprovalData.status === 'active') {
         let userId = null;
@@ -312,14 +407,14 @@ export const webhookMercadoPago = async (req, res, next) => {
           }
         }
         if (!userId) {
-          userId = (await User.findOne({ subscriptionId: resourceId }))?._id;
+          userId = (await User.findOne({ subscriptionId }))?._id;
         }
 
         if (userId) {
           const user = await User.findById(userId);
           if (user) {
             user.isSubscribed = true;
-            user.subscriptionId = resourceId;
+            user.subscriptionId = subscriptionId;
             user.membership = 'premium';
             // Si renueva o activa, quitamos cualquier fecha límite previa de expiración
             user.membershipExpiresAt = null;
@@ -337,14 +432,14 @@ export const webhookMercadoPago = async (req, res, next) => {
                 currency,
                 platform: 'mercadopago',
                 type: 'subscription',
-                externalId: resourceId
+                externalId: subscriptionId
               });
             } catch (txErr) {
               console.error('[Webhook MP] Error al registrar Transaction para sub:', txErr.message);
             }
 
             console.log(
-              `[Webhook MP] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${resourceId}`
+              `[Webhook MP] Suscripción Premium activada con éxito para usuario: ${user.email} | ID de Suscripción: ${subscriptionId}`
             );
 
             // Notify admin
@@ -356,7 +451,7 @@ export const webhookMercadoPago = async (req, res, next) => {
                 <ul>
                   <li><strong>Nombre:</strong> ${user.name}</li>
                   <li><strong>Email:</strong> ${user.email}</li>
-                  <li><strong>ID Suscripción:</strong> ${resourceId}</li>
+                  <li><strong>ID Suscripción:</strong> ${subscriptionId}</li>
                 </ul>
               </div>
             `;
@@ -380,7 +475,7 @@ export const webhookMercadoPago = async (req, res, next) => {
           }
         }
         if (!userId) {
-          userId = (await User.findOne({ subscriptionId: resourceId }))?._id;
+          userId = (await User.findOne({ subscriptionId }))?._id;
         }
 
         if (userId) {
