@@ -447,92 +447,6 @@ const CursoDetail = () => {
 
   return (
     <div className="px-16-mobile" style={{ width: '100%', maxWidth: '100%', margin: '20px auto', padding: '0 3vw 80px 3vw', boxSizing: 'border-box', fontFamily: 'var(--font-sans)' }}>
-      <style>{`
-        @keyframes headerFadeSlideIn {
-          0% { transform: translateY(-12px); }
-          100% { transform: translateY(0); }
-        }
-        @keyframes coverPulse {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.08); }
-        }
-        @keyframes sidebarPopIn {
-          0% { transform: translateX(-12px); }
-          100% { transform: translateX(0); }
-        }
-        @keyframes accordionExpand {
-          0% { transform: translateY(-6px); }
-          100% { transform: translateY(0); }
-        }
-        @keyframes lessonContentPop {
-          0% { transform: translateY(10px); }
-          100% { transform: translateY(0); }
-        }
-        @keyframes attachmentCardPop {
-          0% { transform: translateY(8px); }
-          100% { transform: translateY(0); }
-        }
-        @keyframes reviewCardEntry {
-          0% { transform: translateY(10px); }
-          100% { transform: translateY(0); }
-        }
-        @keyframes starPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-          50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
-        }
-        @keyframes floatInBottom {
-          0% { transform: translateY(16px); }
-          100% { transform: translateY(0); }
-        }
-        .animated-course-header {
-          animation: headerFadeSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-cover-img {
-          animation: coverPulse 12s infinite alternate ease-in-out;
-        }
-        .animated-sidebar {
-          animation: sidebarPopIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
-        }
-        .animated-accordion-body {
-          animation: accordionExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-lesson-container {
-          animation: lessonContentPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-attachment-card {
-          animation: attachmentCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-review-card {
-          animation: reviewCardEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .animated-course-header,
-          .animated-cover-img,
-          .animated-sidebar,
-          .animated-accordion-body,
-          .animated-lesson-container,
-          .animated-attachment-card,
-          .animated-review-card,
-          .animated-star-btn {
-            animation: none;
-          }
-        }
-        .animated-star-btn {
-          animation: starPulse 2.5s infinite;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-star-btn:hover {
-          transform: translateY(-3px) scale(1.03);
-          background-color: #dbeafe !important;
-        }
-        .animated-lesson-btn {
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .animated-lesson-btn:hover {
-          transform: translateX(4px);
-        }
-      `}</style>
-
       {/* Top Navigation Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <button
@@ -564,7 +478,6 @@ const CursoDetail = () => {
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => { window.scrollTo({ top: 0, behavior: 'auto' }); setShowReviewModal(true); }}
-              className="animated-star-btn"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -598,7 +511,7 @@ const CursoDetail = () => {
       </div>
 
       {/* Course Header Banner */}
-      <div className="animated-course-header p-20-mobile" style={{
+      <div className="p-20-mobile" style={{
         backgroundColor: '#051020',
         borderRadius: '24px',
         padding: '32px 40px',
@@ -609,7 +522,7 @@ const CursoDetail = () => {
         marginBottom: '32px',
         border: '1px solid rgba(255,255,255,0.08)'
       }}>
-        <div className="animated-cover-img" style={{
+        <div style={{
           position: 'absolute',
           top: 0,
           right: 0,
@@ -733,7 +646,7 @@ const CursoDetail = () => {
           <div className="skool-classroom-layout">
 
             {/* LEFT SIDEBAR: Skool Curriculum Accordion */}
-            <div className="animated-sidebar" style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)', position: 'sticky', top: '24px', maxHeight: '82vh', overflowY: 'auto' }}>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '20px', padding: '20px', boxShadow: '0 8px 25px rgba(0,0,0,0.03)', position: 'sticky', top: '24px', maxHeight: '82vh', overflowY: 'auto' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '900', color: 'var(--dark)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
                 Módulos y Lecciones
               </h3>
@@ -776,7 +689,7 @@ const CursoDetail = () => {
 
                       {/* Lessons inside Module */}
                       {isActiveMod && (
-                        <div className="animated-accordion-body" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
+                        <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', backgroundColor: '#f8fafc' }}>
                           {lessonList(mod.lessons).filter(Boolean).map((item, itemIndex) => {
                             const isSelected = activeModuleIdx === modIndex && activeLessonIdx === itemIndex;
                             const isDone = doneIds.includes(item.id);
@@ -786,7 +699,6 @@ const CursoDetail = () => {
                               <button
                                 key={item.id}
                                 onClick={() => setActiveLessonIdx(itemIndex)}
-                                className="animated-lesson-btn"
                                 style={{
                                   width: '100%',
                                   display: 'flex',
@@ -890,7 +802,7 @@ const CursoDetail = () => {
               )}
 
               {currentItem ? (
-                <div key={currentItem.id} className="animated-lesson-container" style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                <div key={currentItem.id} style={{ backgroundColor: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
 
                   {/* Breadcrumb & Item Title */}
                   <div style={{ marginBottom: '24px' }}>
@@ -1031,7 +943,6 @@ const CursoDetail = () => {
                                   href={att.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="animated-attachment-card"
                                   style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1044,8 +955,7 @@ const CursoDetail = () => {
                                     color: '#0f172a',
                                     fontWeight: '800',
                                     transition: 'all 0.2s ease',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
-                                    animationDelay: `${attIdx * 0.1}s`
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
                                   }}
                                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -1290,7 +1200,6 @@ const CursoDetail = () => {
             {lessonList(content.reviews).filter(Boolean).map((r, idx) => (
               <div
                 key={idx}
-                className="animated-review-card"
                 style={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #cbd5e1',
@@ -1300,8 +1209,7 @@ const CursoDetail = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '14px',
-                  transition: 'all 0.2s ease',
-                  animationDelay: `${idx * 0.12}s`
+                  transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(31, 117, 245, 0.08)'; e.currentTarget.style.borderColor = '#1f75f5'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
@@ -1400,8 +1308,7 @@ const CursoDetail = () => {
             fontWeight: '800',
             fontSize: '13px',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            animation: 'floatInBottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+            transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#38bdf8'; e.currentTarget.style.color = '#051020'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#051020'; e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.transform = 'translateY(0)'; }}
