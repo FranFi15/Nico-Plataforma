@@ -97,6 +97,16 @@ const MiPerfil = () => {
 
   const roleText = user.role === 'admin' ? 'Administrador' : 'Alumno';
   const hasMembership = user.membership === 'premium' || user.isSubscribed;
+  const ownedIds = new Set(
+    (Array.isArray(user.purchasedItems) ? user.purchasedItems : [])
+      .map((item) => String(item?._id || item))
+      .filter(Boolean)
+  );
+  const visibleBenefits = hasMembership
+    ? benefits
+    : benefits.filter((benefit) =>
+        (benefit.eligibleContent || []).some((id) => ownedIds.has(String(id?._id || id)))
+      );
   const membershipText = hasMembership
     ? 'Membresía Activa'
     : 'Sin Membresía';
@@ -161,13 +171,13 @@ const MiPerfil = () => {
         .animated-discount-card {
           animation: discountCardEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          height: 260px;
+          transition: height 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
         }
         .animated-discount-card:hover {
           transform: translateY(-5px) scale(1.01) !important;
           box-shadow: 0 16px 32px rgba(31, 117, 245, 0.15) !important;
           border-color: var(--primary) !important;
-          height: auto;
         }
         .discount-description {
           display: -webkit-box;
@@ -175,13 +185,13 @@ const MiPerfil = () => {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .animated-discount-card:hover .discount-copy {
+        .animated-discount-card.is-expanded .discount-copy {
           max-width: 100%;
         }
-        .animated-discount-card:hover .discount-overlay {
+        .animated-discount-card.is-expanded .discount-overlay {
           background: linear-gradient(to right, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.94) 72%, rgba(255,255,255,0.82) 100%);
         }
-        .animated-discount-card:hover .discount-description {
+        .animated-discount-card.is-expanded .discount-description {
           display: block;
           -webkit-line-clamp: unset;
           overflow: visible;
@@ -799,7 +809,7 @@ const MiPerfil = () => {
             <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--gray-500)', fontSize: '15px' }}>
               Cargando descuentos disponibles...
             </div>
-          ) : !hasMembership ? (
+          ) : visibleBenefits.length === 0 ? (
             <div className="discount-card" style={{
               textAlign: 'center',
               padding: '48px 32px',
@@ -831,7 +841,7 @@ const MiPerfil = () => {
                 margin: '0 auto 24px auto',
                 lineHeight: '1.6'
               }}>
-                Suscríbete a nuestra membresía para desbloquear beneficios especiales.
+                Suscríbete a la membresía, o compra una formación habilitada, para desbloquear estos beneficios.
               </p>
               <button
                 onClick={() => navigate('/checkout')}
@@ -843,7 +853,7 @@ const MiPerfil = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {benefits.map((benefit, idx) => (
+              {visibleBenefits.map((benefit, idx) => (
                 <div
                   key={benefit._id}
                   onClick={() => benefit.linkUrl && window.open(benefit.linkUrl, '_blank', 'noopener,noreferrer')}
@@ -851,7 +861,7 @@ const MiPerfil = () => {
                   style={{
                     position: 'relative',
                     borderRadius: '24px',
-                    minHeight: '260px',
+                    height: '260px',
                     backgroundColor: '#ffffff',
                     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
                     overflow: 'hidden',
@@ -861,20 +871,32 @@ const MiPerfil = () => {
                     flexDirection: 'column',
                     justifyContent: 'flex-start',
                     padding: '30px',
-                    textDecoration: 'none',
-                    transition: 'all 0.3s ease'
+                    textDecoration: 'none'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px) scale(1.01)';
-                    e.currentTarget.style.boxShadow = '0 16px 32px rgba(0, 0, 0, 0.15)';
-                    const bgImg = e.currentTarget.querySelector('.bg-image');
+                    const card = e.currentTarget;
+                    card.classList.add('is-expanded');
+                    const copy = card.querySelector('.discount-copy');
+                    const fullHeight = (copy ? copy.offsetHeight : 0) + 60;
+                    card.style.height = `${Math.max(260, fullHeight)}px`;
+                    card.style.transform = 'translateY(-5px) scale(1.01)';
+                    card.style.boxShadow = '0 16px 32px rgba(0, 0, 0, 0.15)';
+                    const bgImg = card.querySelector('.bg-image');
                     if (bgImg) bgImg.style.transform = 'scale(1.05)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
-                    const bgImg = e.currentTarget.querySelector('.bg-image');
+                    const card = e.currentTarget;
+                    card.style.height = '260px';
+                    card.style.transform = 'translateY(0) scale(1)';
+                    card.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.05)';
+                    const bgImg = card.querySelector('.bg-image');
                     if (bgImg) bgImg.style.transform = 'scale(1)';
+                    const collapseText = (ev) => {
+                      if (ev.propertyName !== 'height') return;
+                      card.removeEventListener('transitionend', collapseText);
+                      if (!card.matches(':hover')) card.classList.remove('is-expanded');
+                    };
+                    card.addEventListener('transitionend', collapseText);
                   }}
                 >
                   {/* Background Image */}
@@ -910,7 +932,7 @@ const MiPerfil = () => {
                   {/* Content Overlay */}
                   <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     {/* Top Texts */}
-                    <div className="discount-copy" style={{ maxWidth: '65%', transition: 'max-width 0.3s ease' }}>
+                    <div className="discount-copy" style={{ maxWidth: '65%' }}>
                       <h4 style={{ 
                         fontSize: '28px', 
                         fontWeight: '900', 

@@ -19,6 +19,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
   const [bDiscountText, setBDiscountText] = useState('');
   const [bLinkUrl, setBLinkUrl] = useState('');
   const [bActive, setBActive] = useState(true);
+  const [bEligibleContent, setBEligibleContent] = useState([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBgImage, setUploadingBgImage] = useState(false);
 
@@ -136,6 +137,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBDiscountText(benefit.discountText || '');
       setBLinkUrl(benefit.linkUrl || '');
       setBActive(benefit.active !== undefined ? benefit.active : true);
+      setBEligibleContent((benefit.eligibleContent || []).map((id) => String(id?._id || id)));
     } else {
       setEditingBenefit(null);
       setBTitle('');
@@ -145,6 +147,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBDiscountText('');
       setBLinkUrl('');
       setBActive(true);
+      setBEligibleContent([]);
     }
     setShowBenefitForm(true);
   };
@@ -165,7 +168,8 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
         backgroundImageUrl: bBackgroundImageUrl,
         discountText: bDiscountText,
         linkUrl: bLinkUrl,
-        active: bActive
+        active: bActive,
+        eligibleContent: bEligibleContent
       };
 
       if (editingBenefit) {
@@ -217,6 +221,13 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setCValidUntil('');
     }
     setShowCouponForm(true);
+  };
+
+  const handleToggleEligibleContent = (contentId) => {
+    const id = String(contentId);
+    setBEligibleContent((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
   };
 
   const handleToggleCourseSelection = (courseId) => {
@@ -480,6 +491,32 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                   )}
                 </div>
 
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>Compras únicas que también desbloquean este descuento</label>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 10px 0' }}>
+                    Los miembros lo ven siempre. Marcá las formaciones de pago único que también deben recibirlo.
+                  </p>
+                  <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '14px', padding: '16px', maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {coursesList.filter((item) => item.accessType === 'one-time-purchase').length === 0 ? (
+                      <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>No hay cursos ni talleres de pago único.</p>
+                    ) : (
+                      coursesList.filter((item) => item.accessType === 'one-time-purchase').map((item) => (
+                        <label key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#0f172a', cursor: 'pointer', padding: '6px', borderRadius: '8px', backgroundColor: bEligibleContent.includes(String(item._id)) ? '#eff6ff' : 'transparent' }}>
+                          <input
+                            type="checkbox"
+                            checked={bEligibleContent.includes(String(item._id))}
+                            onChange={() => handleToggleEligibleContent(item._id)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                          <span style={{ fontWeight: bEligibleContent.includes(String(item._id)) ? '800' : '600' }}>
+                            {item.title} ({item.contentType === 'workshop' ? 'taller' : 'curso'})
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                   <input
                     type="checkbox"
@@ -536,8 +573,13 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                     <h3 style={{ fontSize: '19px', fontWeight: '900', color: '#0f172a', margin: '0 0 8px 0' }}>
                       {benefit.title}
                     </h3>
-                    <p style={{ fontSize: '14px', color: '#475569', margin: '0 0 16px 0', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
+                    <p style={{ fontSize: '14px', color: '#475569', margin: '0 0 12px 0', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
                       {benefit.description}
+                    </p>
+                    <p style={{ fontSize: '12px', fontWeight: '800', color: '#1d4ed8', margin: '0 0 16px 0' }}>
+                      {(benefit.eligibleContent || []).length === 0
+                        ? 'Solo con membresía'
+                        : `También con ${(benefit.eligibleContent || []).length} compra${(benefit.eligibleContent || []).length === 1 ? '' : 's'} única${(benefit.eligibleContent || []).length === 1 ? '' : 's'}`}
                     </p>
                   </div>
 

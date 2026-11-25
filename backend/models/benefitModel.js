@@ -30,7 +30,11 @@ const benefitSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true
-    }
+    },
+    eligibleContent: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Content'
+    }]
   },
   {
     timestamps: true
