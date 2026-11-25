@@ -20,6 +20,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
   const [bLinkUrl, setBLinkUrl] = useState('');
   const [bActive, setBActive] = useState(true);
   const [bEligibleContent, setBEligibleContent] = useState([]);
+  const [bPurchaseFilter, setBPurchaseFilter] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBgImage, setUploadingBgImage] = useState(false);
 
@@ -138,6 +139,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBLinkUrl(benefit.linkUrl || '');
       setBActive(benefit.active !== undefined ? benefit.active : true);
       setBEligibleContent((benefit.eligibleContent || []).map((id) => String(id?._id || id)));
+      setBPurchaseFilter('');
     } else {
       setEditingBenefit(null);
       setBTitle('');
@@ -148,6 +150,7 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
       setBLinkUrl('');
       setBActive(true);
       setBEligibleContent([]);
+      setBPurchaseFilter('');
     }
     setShowBenefitForm(true);
   };
@@ -223,11 +226,28 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
     setShowCouponForm(true);
   };
 
+  const oneTimePurchases = coursesList.filter((item) => item.accessType === 'one-time-purchase');
+  const purchaseQuery = bPurchaseFilter.trim().toLowerCase();
+  const filteredOneTimePurchases = oneTimePurchases.filter((item) =>
+    !purchaseQuery || item.title?.toLowerCase().includes(purchaseQuery)
+  );
+  const allFilteredSelected = filteredOneTimePurchases.length > 0 && filteredOneTimePurchases.every((item) => bEligibleContent.includes(String(item._id)));
+
   const handleToggleEligibleContent = (contentId) => {
     const id = String(contentId);
     setBEligibleContent((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
     );
+  };
+
+  const handleSelectAllEligible = () => {
+    const visibleIds = filteredOneTimePurchases.map((item) => String(item._id));
+    setBEligibleContent((current) => {
+      if (visibleIds.every((id) => current.includes(id))) {
+        return current.filter((id) => !visibleIds.includes(id));
+      }
+      return [...new Set([...current, ...visibleIds])];
+    });
   };
 
   const handleToggleCourseSelection = (courseId) => {
@@ -496,11 +516,30 @@ const AdminDiscountsTab = ({ formMessage, setFormMessage }) => {
                   <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 10px 0' }}>
                     Los miembros lo ven siempre. Marcá las formaciones de pago único que también deben recibirlo.
                   </p>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      placeholder="Buscar curso o taller..."
+                      value={bPurchaseFilter}
+                      onChange={(e) => setBPurchaseFilter(e.target.value)}
+                      style={{ flex: 1, minWidth: '180px', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', color: '#0f172a' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSelectAllEligible}
+                      disabled={filteredOneTimePurchases.length === 0}
+                      style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #bfdbfe', backgroundColor: '#eff6ff', color: '#1d4ed8', fontWeight: '800', fontSize: '13px', cursor: filteredOneTimePurchases.length === 0 ? 'not-allowed' : 'pointer' }}
+                    >
+                      {allFilteredSelected ? 'Quitar selección' : 'Seleccionar todo'}
+                    </button>
+                  </div>
                   <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '14px', padding: '16px', maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {coursesList.filter((item) => item.accessType === 'one-time-purchase').length === 0 ? (
+                    {oneTimePurchases.length === 0 ? (
                       <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>No hay cursos ni talleres de pago único.</p>
+                    ) : filteredOneTimePurchases.length === 0 ? (
+                      <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>Ninguna formación coincide con la búsqueda.</p>
                     ) : (
-                      coursesList.filter((item) => item.accessType === 'one-time-purchase').map((item) => (
+                      filteredOneTimePurchases.map((item) => (
                         <label key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#0f172a', cursor: 'pointer', padding: '6px', borderRadius: '8px', backgroundColor: bEligibleContent.includes(String(item._id)) ? '#eff6ff' : 'transparent' }}>
                           <input
                             type="checkbox"
