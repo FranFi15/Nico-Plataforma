@@ -167,6 +167,24 @@ const MiPerfil = () => {
           transform: translateY(-5px) scale(1.01) !important;
           box-shadow: 0 16px 32px rgba(31, 117, 245, 0.15) !important;
           border-color: var(--primary) !important;
+          height: auto;
+        }
+        .discount-description {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .animated-discount-card:hover .discount-copy {
+          max-width: 100%;
+        }
+        .animated-discount-card:hover .discount-overlay {
+          background: linear-gradient(to right, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.94) 72%, rgba(255,255,255,0.82) 100%);
+        }
+        .animated-discount-card:hover .discount-description {
+          display: block;
+          -webkit-line-clamp: unset;
+          overflow: visible;
         }
         .animated-ns-logo {
           animation: pulseLogo 3.5s ease-in-out infinite;
@@ -833,7 +851,7 @@ const MiPerfil = () => {
                   style={{
                     position: 'relative',
                     borderRadius: '24px',
-                    height: '260px',
+                    minHeight: '260px',
                     backgroundColor: '#ffffff',
                     boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
                     overflow: 'hidden',
@@ -878,20 +896,21 @@ const MiPerfil = () => {
                   />
                   
                   {/* Gradient Overlay for Text Readability */}
-                  <div style={{
+                  <div className="discount-overlay" style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
                     background: 'linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)',
-                    zIndex: 2
+                    zIndex: 2,
+                    transition: 'background 0.3s ease'
                   }} />
 
                   {/* Content Overlay */}
                   <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
                     {/* Top Texts */}
-                    <div style={{ maxWidth: '65%' }}>
+                    <div className="discount-copy" style={{ maxWidth: '65%', transition: 'max-width 0.3s ease' }}>
                       <h4 style={{ 
                         fontSize: '28px', 
                         fontWeight: '900', 
@@ -903,16 +922,12 @@ const MiPerfil = () => {
                         {benefit.title} {benefit.discountText && <span style={{ color: '#1f75f5ff' }}>{benefit.discountText}</span>}
                       </h4>
                       {benefit.description && (
-                        <p style={{
+                        <p className="discount-description" style={{
                           fontSize: '16px',
                           color: '#334155',
                           margin: '0 0 20px 0',
                           lineHeight: '1.4',
-                          fontWeight: '500',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
+                          fontWeight: '500'
                         }}>
                           {benefit.description}
                         </p>
